@@ -1,0 +1,39 @@
+/* MODO ESCURO PARA PAINEL (OPCIONAL) */
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-card: #333333;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --text-muted: #888888;
+  --border-color: #444444;
+}
+
+[data-theme="dark"] body {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+}
+
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-select {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-input:focus,
+[data-theme="dark"] .form-select:focus {
+  border-color: var(--primary-light);
+}
+
+[data-theme="dark"] .jogo {
+  background: var(--bg-card);
+  border-left-color: var(--primary-light);
+}
+
+[data-theme="dark"] .jogo:hover {
+  background: #404040;
+}
+
+[data-theme="dark"] .paginacao {
+  background: var(--bg-card);
+}
