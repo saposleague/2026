@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - SAPOS LEAGUE</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Login administrativo do Sapos League 2026">
+  <meta name="theme-color" content="#2e7d32">
+  <meta name="apple-mobile-web-app-title" content="Sapos League">
+  
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" href="/favicon-48x48.png" sizes="48x48" />
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  
+  <!-- Favicon Display CSS -->
+  <link rel="stylesheet" href="css/favicon-display.css">
+  
+  <!-- Manifest -->
+  <link rel="manifest" href="/site.webmanifest">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div class="login-container">
+    <h2>Admin Login</h2>
+    <form id="login-form">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="senha" placeholder="Senha" required />
+      <button type="submit" id="login-button">Entrar</button>
+      <p class="error" id="erro"></p>
+    </form>
+  </div>
+
+  <script src="js/dynamic-favicon.js"></script>
+  <script type="module" src="js/admin.js"></script>
+  <script src="js/pwa-install.js"></script>
+</body>
+</html>
