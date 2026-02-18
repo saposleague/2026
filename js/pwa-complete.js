@@ -477,10 +477,6 @@ class PWAComplete {
                     this.sendWelcomeNotification();
                 } else if (permission === 'denied') {
                     this.log('❌ Permissão negada pelo usuário', 'WARN');
-                    this.log('💡 Possíveis soluções para Safari iOS:');
-                    this.log('1. Vá em Configurações → Safari → Notificações');
-                    this.log('2. Ou Configurações → Notificações → Safari');
-                    this.log('3. Certifique-se que o site está na tela inicial (PWA)');
                     
                     button.style.background = 'linear-gradient(135deg, #f44336, #e57373)';
                     button.innerHTML = `
@@ -488,13 +484,10 @@ class PWAComplete {
                             <span style="font-size: 24px;">❌</span>
                             <div>
                                 <div style="font-weight: 600;">Permissão Negada</div>
-                                <div style="font-size: 12px; opacity: 0.9;">Vá em Configurações → Safari → Notificações</div>
+                                <div style="font-size: 12px; opacity: 0.9;">Vá em Configurações → Notificações</div>
                             </div>
                         </div>
                     `;
-                    
-                    // Mostrar instruções detalhadas
-                    this.showSafariInstructions();
                     
                     setTimeout(() => {
                         button.style.animation = 'slideInDown 0.3s ease reverse';
