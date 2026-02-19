@@ -431,6 +431,30 @@
   
   <!-- Header fixo -->
   <header>SAPOS LEAGUE</header>
+
+  <!-- Botão de Debug iOS (flutuante) -->
+  <a href="debug-ios.html" id="btn-debug-ios" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #ff9800;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 9999;
+    display: none;
+    font-size: 14px;
+  ">🍎 Debug iOS</a>
+
+  <script>
+    // Mostrar botão apenas em iOS
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+      document.getElementById('btn-debug-ios').style.display = 'block';
+    }
+  </script>
   
   <!-- Navegação de Fases (abaixo do header) -->
   <div class="fase-navigation">
