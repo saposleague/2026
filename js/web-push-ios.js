@@ -22,6 +22,10 @@ class WebPushIOS {
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
             
+            console.log('🍎 [iOS] User Agent:', navigator.userAgent);
+            console.log('🍎 [iOS] Platform:', navigator.platform);
+            console.log('🍎 [iOS] É iOS?', isIOS);
+            
             if (!isIOS) {
                 console.log('🍎 [iOS] Não é iOS, pulando...');
                 return;
@@ -48,17 +52,21 @@ class WebPushIOS {
             }
 
             console.log('✅ [iOS] Todos os recursos suportados');
+            console.log('✅ [iOS] Permissão atual:', Notification.permission);
 
             // Aguardar permissão
             if (Notification.permission === 'granted') {
-                console.log('✅ [iOS] Permissão já concedida');
+                console.log('✅ [iOS] Permissão já concedida - registrando...');
                 await this.subscribe();
             } else if (Notification.permission === 'default') {
                 console.log('⏳ [iOS] Aguardando permissão...');
+            } else {
+                console.log('❌ [iOS] Permissão negada');
             }
 
         } catch (error) {
             console.error('❌ [iOS] Erro ao inicializar:', error);
+            console.error('❌ [iOS] Stack:', error.stack);
         }
     }
 
