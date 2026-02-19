@@ -8,7 +8,7 @@ admin.initializeApp();
  * para enviar notificações sobre jogos do dia
  */
 exports.sendDailyGameNotifications = functions.pubsub
-  .schedule('47 11 * * *') // Cron: 11:47 todos os dias
+  .schedule('2 12 * * *') // Cron: 12:02 todos os dias
   .timeZone('America/Sao_Paulo')
   .onRun(async (context) => {
     console.log('🔔 Iniciando envio de notificações diárias...');

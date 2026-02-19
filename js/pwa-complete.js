@@ -879,10 +879,10 @@ class PWAComplete {
         const currentHour = now.getHours();
         const currentMinute = now.getMinutes();
         
-        // Horários de disparo: 00:00, 11:47 (TESTE), 12:30, 19:00
+        // Horários de disparo: 00:00, 12:02 (TESTE), 12:30, 19:00
         const notificationTimes = [
             { hour: 0, minute: 0 },   // 00:00
-            { hour: 11, minute: 47 }, // 11:47 (TESTE)
+            { hour: 12, minute: 2 },  // 12:02 (TESTE)
             { hour: 12, minute: 30 }, // 12:30
             { hour: 19, minute: 0 }   // 19:00
         ];
