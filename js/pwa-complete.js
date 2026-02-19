@@ -469,10 +469,16 @@ class PWAComplete {
                     
                     this.sendWelcomeNotification();
                     
-                    // Registrar token FCM para notificações push
+                    // Registrar token FCM para notificações push (Android/Chrome)
                     if (window.fcmNotifications) {
                         this.log('🔔 Registrando token FCM...');
                         await window.fcmNotifications.onPermissionGranted();
+                    }
+                    
+                    // Registrar Web Push para iOS
+                    if (window.webPushIOS) {
+                        this.log('🍎 Registrando Web Push iOS...');
+                        await window.webPushIOS.onPermissionGranted();
                     }
                 } else if (permission === 'denied') {
                     this.log('❌ Permissão negada pelo usuário', 'WARN');
