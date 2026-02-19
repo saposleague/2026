@@ -472,7 +472,7 @@ class PWAComplete {
                     // Registrar token FCM para notificações push
                     if (window.fcmNotifications) {
                         this.log('🔔 Registrando token FCM...');
-                        window.fcmNotifications.onPermissionGranted();
+                        await window.fcmNotifications.onPermissionGranted();
                     }
                 } else if (permission === 'denied') {
                     this.log('❌ Permissão negada pelo usuário', 'WARN');

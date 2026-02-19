@@ -18,22 +18,26 @@ class FCMNotifications {
 
     async init() {
         try {
+            console.log('🔔 [FCM] Iniciando...');
+            
             // Verificar se o navegador suporta notificações
             if (!('Notification' in window)) {
-                console.log('❌ Este navegador não suporta notificações');
+                console.log('❌ [FCM] Este navegador não suporta notificações');
                 return;
             }
 
             // Verificar se o Service Worker está disponível
             if (!('serviceWorker' in navigator)) {
-                console.log('❌ Service Worker não disponível');
+                console.log('❌ [FCM] Service Worker não disponível');
                 return;
             }
 
-            console.log('🔔 Inicializando Firebase Cloud Messaging...');
+            console.log('🔔 [FCM] Inicializando Firebase Cloud Messaging...');
+            console.log('🔔 [FCM] Permissão atual:', Notification.permission);
 
             // Inicializar Firebase Messaging
             this.messaging = getMessaging(app);
+            console.log('✅ [FCM] Messaging inicializado');
 
             // Configurar listener para mensagens em foreground
             this.setupForegroundListener();
@@ -42,64 +46,79 @@ class FCMNotifications {
             await this.requestPermissionAndRegisterToken();
 
         } catch (error) {
-            console.error('❌ Erro ao inicializar FCM:', error);
+            console.error('❌ [FCM] Erro ao inicializar:', error);
         }
     }
 
     async requestPermissionAndRegisterToken() {
         try {
+            console.log('🔔 [FCM] Verificando permissão...');
+            console.log('🔔 [FCM] Status:', Notification.permission);
+            
             // Verificar permissão atual
             if (Notification.permission === 'granted') {
-            console.log('✅ Permissão de notificação já concedida');
+                console.log('✅ [FCM] Permissão já concedida - registrando token...');
                 await this.registerToken();
             } else if (Notification.permission === 'default') {
-                console.log('⏳ Aguardando permissão do usuário...');
+                console.log('⏳ [FCM] Aguardando permissão do usuário...');
                 // A permissão será solicitada pelo pwa-complete.js
                 // Quando concedida, este método será chamado novamente
             } else {
-                console.log('❌ Permissão de notificação negada');
+                console.log('❌ [FCM] Permissão negada');
             }
         } catch (error) {
-            console.error('❌ Erro ao solicitar permissão:', error);
+            console.error('❌ [FCM] Erro ao solicitar permissão:', error);
         }
     }
 
     async registerToken() {
         try {
-            console.log('📝 Registrando token FCM...');
+            console.log('📝 [FCM] Iniciando registro de token...');
+
+            // Garantir que o Service Worker está registrado
+            const registration = await navigator.serviceWorker.ready;
+            console.log('✅ [FCM] Service Worker pronto:', registration.scope);
 
             // Obter token FCM
             const token = await getToken(this.messaging, {
-                vapidKey: 'BCGlPwG2538voWXXYiSV-y6P1jIWN60aYHdcNUQcS4rpWe-eJpo5bK4-HJHkcbDRzD-S0jaW-sXeRL8XsGLPBts'
+                vapidKey: 'BCGlPwG2538voWXXYiSV-y6P1jIWN60aYHdcNUQcS4rpWe-eJpo5bK4-HJHkcbDRzD-S0jaW-sXeRL8XsGLPBts',
+                serviceWorkerRegistration: registration
             });
 
             if (token) {
-                console.log('✅ Token FCM obtido:', token.substring(0, 20) + '...');
+                console.log('✅ [FCM] Token obtido:', token.substring(0, 30) + '...');
                 this.currentToken = token;
 
                 // Salvar token no Firestore
+                console.log('💾 [FCM] Salvando token no Firestore...');
                 await this.saveTokenToFirestore(token);
 
-                console.log('✅ Token salvo no Firestore');
+                console.log('✅ [FCM] Token salvo com sucesso!');
             } else {
-                console.log('❌ Não foi possível obter o token FCM');
+                console.log('❌ [FCM] Não foi possível obter o token');
             }
 
         } catch (error) {
-            console.error('❌ Erro ao registrar token:', error);
+            console.error('❌ [FCM] Erro ao registrar token:', error);
+            console.error('❌ [FCM] Código do erro:', error.code);
+            console.error('❌ [FCM] Mensagem:', error.message);
             
             if (error.code === 'messaging/permission-blocked') {
-                console.log('⚠️ Permissão de notificação bloqueada pelo usuário');
+                console.log('⚠️ [FCM] Permissão bloqueada pelo usuário');
             }
         }
     }
 
     async saveTokenToFirestore(token) {
         try {
+            console.log('💾 [FCM] Preparando para salvar no Firestore...');
+            
             // Criar ID único baseado no token (hash simples)
             const tokenId = this.hashToken(token);
+            console.log('🔑 [FCM] Token ID:', tokenId);
 
             // Salvar no Firestore
+            console.log('💾 [FCM] Salvando documento...');
             await setDoc(doc(db, 'fcmTokens', tokenId), {
                 token: token,
                 createdAt: serverTimestamp(),
@@ -108,8 +127,12 @@ class FCMNotifications {
                 platform: navigator.platform
             }, { merge: true });
 
+            console.log('✅ [FCM] Documento salvo com sucesso!');
+
         } catch (error) {
-            console.error('❌ Erro ao salvar token no Firestore:', error);
+            console.error('❌ [FCM] Erro ao salvar no Firestore:', error);
+            console.error('❌ [FCM] Código:', error.code);
+            console.error('❌ [FCM] Mensagem:', error.message);
             throw error;
         }
     }
@@ -173,7 +196,8 @@ class FCMNotifications {
 
     // Método público para ser chamado após permissão concedida
     async onPermissionGranted() {
-        console.log('🔔 Permissão concedida - registrando token FCM...');
+        console.log('🔔 [FCM] onPermissionGranted chamado!');
+        console.log('🔔 [FCM] Permissão concedida - registrando token...');
         await this.registerToken();
     }
 }
