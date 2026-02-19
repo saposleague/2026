@@ -99,6 +99,47 @@ exports.notifyTodayGames = functions.pubsub
   });
 
 /**
+ * Notificação de TESTE - Quinta às 15:30
+ */
+exports.notifyTodayGamesTest = functions.pubsub
+  .schedule('30 15 * * 4') // Quinta às 15:30 (TESTE)
+  .timeZone('America/Sao_Paulo')
+  .onRun(async (context) => {
+    console.log('🧪 TESTE - Verificando jogos de hoje (quinta-feira - 15:30)...');
+    
+    try {
+      const today = new Date();
+      const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD
+      
+      console.log(`🔍 Buscando jogos para hoje: ${todayString}`);
+      
+      // Buscar jogos de hoje
+      const games = await getGamesForDate(todayString);
+      
+      if (games.length === 0) {
+        console.log('📭 Nenhum jogo encontrado para hoje');
+        return null;
+      }
+      
+      console.log(`⚽ ${games.length} jogo(s) encontrado(s) para hoje`);
+      
+      // Criar mensagem
+      const title = games.length === 1 ? 'Jogo Hoje' : 'Jogos Hoje';
+      const rodada = games[0].rodada;
+      const body = createGameMessage(games, rodada);
+      
+      // Enviar notificação
+      await sendNotificationToAll(title, body);
+      
+      return { success: true, games: games.length };
+      
+    } catch (error) {
+      console.error('❌ Erro ao enviar notificações de hoje:', error);
+      throw error;
+    }
+  });
+
+/**
  * Busca jogos para uma data específica
  */
 async function getGamesForDate(dateString) {
