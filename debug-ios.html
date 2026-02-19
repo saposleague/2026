@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug iOS - Sapos League</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .log {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #00ff00;
+            background: #2a2a2a;
+        }
+        .error {
+            border-left-color: #ff0000;
+            color: #ff6666;
+        }
+        .success {
+            border-left-color: #00ff00;
+            color: #66ff66;
+        }
+        .info {
+            border-left-color: #ffaa00;
+            color: #ffcc66;
+        }
+        h1 {
+            color: #00ff00;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>🍎 Debug iOS Web Push</h1>
+    <button onclick="testWebPush()">Testar Web Push</button>
+    <button onclick="clearLogs()">Limpar Logs</button>
+    <div id="logs"></div>
+
+    <script type="module">
+        import { app } from './js/firebase-config.js';
+        import { getFirestore, collection, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+        const db = getFirestore(app);
+        const logsDiv = document.getElementById('logs');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            logsDiv.appendChild(div);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(message);
+        }
+
+        window.clearLogs = function() {
+            logsDiv.innerHTML = '';
+        }
+
+        window.testWebPush = async function() {
+            try {
+                log('🍎 Iniciando teste...', 'info');
+
+                // 1. Verificar se é iOS
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                log('User Agent: ' + navigator.userAgent, 'info');
+                log('É iOS? ' + isIOS, isIOS ? 'success' : 'error');
+
+                if (!isIOS) {
+                    log('❌ Não é iOS!', 'error');
+                    return;
+                }
+
+                // 2. Verificar suporte a notificações
+                if (!('Notification' in window)) {
+                    log('❌ Notificações não suportadas', 'error');
+                    return;
+                }
+                log('✅ Notificações suportadas', 'success');
+
+                // 3. Verificar suporte a Service Worker
+                if (!('serviceWorker' in navigator)) {
+                    log('❌ Service Worker não suportado', 'error');
+                    return;
+                }
+                log('✅ Service Worker suportado', 'success');
+
+                // 4. Verificar suporte a Push API
+                if (!('PushManager' in window)) {
+                    log('❌ Push API não suportada', 'error');
+                    return;
+                }
+                log('✅ Push API suportada', 'success');
+
+                // 5. Verificar permissão
+                log('Permissão atual: ' + Notification.permission, 'info');
+
+                if (Notification.permission === 'default') {
+                    log('⏳ Solicitando permissão...', 'info');
+                    const permission = await Notification.requestPermission();
+                    log('Permissão concedida: ' + permission, permission === 'granted' ? 'success' : 'error');
+                    
+                    if (permission !== 'granted') {
+                        return;
+                    }
+                } else if (Notification.permission !== 'granted') {
+                    log('❌ Permissão negada', 'error');
+                    return;
+                }
+
+                // 6. Aguardar Service Worker
+                log('⏳ Aguardando Service Worker...', 'info');
+                const registration = await navigator.serviceWorker.ready;
+                log('✅ Service Worker pronto: ' + registration.scope, 'success');
+
+                // 7. Verificar subscription existente
+                log('⏳ Verificando subscription existente...', 'info');
+                let subscription = await registration.pushManager.getSubscription();
+
+                if (subscription) {
+                    log('✅ Subscription já existe', 'success');
+                } else {
+                    log('📝 Criando nova subscription...', 'info');
+                    
+                    const vapidKey = 'BCGlPwG2538voWXXYiSV-y6P1jIWN60aYHdcNUQcS4rpWe-eJpo5bK4-HJHkcbDRzD-S0jaW-sXeRL8XsGLPBts';
+                    const applicationServerKey = urlBase64ToUint8Array(vapidKey);
+                    
+                    subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: applicationServerKey
+                    });
+
+                    log('✅ Subscription criada!', 'success');
+                }
+
+                // 8. Salvar no Firestore
+                log('💾 Salvando no Firestore...', 'info');
+                const subscriptionJSON = subscription.toJSON();
+                const subscriptionId = hashString(subscriptionJSON.endpoint);
+                
+                await setDoc(doc(db, 'webPushSubscriptions', subscriptionId), {
+                    subscription: subscriptionJSON,
+                    endpoint: subscriptionJSON.endpoint,
+                    platform: 'ios',
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    userAgent: navigator.userAgent
+                }, { merge: true });
+
+                log('✅ Salvo com sucesso! ID: ' + subscriptionId, 'success');
+                log('🎉 TUDO FUNCIONOU!', 'success');
+
+            } catch (error) {
+                log('❌ ERRO: ' + error.message, 'error');
+                log('Stack: ' + error.stack, 'error');
+            }
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/\-/g, '+')
+                .replace(/_/g, '/');
+
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        function hashString(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return 'sub_' + Math.abs(hash).toString(36);
+        }
+
+        log('✅ Página carregada. Clique no botão para testar!', 'success');
+    </script>
+</body>
+</html>
