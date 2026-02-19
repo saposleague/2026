@@ -230,50 +230,51 @@ async function sendNotificationToAll(title, body) {
     return;
   }
   
-  // Criar payload da notificação
-  const message = {
-    notification: {
-      title: title,
-      body: body
-    },
-    data: {
-      type: 'game-notification',
-      timestamp: Date.now().toString()
-    },
-    tokens: tokens
-  };
+  // Enviar notificação para cada token individualmente
+  let successCount = 0;
+  let failureCount = 0;
+  const tokensToRemove = [];
   
-  // Enviar notificação
-  const response = await admin.messaging().sendEachForMulticast(message);
-  
-  console.log(`✅ Notificações enviadas: ${response.successCount}`);
-  console.log(`❌ Falhas: ${response.failureCount}`);
-  
-  // Remover tokens inválidos
-  if (response.failureCount > 0) {
-    const tokensToRemove = [];
-    
-    response.responses.forEach((resp, idx) => {
-      if (!resp.success) {
-        if (resp.error.code === 'messaging/invalid-registration-token' ||
-            resp.error.code === 'messaging/registration-token-not-registered') {
-          tokensToRemove.push(tokens[idx]);
-        }
-      }
-    });
-    
-    // Remover tokens inválidos do Firestore
-    for (const token of tokensToRemove) {
-      const tokenDoc = await admin.firestore()
-        .collection('fcmTokens')
-        .where('token', '==', token)
-        .get();
-      
-      tokenDoc.forEach(doc => {
-        doc.ref.delete();
-        console.log(`🗑️ Token inválido removido`);
+  for (const token of tokens) {
+    try {
+      await admin.messaging().send({
+        notification: {
+          title: title,
+          body: body
+        },
+        data: {
+          type: 'game-notification',
+          timestamp: Date.now().toString()
+        },
+        token: token
       });
+      successCount++;
+    } catch (error) {
+      failureCount++;
+      console.error(`❌ Erro ao enviar para token: ${error.code}`);
+      
+      // Marcar tokens inválidos para remoção
+      if (error.code === 'messaging/invalid-registration-token' ||
+          error.code === 'messaging/registration-token-not-registered') {
+        tokensToRemove.push(token);
+      }
     }
+  }
+  
+  console.log(`✅ Notificações enviadas: ${successCount}`);
+  console.log(`❌ Falhas: ${failureCount}`);
+  
+  // Remover tokens inválidos do Firestore
+  for (const token of tokensToRemove) {
+    const tokenDoc = await admin.firestore()
+      .collection('fcmTokens')
+      .where('token', '==', token)
+      .get();
+    
+    tokenDoc.forEach(doc => {
+      doc.ref.delete();
+      console.log(`🗑️ Token inválido removido`);
+    });
   }
 }
 
@@ -333,28 +334,37 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
     
     console.log(`📱 Tokens encontrados: ${tokens.length}`);
     
-    // Enviar notificação
-    const message = {
-      notification: {
-        title: title,
-        body: body
-      },
-      data: {
-        type: 'test',
-        timestamp: Date.now().toString()
-      },
-      tokens: tokens
-    };
+    // Enviar notificação para cada token individualmente
+    let successCount = 0;
+    let failureCount = 0;
     
-    const response = await admin.messaging().sendEachForMulticast(message);
+    for (const token of tokens) {
+      try {
+        await admin.messaging().send({
+          notification: {
+            title: title,
+            body: body
+          },
+          data: {
+            type: 'test',
+            timestamp: Date.now().toString()
+          },
+          token: token
+        });
+        successCount++;
+      } catch (error) {
+        failureCount++;
+        console.error(`❌ Erro ao enviar: ${error.code}`);
+      }
+    }
     
-    console.log(`✅ Enviadas: ${response.successCount}`);
-    console.log(`❌ Falhas: ${response.failureCount}`);
+    console.log(`✅ Enviadas: ${successCount}`);
+    console.log(`❌ Falhas: ${failureCount}`);
     
     res.json({
       success: true,
-      sent: response.successCount,
-      failed: response.failureCount,
+      sent: successCount,
+      failed: failureCount,
       total: tokens.length,
       games: games.length,
       date: todayString,
