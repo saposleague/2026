@@ -1,9 +1,17 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const webpush = require('web-push');
 
 admin.initializeApp();
 
-// Versão: 1.1 - Corrigido sendEachForMulticast
+// Versão: 1.3 - Suporte completo para iOS Web Push
+
+// Configurar Web Push VAPID
+webpush.setVapidDetails(
+  'mailto:contato@saposleague.com',
+  'BCGlPwG2538voWXXYiSV-y6P1jIWN60aYHdcNUQcS4rpWe-eJpo5bK4-HJHkcbDRzD-S0jaW-sXeRL8XsGLPBts',
+  '1kH9DbsiSlEcQwBjyoBTGNU0p6zvf6C9MXEtFFEfUAg'
+);
 
 /**
  * Notificações de Segunda a Quarta às 08:00
@@ -101,13 +109,13 @@ exports.notifyTodayGames = functions.pubsub
   });
 
 /**
- * Notificação de TESTE - Quinta às 15:30
+ * Notificação de TESTE - Quinta às 16:40
  */
 exports.notifyTodayGamesTest = functions.pubsub
-  .schedule('30 15 * * 4') // Quinta às 15:30 (TESTE)
+  .schedule('40 16 * * 4') // Quinta às 16:40 (TESTE)
   .timeZone('America/Sao_Paulo')
   .onRun(async (context) => {
-    console.log('🧪 TESTE - Verificando jogos de hoje (quinta-feira - 15:30)...');
+    console.log('🧪 TESTE - Verificando jogos de hoje (quinta-feira - 16:40)...');
     
     try {
       const today = new Date();
@@ -207,12 +215,35 @@ function createGameMessage(games, rodada) {
  * Envia notificação para todos os dispositivos registrados
  */
 async function sendNotificationToAll(title, body) {
-  // Buscar todos os tokens
+  let totalSuccess = 0;
+  let totalFailure = 0;
+
+  // 1. ENVIAR PARA FCM (Android/Chrome)
+  console.log('📱 Enviando para dispositivos FCM (Android/Chrome)...');
+  const fcmResult = await sendToFCM(title, body);
+  totalSuccess += fcmResult.success;
+  totalFailure += fcmResult.failure;
+
+  // 2. ENVIAR PARA WEB PUSH (iOS)
+  console.log('🍎 Enviando para dispositivos iOS...');
+  const iosResult = await sendToWebPush(title, body);
+  totalSuccess += iosResult.success;
+  totalFailure += iosResult.failure;
+
+  console.log(`✅ Total enviadas: ${totalSuccess}`);
+  console.log(`❌ Total falhas: ${totalFailure}`);
+}
+
+/**
+ * Envia notificações via FCM (Android/Chrome)
+ */
+async function sendToFCM(title, body) {
+  // Buscar todos os tokens FCM
   const tokensSnapshot = await admin.firestore().collection('fcmTokens').get();
   
   if (tokensSnapshot.empty) {
     console.log('⚠️ Nenhum token FCM registrado');
-    return;
+    return { success: 0, failure: 0 };
   }
   
   const tokens = [];
@@ -223,11 +254,10 @@ async function sendNotificationToAll(title, body) {
     }
   });
   
-  console.log(`📱 Enviando para ${tokens.length} dispositivo(s)`);
+  console.log(`📱 Enviando para ${tokens.length} dispositivo(s) FCM`);
   
   if (tokens.length === 0) {
-    console.log('⚠️ Nenhum token válido encontrado');
-    return;
+    return { success: 0, failure: 0 };
   }
   
   // Enviar notificação para cada token individualmente
@@ -251,7 +281,7 @@ async function sendNotificationToAll(title, body) {
       successCount++;
     } catch (error) {
       failureCount++;
-      console.error(`❌ Erro ao enviar para token: ${error.code}`);
+      console.error(`❌ Erro ao enviar FCM: ${error.code}`);
       
       // Marcar tokens inválidos para remoção
       if (error.code === 'messaging/invalid-registration-token' ||
@@ -261,8 +291,8 @@ async function sendNotificationToAll(title, body) {
     }
   }
   
-  console.log(`✅ Notificações enviadas: ${successCount}`);
-  console.log(`❌ Falhas: ${failureCount}`);
+  console.log(`✅ FCM enviadas: ${successCount}`);
+  console.log(`❌ FCM falhas: ${failureCount}`);
   
   // Remover tokens inválidos do Firestore
   for (const token of tokensToRemove) {
@@ -273,9 +303,85 @@ async function sendNotificationToAll(title, body) {
     
     tokenDoc.forEach(doc => {
       doc.ref.delete();
-      console.log(`🗑️ Token inválido removido`);
+      console.log(`🗑️ Token FCM inválido removido`);
     });
   }
+
+  return { success: successCount, failure: failureCount };
+}
+
+/**
+ * Envia notificações via Web Push (iOS)
+ */
+async function sendToWebPush(title, body) {
+  // Buscar todas as subscriptions
+  const subscriptionsSnapshot = await admin.firestore().collection('webPushSubscriptions').get();
+  
+  if (subscriptionsSnapshot.empty) {
+    console.log('⚠️ Nenhuma subscription iOS registrada');
+    return { success: 0, failure: 0 };
+  }
+  
+  const subscriptions = [];
+  subscriptionsSnapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.subscription) {
+      subscriptions.push({
+        id: doc.id,
+        subscription: data.subscription
+      });
+    }
+  });
+  
+  console.log(`🍎 Enviando para ${subscriptions.length} dispositivo(s) iOS`);
+  
+  if (subscriptions.length === 0) {
+    return { success: 0, failure: 0 };
+  }
+  
+  // Criar payload da notificação
+  const payload = JSON.stringify({
+    title: title,
+    body: body,
+    icon: '/images/web-app-manifest-192x192.png',
+    badge: '/images/favicon-96x96.png',
+    tag: 'sapos-league',
+    data: {
+      type: 'game-notification',
+      timestamp: Date.now()
+    }
+  });
+  
+  // Enviar para cada subscription
+  let successCount = 0;
+  let failureCount = 0;
+  const subscriptionsToRemove = [];
+  
+  for (const sub of subscriptions) {
+    try {
+      await webpush.sendNotification(sub.subscription, payload);
+      successCount++;
+    } catch (error) {
+      failureCount++;
+      console.error(`❌ Erro ao enviar Web Push: ${error.statusCode}`);
+      
+      // Marcar subscriptions inválidas para remoção (410 = Gone)
+      if (error.statusCode === 410 || error.statusCode === 404) {
+        subscriptionsToRemove.push(sub.id);
+      }
+    }
+  }
+  
+  console.log(`✅ iOS enviadas: ${successCount}`);
+  console.log(`❌ iOS falhas: ${failureCount}`);
+  
+  // Remover subscriptions inválidas
+  for (const subId of subscriptionsToRemove) {
+    await admin.firestore().collection('webPushSubscriptions').doc(subId).delete();
+    console.log(`🗑️ Subscription iOS inválida removida`);
+  }
+
+  return { success: successCount, failure: failureCount };
 }
 
 /**
@@ -312,60 +418,43 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
     console.log(`📢 Título: ${title}`);
     console.log(`📝 Mensagem: ${body}`);
     
-    // Buscar tokens
-    const tokensSnapshot = await admin.firestore().collection('fcmTokens').get();
+    // Contar dispositivos registrados
+    const fcmTokensSnapshot = await admin.firestore().collection('fcmTokens').get();
+    const iosSubsSnapshot = await admin.firestore().collection('webPushSubscriptions').get();
     
-    if (tokensSnapshot.empty) {
+    const fcmCount = fcmTokensSnapshot.size;
+    const iosCount = iosSubsSnapshot.size;
+    
+    console.log(`📱 Dispositivos FCM: ${fcmCount}`);
+    console.log(`🍎 Dispositivos iOS: ${iosCount}`);
+    
+    if (fcmCount === 0 && iosCount === 0) {
       res.json({
         success: false,
-        message: 'Nenhum token FCM registrado',
+        message: 'Nenhum dispositivo registrado',
         games: games.length
       });
       return;
     }
     
-    const tokens = [];
-    tokensSnapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.token) {
-        tokens.push(data.token);
-      }
-    });
+    // Enviar para FCM
+    const fcmResult = await sendToFCM(title, body);
     
-    console.log(`📱 Tokens encontrados: ${tokens.length}`);
+    // Enviar para iOS
+    const iosResult = await sendToWebPush(title, body);
     
-    // Enviar notificação para cada token individualmente
-    let successCount = 0;
-    let failureCount = 0;
+    const totalSent = fcmResult.success + iosResult.success;
+    const totalFailed = fcmResult.failure + iosResult.failure;
     
-    for (const token of tokens) {
-      try {
-        await admin.messaging().send({
-          notification: {
-            title: title,
-            body: body
-          },
-          data: {
-            type: 'test',
-            timestamp: Date.now().toString()
-          },
-          token: token
-        });
-        successCount++;
-      } catch (error) {
-        failureCount++;
-        console.error(`❌ Erro ao enviar: ${error.code}`);
-      }
-    }
-    
-    console.log(`✅ Enviadas: ${successCount}`);
-    console.log(`❌ Falhas: ${failureCount}`);
+    console.log(`✅ Total enviadas: ${totalSent}`);
+    console.log(`❌ Total falhas: ${totalFailed}`);
     
     res.json({
       success: true,
-      sent: successCount,
-      failed: failureCount,
-      total: tokens.length,
+      sent: totalSent,
+      failed: totalFailed,
+      fcm: { sent: fcmResult.success, failed: fcmResult.failure, total: fcmCount },
+      ios: { sent: iosResult.success, failed: iosResult.failure, total: iosCount },
       games: games.length,
       date: todayString,
       title: title,
