@@ -3,6 +3,8 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
+// Versão: 1.1 - Corrigido sendEachForMulticast
+
 /**
  * Notificações de Segunda a Quarta às 08:00
  * Avisa sobre jogos de quinta-feira
