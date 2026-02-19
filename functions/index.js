@@ -242,7 +242,7 @@ async function sendNotificationToAll(title, body) {
   };
   
   // Enviar notificação
-  const response = await admin.messaging().sendMulticast(message);
+  const response = await admin.messaging().sendEachForMulticast(message);
   
   console.log(`✅ Notificações enviadas: ${response.successCount}`);
   console.log(`❌ Falhas: ${response.failureCount}`);
@@ -344,7 +344,7 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
       tokens: tokens
     };
     
-    const response = await admin.messaging().sendMulticast(message);
+    const response = await admin.messaging().sendEachForMulticast(message);
     
     console.log(`✅ Enviadas: ${response.successCount}`);
     console.log(`❌ Falhas: ${response.failureCount}`);
