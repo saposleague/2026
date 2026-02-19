@@ -280,10 +280,44 @@ async function sendNotificationToAll(title, body) {
  */
 exports.testNotification = functions.https.onRequest(async (req, res) => {
   try {
+    console.log('🧪 Teste manual de notificação iniciado...');
+    
+    // Buscar jogos de hoje
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
+    
+    console.log(`📅 Buscando jogos para: ${todayString}`);
+    
+    const games = await getGamesForDate(todayString);
+    
+    console.log(`⚽ Jogos encontrados: ${games.length}`);
+    
+    if (games.length === 0) {
+      res.json({
+        success: false,
+        message: 'Nenhum jogo encontrado para hoje',
+        date: todayString
+      });
+      return;
+    }
+    
+    // Criar mensagem
+    const title = games.length === 1 ? 'Jogo Hoje' : 'Jogos Hoje';
+    const rodada = games[0].rodada;
+    const body = createGameMessage(games, rodada);
+    
+    console.log(`📢 Título: ${title}`);
+    console.log(`📝 Mensagem: ${body}`);
+    
+    // Buscar tokens
     const tokensSnapshot = await admin.firestore().collection('fcmTokens').get();
     
     if (tokensSnapshot.empty) {
-      res.status(404).send('Nenhum token FCM registrado');
+      res.json({
+        success: false,
+        message: 'Nenhum token FCM registrado',
+        games: games.length
+      });
       return;
     }
     
@@ -295,10 +329,13 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
       }
     });
     
+    console.log(`📱 Tokens encontrados: ${tokens.length}`);
+    
+    // Enviar notificação
     const message = {
       notification: {
-        title: 'Teste de Notificação',
-        body: 'Se você viu isso, as notificações push estão funcionando!'
+        title: title,
+        body: body
       },
       data: {
         type: 'test',
@@ -309,15 +346,25 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
     
     const response = await admin.messaging().sendMulticast(message);
     
+    console.log(`✅ Enviadas: ${response.successCount}`);
+    console.log(`❌ Falhas: ${response.failureCount}`);
+    
     res.json({
       success: true,
       sent: response.successCount,
       failed: response.failureCount,
-      total: tokens.length
+      total: tokens.length,
+      games: games.length,
+      date: todayString,
+      title: title,
+      body: body
     });
     
   } catch (error) {
-    console.error('Erro ao enviar notificação de teste:', error);
-    res.status(500).json({ error: error.message });
+    console.error('❌ Erro ao enviar notificação de teste:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
   }
 });
