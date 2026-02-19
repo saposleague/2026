@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Regras para times - leitura pública, escrita apenas autenticada
+    match /times/{timeId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Regras para rodadas - leitura pública, escrita apenas autenticada
+    match /rodadas2026_fase1/{rodadaId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /rodadas2026_fase2/{rodadaId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /rodadas2026_final/{rodadaId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Regras para configurações - leitura pública, escrita apenas autenticada
+    match /configuracoes/{configId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Regras para tokens FCM - qualquer um pode criar/atualizar seu próprio token
+    match /fcmTokens/{tokenId} {
+      allow read: if false; // Ninguém precisa ler tokens
+      allow create, update: if true; // Qualquer um pode registrar seu token
+      allow delete: if false; // Apenas cloud functions podem deletar
+    }
+  }
+}

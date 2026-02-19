@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAPOS LEAGUE</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Sistema de gerenciamento do campeonato Sapos League 2026 com notificações em tempo real e suporte offline">
+  <meta name="theme-color" content="#2e7d32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sapos League">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Sapos League">
+  <meta name="msapplication-TileColor" content="#2e7d32">
+  <meta name="msapplication-config" content="./browserconfig.xml">
+  
+  <!-- iOS Specific Meta Tags -->
+  <meta name="apple-touch-fullscreen" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="apple-mobile-web-app-orientation" content="portrait">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://saposleague.com/">
+  <meta property="og:title" content="Sapos League 2026">
+  <meta property="og:description" content="Sistema completo de gerenciamento do campeonato com notificações em tempo real">
+  <meta property="og:image" content="./images/web-app-manifest-512x512.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://saposleague.com/">
+  <meta property="twitter:title" content="Sapos League 2026">
+  <meta property="twitter:description" content="Sistema completo de gerenciamento do campeonato com notificações em tempo real">
+  <meta property="twitter:image" content="./images/web-app-manifest-512x512.png">
+  
+  <!-- Favicon otimizado - Tamanhos maiores para melhor qualidade -->
+  <link rel="icon" href="./images/web-app-manifest-512x512.png?v=5" type="image/png" sizes="512x512" />
+  <link rel="icon" href="./images/web-app-manifest-192x192.png?v=5" type="image/png" sizes="192x192" />
+  <link rel="icon" href="./images/favicon-96x96.png?v=5" type="image/png" sizes="96x96" />
+  <link rel="shortcut icon" href="./images/web-app-manifest-512x512.png?v=5" />
+  
+  <!-- Apple Touch Icons - Multiple sizes for better iOS support -->
+  <link rel="apple-touch-icon" href="./images/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="57x57" href="./images/favicon-48x48.png" />
+  <link rel="apple-touch-icon" sizes="60x60" href="./images/favicon-48x48.png" />
+  <link rel="apple-touch-icon" sizes="72x72" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="76x76" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="114x114" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="120x120" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="144x144" href="./images/web-app-manifest-192x192.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="./images/web-app-manifest-192x192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png" />
+  
+  <!-- Splash screens iOS removidos - usando splash customizado apenas -->
+  
+  <!-- Manifest -->
+  <link rel="manifest" href="./site.webmanifest">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/dark-mode-colors.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/index.css">
+  
+  <style>
+    /* Navegação de fases (abaixo do header) */
+    .fase-navigation {
+      width: 100%;
+      background: var(--container-bg);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      box-sizing: border-box;
+      border-bottom: 1px solid var(--border-soft);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    
+    .titulo-fase {
+      color: var(--text-dark);
+      font-size: 1.5em;
+      font-weight: bold;
+      margin: 0;
+      text-align: center;
+      flex-shrink: 0;
+      letter-spacing: 1px;
+      transition: color 0.3s ease;
+    }
+    
+    .seta-fase {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .seta-fase:hover {
+      background: #1b5e20;
+      transform: scale(1.1);
+    }
+    
+    .seta-fase:active {
+      transform: scale(0.95);
+    }
+    
+    .seta-fase:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    
+    /* Layout para a final - centralizado e destacado */
+    .container.final-layout {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 60vh;
+    }
+    
+    .final-wrapper {
+      max-width: 800px;
+      width: 100%;
+    }
+    
+    .jogo-final, .jogo-final-preview {
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      border-radius: 16px;
+      padding: 2rem;
+      margin: 2rem auto;
+      box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
+      max-width: 700px;
+    }
+    
+    .jogo-final-preview {
+      background: var(--container-bg);
+      box-shadow: 0 8px 24px var(--shadow-medium);
+      transition: background-color 0.3s ease;
+    }
+    
+    .final-badge {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #b8860b;
+      margin-bottom: 1.5rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      letter-spacing: 2px;
+    }
+    
+    .jogo-final-preview .final-badge {
+      color: var(--text-medium);
+      transition: color 0.3s ease;
+    }
+    
+    .final-aguardando {
+      text-align: center;
+      font-size: 1rem;
+      color: var(--text-medium);
+      margin-bottom: 1.5rem;
+      font-style: italic;
+      transition: color 0.3s ease;
+    }
+    
+    .campeao-badge {
+      font-size: 0.85rem;
+      color: #b8860b;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .jogo-final-preview .campeao-badge {
+      color: var(--text-medium);
+      transition: color 0.3s ease;
+    }
+    
+    .jogo-final .jogo-cabecalho {
+      background: rgba(184, 134, 11, 0.2);
+      color: #b8860b;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+    }
+    
+    .jogo-final .placar {
+      font-size: 2.5rem;
+      color: #b8860b;
+      font-weight: bold;
+    }
+    
+    .placar-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .vs-text {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--text-medium);
+      transition: color 0.3s ease;
+    }
+    
+    .jogo-final .time, .jogo-final-preview .time {
+      gap: 8px;
+    }
+    
+    .jogo-final .icone-time {
+      width: 80px;
+      height: 80px;
+      border: 3px solid #b8860b;
+    }
+    
+    .jogo-final-preview .icone-time {
+      width: 80px;
+      height: 80px;
+      border: 3px solid var(--text-medium);
+      transition: border-color 0.3s ease;
+    }
+    
+    .jogo-final .nome-time {
+      font-size: 1.2rem;
+      color: #b8860b;
+      font-weight: bold;
+    }
+    
+    .jogo-final-preview .nome-time {
+      font-size: 1.2rem;
+      color: var(--text-dark);
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+    
+    /* Placeholder para times não definidos */
+    .placeholder-time {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .placeholder-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--table-row-even);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: var(--text-medium);
+      border: 3px solid var(--border-soft);
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+    
+    .nome-time-placeholder {
+      font-size: 1rem;
+      color: var(--text-medium);
+      font-weight: 500;
+      text-align: center;
+      transition: color 0.3s ease;
+    }
+    
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      .fase-navigation {
+        padding: 15px;
+        gap: 10px;
+      }
+      
+      .titulo-fase {
+        font-size: 1.2em;
+      }
+      
+      .seta-fase {
+        width: 35px;
+        height: 35px;
+        font-size: 1.2rem;
+      }
+      
+      .jogo-final, .jogo-final-preview {
+        padding: 1.5rem;
+        margin: 1rem;
+      }
+      
+      .final-badge {
+        font-size: 1.5rem;
+      }
+      
+      .jogo-final .icone-time, .jogo-final-preview .icone-time {
+        width: 60px;
+        height: 60px;
+      }
+      
+      .placeholder-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+      }
+      
+      .jogo-final .nome-time, .jogo-final-preview .nome-time {
+        font-size: 1rem;
+      }
+      
+      .nome-time-placeholder {
+        font-size: 0.9rem;
+      }
+      
+      .jogo-final .placar {
+        font-size: 2rem;
+      }
+      
+      .vs-text {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Splash Screen PWA Customizado (inicialmente oculto) -->
+  <div id="pwa-splash-screen" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #667eea;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  ">
+    <!-- Logo centralizado (ícone real do Sapos League) -->
+    <img src="./images/web-app-manifest-512x512.png" style="
+      width: min(35vw, 35vh);
+      height: min(35vw, 35vh);
+      max-width: 200px;
+      max-height: 200px;
+      min-width: 120px;
+      min-height: 120px;
+      border-radius: 20%;
+      margin-bottom: auto;
+      margin-top: auto;
+      object-fit: contain;
+    " alt="Sapos League" />
+    
+    <!-- Texto na parte inferior (mesma posição do iOS) -->
+    <div style="
+      position: absolute;
+      bottom: 12vh;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.9);
+      font-size: min(4.5vw, 4.5vh);
+      font-weight: 300;
+      text-align: center;
+      white-space: nowrap;
+    ">Sapos League 2026</div>
+  </div>
+
+  <style>
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .pwa-splash-fade-out {
+      opacity: 0 !important;
+      transform: scale(1.1) !important;
+    }
+    
+    .main-content-hidden {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    .main-content-visible {
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+    
+    /* Garantir que o splash seja responsivo */
+    #pwa-splash-screen {
+      font-size: clamp(14px, 4vw, 24px);
+    }
+    
+    /* Ajustes para telas muito pequenas */
+    @media (max-height: 500px) {
+      #pwa-splash-screen div[style*="bottom: 12vh"] {
+        bottom: 8vh !important;
+        font-size: clamp(16px, 3.5vw, 20px) !important;
+      }
+    }
+    
+    /* Ajustes para telas muito grandes */
+    @media (min-height: 900px) {
+      #pwa-splash-screen div[style*="bottom: 12vh"] {
+        bottom: 15vh !important;
+      }
+    }
+  </style>
+
+  <!-- Conteúdo Principal (inicialmente oculto) -->
+  <div id="main-app-content" class="main-content-hidden">
+  
+  <!-- Botão de modo noturno -->
+  <button id="toggle-dark-mode" aria-label="Alternar modo noturno" class="dark-toggle-button">
+</button>
+  
+  <!-- Header fixo -->
+  <header>SAPOS LEAGUE</header>
+  
+  <!-- Navegação de Fases (abaixo do header) -->
+  <div class="fase-navigation">
+    <button id="btn-fase-anterior" class="seta-fase" onclick="window.faseAnterior()">←</button>
+    <h2 id="titulo-fase" class="titulo-fase">PRIMEIRA FASE</h2>
+    <button id="btn-fase-proxima" class="seta-fase" onclick="window.proximaFase()">→</button>
+  </div>
+
+  <div class="container">
+    <div class="tabela">
+      <h2>Sapos League 2026</h2>
+      <table id="tabela">
+        <thead>
+          <tr>
+            <th>#</th><th>Time</th><th>PTS</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>%</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="jogos">
+      <div class="rodada-header">
+        <button class="seta" onclick="window.anteriorRodada()">←</button>
+        <h3 id="rodada-titulo">Rodada</h3>
+        <button class="seta" onclick="window.proximaRodada()">→</button>
+      </div>
+      <div id="lista-jogos"></div>
+    </div>
+  </div>
+
+  <div class="botao-peladas-container">
+    <button class="botao-peladas" onclick="window.location.href='pelada/'">
+      Ver Peladas
+    </button>
+  </div>
+  
+  <!-- Botão de Debug de Notificações -->
+  <div style="position: fixed; bottom: 80px; right: 20px; z-index: 1000;">
+    <button id="toggle-logs" style="
+      background: #9c27b0;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    ">📋 Mostrar Logs</button>
+    
+    <button id="test-notification" style="
+      background: #ff9800;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 10px;
+      display: block;
+      transition: all 0.3s ease;
+    ">🔔 Testar Notificação</button>
+  </div>
+  
+  <!-- Container de Logs -->
+  <div id="debug-logs" style="
+    position: fixed;
+    bottom: 180px;
+    right: 20px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 400px;
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+    border-radius: 12px;
+    padding: 15px;
+    display: none;
+    z-index: 999;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+  ">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px;">
+      <strong style="color: #9c27b0;">🔍 Debug Logs</strong>
+      <button onclick="document.getElementById('log-content').innerHTML = ''" style="
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 11px;
+      ">Limpar</button>
+    </div>
+    <div id="log-content" style="
+      max-height: 320px;
+      overflow-y: auto;
+      line-height: 1.4;
+    "></div>
+  </div>
+  
+  </div> <!-- Fim do main-app-content -->
+
+  <script>
+    // Splash Screen PWA Customizado - Para iOS e Android
+    const isStandalone = window.navigator.standalone || 
+                        window.matchMedia('(display-mode: standalone)').matches;
+    
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    const splash = document.getElementById('pwa-splash-screen');
+    const mainContent = document.getElementById('main-app-content');
+    
+    if (isStandalone && (isIOS || isAndroid)) {
+      // PWA instalado - Mostrar splash customizado por 2 segundos
+      splash.style.display = 'flex';
+      
+      function hidePWASplash() {
+        splash.classList.add('pwa-splash-fade-out');
+        
+        setTimeout(() => {
+          splash.style.display = 'none';
+          mainContent.classList.remove('main-content-hidden');
+          mainContent.classList.add('main-content-visible');
+        }, 500);
+      }
+      
+      setTimeout(() => {
+        hidePWASplash();
+      }, 2000);
+      
+    } else {
+      // Navegador normal - Mostrar conteúdo diretamente
+      splash.style.display = 'none';
+      mainContent.classList.remove('main-content-hidden');
+      mainContent.classList.add('main-content-visible');
+    }
+  </script>
+
+  <script src="js/dynamic-favicon.js"></script>
+  <script src="js/dark-mode-logic.js"></script>
+  <script type="module" src="js/index.js"></script>
+  <script type="module" src="js/fcm-notifications.js"></script>
+  <script type="module" src="js/pwa-complete.js"></script>
+  <script src="js/pwa-install.js"></script>
+  
+  <!-- Script de teste de notificações -->
+  <script type="module">
+    // Aguardar carregamento do PWA Complete
+    setTimeout(() => {
+      const testButton = document.getElementById('test-notification');
+      
+      if (testButton) {
+        testButton.addEventListener('click', () => {
+          if (window.pwaComplete) {
+            window.pwaComplete.log('🧪 TESTE MANUAL: Verificando jogos de hoje...');
+            
+            // Forçar verificação de jogos
+            const todayGames = window.pwaComplete.getTodayGames();
+            
+            if (todayGames.length > 0) {
+              window.pwaComplete.log(`✅ ${todayGames.length} jogo(s) encontrado(s)!`);
+              window.pwaComplete.sendDailyGameNotification();
+            } else {
+              window.pwaComplete.log('❌ Nenhum jogo encontrado para hoje');
+              
+              // Enviar notificação de teste mesmo assim
+              window.pwaComplete.sendNotification(
+                '🧪 Teste de Notificação',
+                'Se você viu isso, as notificações estão funcionando!',
+                window.pwaComplete.getOptimalIcon()
+              );
+            }
+          } else {
+            alert('PWA Complete ainda não foi carregado. Aguarde alguns segundos.');
+          }
+        });
+      }
+    }, 2000);
+  </script>
+</body>
+</html>
+
+
+

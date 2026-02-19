@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Presenças</title>
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" href="/favicon-48x48.png" sizes="48x48" />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    
+    <!-- Favicon Display CSS -->
+    <link rel="stylesheet" href="css/favicon-display.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Bibliotecas para exportação -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        #app { min-height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        // Configuração inicial
+        const CONFIG = {
+            supabaseUrl: 'https://yaapgjkvkhsfsskkbmso.supabase.co',
+            supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhYXBnamt2a2hzZnNza2tibXNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwOTQ3MjUsImV4cCI6MjA3MDY3MDcyNX0.RiPWRX__AjuioaLVU5gkJFuOpVdBYwCN0HuD2gd0laM'
+        };
+
+        let state = {
+            conectado: false,
+            dados: [],
+            loading: false,
+            erro: ''
+        };
+
+        // Cores para os gráficos
+        const CORES = [
+            '#0088FE', '#00C49F', '#FFBB28', '#FF8042', 
+            '#8884d8', '#82ca9d', '#ffc658', '#ff7c7c'
+        ];
+
+        // Função para exportar para PDF
+        function exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Título
+            doc.setFontSize(18);
+            doc.text('Relatório de Presenças', 14, 20);
+            
+            // Data do relatório
+            doc.setFontSize(10);
+            doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, 14, 28);
+
+            // Estatísticas
+            const totalPresencas = state.dados.reduce((sum, d) => sum + d.total_presencas, 0);
+            const mediaPresencas = state.dados.length > 0 ? (totalPresencas / state.dados.length).toFixed(1) : 0;
+            
+            doc.setFontSize(12);
+            doc.text(`Total de Jogadores: ${state.dados.length}`, 14, 38);
+            doc.text(`Total de Presenças: ${totalPresencas}`, 14, 45);
+            doc.text(`Média por Jogador: ${mediaPresencas}`, 14, 52);
+
+            // Tabela
+            const tableData = state.dados.map((jogador, idx) => [
+                idx + 1,
+                jogador.nome,
+                jogador.total_presencas,
+                jogador.primeira_presenca,
+                jogador.ultima_presenca
+            ]);
+
+            doc.autoTable({
+                startY: 60,
+                head: [['#', 'Jogador', 'Presenças', 'Primeira', 'Última']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [59, 130, 246] },
+                styles: { fontSize: 9 }
+            });
+
+            // Salvar
+            doc.save(`relatorio-presencas-${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        // Função para exportar para Excel
+        function exportarExcel() {
+            const totalPresencas = state.dados.reduce((sum, d) => sum + d.total_presencas, 0);
+            const mediaPresencas = state.dados.length > 0 ? (totalPresencas / state.dados.length).toFixed(1) : 0;
+
+            // Dados do resumo
+            const resumo = [
+                ['RELATÓRIO DE PRESENÇAS'],
+                [],
+                ['Gerado em:', new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR')],
+                [],
+                ['ESTATÍSTICAS'],
+                ['Total de Jogadores:', state.dados.length],
+                ['Total de Presenças:', totalPresencas],
+                ['Média por Jogador:', mediaPresencas],
+                [],
+                ['RANKING DE JOGADORES'],
+                ['#', 'Jogador', 'Presenças', 'Primeira Presença', 'Última Presença']
+            ];
+
+            // Dados dos jogadores
+            const jogadoresData = state.dados.map((jogador, idx) => [
+                idx + 1,
+                jogador.nome,
+                jogador.total_presencas,
+                jogador.primeira_presenca,
+                jogador.ultima_presenca
+            ]);
+
+            // Combinar tudo
+            const wsData = [...resumo, ...jogadoresData];
+
+            // Criar workbook e worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // Ajustar largura das colunas
+            ws['!cols'] = [
+                { wch: 5 },
+                { wch: 25 },
+                { wch: 12 },
+                { wch: 18 },
+                { wch: 18 }
+            ];
+
+            // Adicionar worksheet ao workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Presenças');
+
+            // Salvar arquivo
+            XLSX.writeFile(wb, `relatorio-presencas-${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        // Cores para os gráficos
+
+        // Função para buscar dados do Supabase
+        async function buscarDados() {
+            state.loading = true;
+            state.erro = '';
+            render();
+
+            try {
+                let urlNormalizada = CONFIG.supabaseUrl.trim();
+                if (!urlNormalizada.startsWith('http://') && !urlNormalizada.startsWith('https://')) {
+                    urlNormalizada = 'https://' + urlNormalizada;
+                }
+
+                console.log('Buscando dados de:', urlNormalizada);
+
+                // Buscar jogadores
+                const jogadoresRes = await fetch(`${urlNormalizada}/rest/v1/jogadores?select=*`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': CONFIG.supabaseKey,
+                        'Authorization': `Bearer ${CONFIG.supabaseKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!jogadoresRes.ok) {
+                    throw new Error(`Erro ao buscar jogadores: ${jogadoresRes.status}`);
+                }
+
+                const jogadores = await jogadoresRes.json();
+                console.log('Jogadores:', jogadores);
+
+                // Buscar presenças
+                const presencasRes = await fetch(`${urlNormalizada}/rest/v1/presencas?select=*`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': CONFIG.supabaseKey,
+                        'Authorization': `Bearer ${CONFIG.supabaseKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!presencasRes.ok) {
+                    throw new Error(`Erro ao buscar presenças: ${presencasRes.status}`);
+                }
+
+                const presencas = await presencasRes.json();
+                console.log('Presenças:', presencas);
+
+                // Processar dados
+                const relatorio = jogadores.map(j => {
+                    const presencasJogador = presencas.filter(p => p.jogador_id === j.id);
+                    const datas = presencasJogador
+                        .map(p => p.data_pelada ? new Date(p.data_pelada) : null)
+                        .filter(d => d !== null);
+                    
+                    return {
+                        id: j.id,
+                        nome: j.nome || 'Sem nome',
+                        total_presencas: presencasJogador.length,
+                        primeira_presenca: datas.length > 0 
+                            ? new Date(Math.min(...datas)).toLocaleDateString('pt-BR') 
+                            : '-',
+                        ultima_presenca: datas.length > 0 
+                            ? new Date(Math.max(...datas)).toLocaleDateString('pt-BR') 
+                            : '-'
+                    };
+                });
+
+                relatorio.sort((a, b) => b.total_presencas - a.total_presencas);
+                state.dados = relatorio;
+                state.conectado = true;
+                state.loading = false;
+
+                render();
+                criarGraficos();
+
+            } catch (err) {
+                console.error('Erro:', err);
+                state.erro = err.message;
+                state.loading = false;
+                render();
+            }
+        }
+
+        // Criar gráficos com Chart.js
+        function criarGraficos() {
+            if (state.dados.length === 0) return;
+
+            setTimeout(() => {
+                // Gráfico de barras
+                const ctxBar = document.getElementById('chartBar');
+                if (ctxBar) {
+                    const top10 = state.dados.slice(0, 10);
+                    new Chart(ctxBar, {
+                        type: 'bar',
+                        data: {
+                            labels: top10.map(d => d.nome),
+                            datasets: [{
+                                label: 'Presenças',
+                                data: top10.map(d => d.total_presencas),
+                                backgroundColor: '#3b82f6',
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: '#1e293b',
+                                    titleColor: '#e2e8f0',
+                                    bodyColor: '#e2e8f0'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { color: '#9CA3AF' },
+                                    grid: { color: '#374151' }
+                                },
+                                x: {
+                                    ticks: { color: '#9CA3AF' },
+                                    grid: { display: false }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Gráfico de pizza
+                const ctxPie = document.getElementById('chartPie');
+                if (ctxPie) {
+                    const top8 = state.dados.slice(0, 8);
+                    new Chart(ctxPie, {
+                        type: 'doughnut',
+                        data: {
+                            labels: top8.map(d => d.nome),
+                            datasets: [{
+                                data: top8.map(d => d.total_presencas),
+                                backgroundColor: CORES,
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { color: '#e2e8f0', padding: 15 }
+                                },
+                                tooltip: {
+                                    backgroundColor: '#1e293b',
+                                    titleColor: '#e2e8f0',
+                                    bodyColor: '#e2e8f0'
+                                }
+                            }
+                        }
+                    });
+                }
+            }, 100);
+        }
+
+        // Função de renderização
+        function render() {
+            const app = document.getElementById('app');
+
+            if (!state.conectado) {
+                app.innerHTML = `
+                    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+                        <div class="max-w-2xl mx-auto">
+                            <div class="bg-slate-800 rounded-2xl shadow-2xl p-8 border border-slate-700">
+                                <div class="text-center mb-8">
+                                    <h1 class="text-4xl font-bold text-white mb-2">⚽ Relatório de Presenças</h1>
+                                    <p class="text-slate-400">Sistema de controle de jogadores</p>
+                                </div>
+
+                                ${state.erro ? `
+                                    <div class="bg-red-900/50 border border-red-700 rounded-lg p-4 mb-6">
+                                        <p class="text-red-200 text-sm font-medium mb-2">❌ Erro na conexão:</p>
+                                        <p class="text-red-300 text-xs">${state.erro}</p>
+                                    </div>
+                                ` : ''}
+
+                                <button
+                                    onclick="buscarDados()"
+                                    ${state.loading ? 'disabled' : ''}
+                                    class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-slate-600 disabled:to-slate-700 text-white font-semibold py-4 px-6 rounded-lg transition-all disabled:cursor-not-allowed shadow-lg text-lg"
+                                    style="background: linear-gradient(to right, #2563eb, #1d4ed8); color: white; font-weight: 600; padding: 1rem 1.5rem; border-radius: 0.5rem; border: none; cursor: pointer; font-size: 1.125rem;"
+                                >
+                                    ${state.loading ? '🔄 Carregando...' : '🚀 Carregar Relatório'}
+                                </button>
+
+                                <div class="mt-6 p-4 bg-slate-700/50 rounded-lg" style="margin-top: 1.5rem; padding: 1rem; background: rgba(51, 65, 85, 0.5); border-radius: 0.5rem;">
+                                    <p class="text-xs text-slate-400 text-center" style="font-size: 0.75rem; color: #94a3b8; text-align: center;">
+                                        Clique no botão acima para visualizar o relatório de presenças
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const totalPresencas = state.dados.reduce((sum, d) => sum + d.total_presencas, 0);
+            const mediaPresencas = state.dados.length > 0 
+                ? (totalPresencas / state.dados.length).toFixed(1) 
+                : 0;
+
+            app.innerHTML = `
+                <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+                    <div class="max-w-7xl mx-auto">
+                        <!-- Header -->
+                        <div class="flex justify-between items-center mb-8" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                            <div>
+                                <h1 class="text-4xl font-bold text-white mb-2" style="font-size: 2.25rem; font-weight: bold; color: white; margin-bottom: 0.5rem;">⚽ Relatório de Presenças</h1>
+                                <p class="text-slate-400" style="color: #94a3b8;">Acompanhe a participação de cada jogador</p>
+                            </div>
+                            <div class="flex gap-3" style="display: flex; gap: 0.75rem;">
+                                <button
+                                    onclick="exportarPDF()"
+                                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
+                                    style="padding: 0.5rem 1rem; background: #dc2626; color: white; border-radius: 0.5rem; border: none; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;"
+                                    onmouseover="this.style.background='#b91c1c'"
+                                    onmouseout="this.style.background='#dc2626'"
+                                >
+                                    📄 Exportar PDF
+                                </button>
+                                <button
+                                    onclick="exportarExcel()"
+                                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
+                                    style="padding: 0.5rem 1rem; background: #16a34a; color: white; border-radius: 0.5rem; border: none; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;"
+                                    onmouseover="this.style.background='#15803d'"
+                                    onmouseout="this.style.background='#16a34a'"
+                                >
+                                    📊 Exportar Excel
+                                </button>
+                                <button
+                                    onclick="location.reload()"
+                                    class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                                    style="padding: 0.5rem 1rem; background: #334155; color: white; border-radius: 0.5rem; border: none; cursor: pointer;"
+                                    onmouseover="this.style.background='#475569'"
+                                    onmouseout="this.style.background='#334155'"
+                                >
+                                    🔄 Atualizar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cards de Estatísticas -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 shadow-lg">
+                                <div class="text-blue-100 text-sm font-medium mb-1">Total de Jogadores</div>
+                                <div class="text-4xl font-bold text-white">${state.dados.length}</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-6 shadow-lg">
+                                <div class="text-green-100 text-sm font-medium mb-1">Total de Presenças</div>
+                                <div class="text-4xl font-bold text-white">${totalPresencas}</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-6 shadow-lg">
+                                <div class="text-purple-100 text-sm font-medium mb-1">Média por Jogador</div>
+                                <div class="text-4xl font-bold text-white">${mediaPresencas}</div>
+                            </div>
+                        </div>
+
+                        <!-- Gráficos -->
+                        ${state.dados.length > 0 ? `
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
+                                    <h2 class="text-xl font-bold text-white mb-4">📊 Top 10 Jogadores</h2>
+                                    <div style="height: 300px;">
+                                        <canvas id="chartBar"></canvas>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
+                                    <h2 class="text-xl font-bold text-white mb-4">🥧 Distribuição Top 8</h2>
+                                    <div style="height: 300px;">
+                                        <canvas id="chartPie"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Tabela -->
+                        <div class="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="bg-slate-700">
+                                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-200">#</th>
+                                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-200">Jogador</th>
+                                            <th class="px-6 py-4 text-center text-sm font-semibold text-slate-200">Presenças</th>
+                                            <th class="px-6 py-4 text-center text-sm font-semibold text-slate-200">Primeira</th>
+                                            <th class="px-6 py-4 text-center text-sm font-semibold text-slate-200">Última</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-700">
+                                        ${state.dados.map((jogador, idx) => `
+                                            <tr class="hover:bg-slate-700/50 transition-colors">
+                                                <td class="px-6 py-4 text-slate-400 font-medium">${idx + 1}</td>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex items-center">
+                                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold mr-3">
+                                                            ${jogador.nome.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <span class="text-white font-medium">${jogador.nome}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 text-center">
+                                                    <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 text-white font-bold text-lg">
+                                                        ${jogador.total_presencas}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 text-center text-slate-300">${jogador.primeira_presenca}</td>
+                                                <td class="px-6 py-4 text-center text-slate-300">${jogador.ultima_presenca}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        ${state.dados.length === 0 ? `
+                            <div class="bg-slate-800 rounded-2xl p-12 text-center border border-slate-700">
+                                <p class="text-slate-400 text-lg">✅ Conectado! Mas não há dados para exibir.</p>
+                                <p class="text-slate-500 text-sm mt-2">Adicione jogadores e presenças no seu banco de dados.</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Renderização inicial
+        render();
+    </script>
+    <script src="js/dynamic-favicon.js"></script>
+</body>
+</html>

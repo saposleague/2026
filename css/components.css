@@ -1,0 +1,140 @@
+/* css/components.css - VERSÃO CORRIGIDA */
+
+/* Estilo do botão de alternância de modo claro/escuro */
+.dark-toggle-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--container-bg);
+  border: 2px solid var(--border-soft);
+  color: var(--mode-toggle-icon);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px var(--shadow-subtle);
+  z-index: 1000;
+}
+
+.dark-toggle-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px var(--shadow-medium);
+}
+
+.dark-toggle-button svg {
+  width: 26px;
+  height: 26px;
+  transition: all 0.3s ease;
+}
+
+/* Responsividade para mobile - TAMANHO MÁXIMO */
+@media (max-width: 768px) {
+  .dark-toggle-button {
+    top: 15px;
+    right: 15px;
+    width: 43px; 
+    height: 43px; 
+    font-size: 0; /* Definido para 0 para não interferir com o SVG */
+    border-width: 2px;
+  }
+  
+  .dark-toggle-button svg {
+    width: 24px !important; 
+    height: 24px !important; 
+    display: block !important;
+  }
+  
+  .dark-toggle-button:hover {
+    transform: scale(1.02);
+  }
+}
+
+@media (max-width: 480px) {
+  .dark-toggle-button {
+    top: 12px;
+    right: 12px;
+    width: 43px; 
+    height: 43px; 
+    font-size: 0; /* Definido para 0 para não interferir com o SVG */
+  }
+  
+  .dark-toggle-button svg {
+    width: 24px !important; 
+    height: 24px !important; 
+    display: block !important;
+  }
+}
+
+/* Botão de voltar para página inicial */
+.back-to-home-button {
+  position: fixed;
+  top: 140px;
+  left: 20px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #1e7d32 100%);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(46, 125, 50, 0.4);
+  z-index: 999;
+}
+
+.back-to-home-button svg {
+  width: 28px;
+  height: 28px;
+  transition: transform 0.3s ease;
+}
+
+.back-to-home-button:hover {
+  transform: translateX(-8px) scale(1.08);
+  box-shadow: 0 8px 24px rgba(46, 125, 50, 0.6);
+  background: linear-gradient(135deg, #1e7d32 0%, var(--primary-color) 100%);
+}
+
+.back-to-home-button:hover svg {
+  transform: translateX(-3px);
+}
+
+.back-to-home-button:active {
+  transform: translateX(-5px) scale(1.05);
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+  .back-to-home-button {
+    top: 120px;
+    left: 15px;
+    width: 52px;
+    height: 52px;
+  }
+  
+  .back-to-home-button svg {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-to-home-button {
+    top: 100px;
+    left: 12px;
+    width: 48px;
+    height: 48px;
+  }
+  
+  .back-to-home-button svg {
+    width: 24px;
+    height: 24px;
+  }
+}

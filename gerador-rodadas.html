@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAPOS LEAGUE - Gerador de Rodadas</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Gerador de rodadas do Sapos League 2026">
+  <meta name="theme-color" content="#2e7d32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sapos League">
+  
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" href="/favicon-48x48.png" sizes="48x48" />
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  
+  <!-- Manifest -->
+  <link rel="manifest" href="/site.webmanifest">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/dark-mode-colors.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/gerador-rodadas.css">
+  
+  <style>
+    .fase-selector-gerador {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .fase-selector-gerador label {
+      font-weight: 600;
+      color: #495057;
+    }
+    
+    .form-select-fase-gerador {
+      padding: 0.5rem 1rem;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .form-select-fase-gerador:hover {
+      border-color: #2e7d32;
+    }
+    
+    .form-select-fase-gerador:focus {
+      outline: none;
+      border-color: #2e7d32;
+      box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header com navegação -->
+  <div class="page-header">
+    <div class="header-left">
+      <button id="voltar-button" class="btn-voltar">
+        ← Voltar ao Painel
+      </button>
+      <div class="page-subtitle">⚽ Gerador de Rodadas</div>
+    </div>
+    <div class="header-right">
+      <button id="logout-button" class="btn-logout-header">
+        Sair
+      </button>
+    </div>
+  </div>
+
+  <!-- Container Principal -->
+  <div class="container">
+    <!-- Card de Configuração -->
+    <div class="config-card">
+      <div class="card-header">
+        <h2>🎯 Configuração da Geração</h2>
+        <p class="card-subtitle">Sistema Turno/Returno: 3 rodadas de ida + 3 rodadas de volta</p>
+      </div>
+      <div class="card-body">
+        <div class="fase-selector-gerador">
+          <label for="fase-select-gerador">Fase:</label>
+          <select id="fase-select-gerador" class="form-select-fase-gerador">
+            <option value="fase1">Primeira Fase</option>
+            <option value="fase2">Segunda Fase</option>
+            <option value="final">Final</option>
+          </select>
+        </div>
+        
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Times Carregados:</span>
+            <span id="times-count" class="info-value">Carregando...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Última Rodada:</span>
+            <span id="ultima-rodada" class="info-value">Verificando...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Próximas Rodadas:</span>
+            <span id="proximas-rodadas" class="info-value">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Jogos por Rodada:</span>
+            <span class="info-value">2 jogos</span>
+          </div>
+        </div>
+        
+        <div class="button-section">
+          <button id="gerar-button" class="btn btn-primary" disabled>
+            🎲 Gerar Turno/Returno (6 Rodadas)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card de Prévia (inicialmente oculto) -->
+    <div id="previa-card" class="previa-card" style="display: none;">
+      <div class="card-header">
+        <h2>👀 Prévia das Rodadas Geradas</h2>
+        <p class="card-subtitle">Você pode reorganizar os jogos antes de salvar</p>
+      </div>
+      <div class="card-body">
+        <div id="rodadas-preview"></div>
+        
+        <div class="button-section">
+          <button id="salvar-rodadas-button" class="btn btn-success">
+            💾 Salvar Todas as Rodadas
+          </button>
+          <button id="cancelar-button" class="btn btn-secondary">
+            ❌ Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação -->
+  <div id="confirmacao-popup" class="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h2>✅ Confirmação</h2>
+      </div>
+      <div class="popup-body">
+        <p id="confirmacao-texto"></p>
+        <div class="popup-buttons">
+          <button id="confirmar-sim-button" class="btn btn-success">Sim</button>
+          <button id="confirmar-nao-button" class="btn btn-secondary">Não</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Mensagem -->
+  <div id="mensagem-popup" class="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h2>💬 Mensagem</h2>
+      </div>
+      <div class="popup-body">
+        <p id="mensagem-texto"></p>
+        <button id="mensagem-ok-button" class="btn btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/dynamic-favicon.js"></script>
+  <script type="module" src="js/gerador-rodadas.js"></script>
+  <script src="js/pwa-install.js"></script>
+</body>
+</html>
