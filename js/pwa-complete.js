@@ -13,7 +13,6 @@ class PWAComplete {
     constructor() {
         this.times = [];
         this.rodadas = [];
-        this.notifiedGames = new Set();
         this.browserInfo = this.detectBrowser();
         this.debugLogs = [];
         this.maxLogs = 50;
@@ -207,8 +206,6 @@ class PWAComplete {
         // Carregar dados em tempo real
         this.loadTimesRealtime();
         this.loadRodadasRealtime();
-        
-        this.loadNotifiedGames();
     }
 
     logEnvironment() {
@@ -890,98 +887,13 @@ class PWAComplete {
                 
                 this.log(`📅 Rodadas carregadas de ${colecao}: ${rodadasFase.length}`);
                 this.log(`📅 Total de rodadas: ${this.rodadas.length}`);
-                this.checkTodayGames();
             }, (error) => {
                 this.log(`❌ Erro ao carregar rodadas de ${colecao}: ` + error.message, 'ERROR');
             });
         });
     }
 
-    // ==================== VERIFICAÇÃO DE JOGOS ====================
-    checkTodayGames() {
-        if (Notification.permission !== 'granted') {
-            this.log('⚠️ Notificações não permitidas', 'WARN');
-            return;
-        }
-
-        const hoje = new Date();
-        const hojeString = hoje.toISOString().split('T')[0]; // YYYY-MM-DD
-
-        this.log(`🔍 Verificando jogos para: ${hojeString}`);
-
-        let jogosHoje = [];
-
-        this.rodadas.forEach(rodada => {
-            if (rodada.jogos) {
-                rodada.jogos.forEach(jogo => {
-                    if (jogo.data) {
-                        // Comparar diretamente strings no formato YYYY-MM-DD
-                        if (jogo.data === hojeString) {
-                            const gameId = `${rodada.numero}-${jogo.timeA}-${jogo.timeB}-${jogo.data}`;
-                            
-                            if (!this.notifiedGames.has(gameId)) {
-                                jogosHoje.push({
-                                    rodada: rodada.numero,
-                                    jogo: jogo,
-                                    gameId: gameId
-                                });
-                            }
-                        }
-                    }
-                });
-            }
-        });
-
-        if (jogosHoje.length > 0) {
-            this.log(`⚽ ${jogosHoje.length} jogo(s) para hoje!`);
-            this.notifyTodayGames(jogosHoje);
-        } else {
-            this.log('📭 Nenhum jogo para hoje');
-        }
-    }
-
-    notifyTodayGames(jogos) {
-        jogos.forEach((item, index) => {
-            setTimeout(() => {
-                const { rodada, jogo, gameId } = item;
-                
-                const timeA = this.times.find(t => t.id === jogo.timeA) || { nome: jogo.timeA };
-                const timeB = this.times.find(t => t.id === jogo.timeB) || { nome: jogo.timeB };
-
-                const titulo = `⚽ Jogo Hoje - ${rodada}ª Rodada`;
-                const mensagem = `${timeA.nome} x ${timeB.nome} às ${jogo.hora}`;
-                
-                this.sendNotification(titulo, mensagem, this.getOptimalIcon());
-                
-                this.notifiedGames.add(gameId);
-                this.saveNotifiedGames();
-                
-            }, index * 3000);
-        });
-    }
-
     // ==================== PERSISTÊNCIA ====================
-    saveNotifiedGames() {
-        try {
-            const notifiedArray = Array.from(this.notifiedGames);
-            localStorage.setItem('notifiedGamesPWA', JSON.stringify(notifiedArray));
-        } catch (error) {
-            this.log('❌ Erro ao salvar jogos notificados: ' + error.message, 'ERROR');
-        }
-    }
-
-    loadNotifiedGames() {
-        try {
-            const saved = localStorage.getItem('notifiedGamesPWA');
-            if (saved) {
-                const notifiedArray = JSON.parse(saved);
-                this.notifiedGames = new Set(notifiedArray);
-                this.log(`📋 ${this.notifiedGames.size} jogos já notificados carregados`);
-            }
-        } catch (error) {
-            this.log('❌ Erro ao carregar jogos notificados: ' + error.message, 'ERROR');
-        }
-    }
 }
 
 // Inicializar sistema completo
