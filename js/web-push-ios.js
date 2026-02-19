@@ -87,7 +87,7 @@ class WebPushIOS {
                 // Criar nova subscription
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: this.urlBase64ToUint8Array('BCGlPwG2538voWXXYiSV-y6P1jIWN60aYHdcNUQcS4rpWe-eJpo5bK4-HJHkcbDRzD-S0jaW-sXeRL8XsGLPBts')
+                    applicationServerKey: this.urlBase64ToUint8Array('BOhtY4OV28BYdfrjYvpTmyrp34WcUExr_uCwgs8KeRLWL3WdMREX3VcFqC2SwJYWCwDoMzKv-Okmv82JaweRK5M')
                 });
 
                 console.log('✅ [iOS] Subscription criada');
