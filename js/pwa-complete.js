@@ -202,15 +202,11 @@ class PWAComplete {
         // Aguardar carregamento completo
         setTimeout(() => {
             this.setupNotifications();
-            this.setupDailyNotifications(); // Sistema de notificações diárias
         }, 2000);
         
         // Carregar dados em tempo real
         this.loadTimesRealtime();
         this.loadRodadasRealtime();
-        
-        // Verificar jogos periodicamente
-        setInterval(() => this.checkTodayGames(), 60 * 60 * 1000);
         
         this.loadNotifiedGames();
     }
@@ -862,160 +858,7 @@ class PWAComplete {
         this.log('⚠️ Aviso de compatibilidade iOS exibido');
     }
 
-    // ==================== NOTIFICAÇÕES DE JOGOS DIÁRIOS ====================
-    
-    setupDailyNotifications() {
-        // Verificar jogos a cada minuto para capturar os horários exatos
-        setInterval(() => {
-            this.checkDailyGameNotifications();
-        }, 60000); // 1 minuto
-        
-        // Verificar imediatamente ao carregar
-        this.checkDailyGameNotifications();
-    }
-    
-    checkDailyGameNotifications() {
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        
-        // Horários de disparo: 00:00, 12:02 (TESTE), 12:30, 19:00
-        const notificationTimes = [
-            { hour: 0, minute: 0 },   // 00:00
-            { hour: 12, minute: 2 },  // 12:02 (TESTE)
-            { hour: 12, minute: 30 }, // 12:30
-            { hour: 19, minute: 0 }   // 19:00
-        ];
-        
-        // Verificar se é um dos horários de notificação
-        const isNotificationTime = notificationTimes.some(time => 
-            currentHour === time.hour && currentMinute === time.minute
-        );
-        
-        if (isNotificationTime) {
-            this.log(`⏰ Horário de notificação detectado: ${currentHour}:${currentMinute.toString().padStart(2, '0')}`);
-            this.sendDailyGameNotification();
-        }
-    }
-    
-    sendDailyGameNotification() {
-        const today = new Date();
-        const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD
-        
-        this.log(`🔔 Tentando enviar notificação diária...`);
-        this.log(`📅 Data de hoje: ${todayString}`);
-        
-        // Verificar se já enviou notificação hoje
-        const lastNotificationDate = localStorage.getItem('lastGameNotificationDate');
-        const lastNotificationTime = localStorage.getItem('lastGameNotificationTime');
-        const currentTime = `${today.getHours()}:${today.getMinutes().toString().padStart(2, '0')}`;
-        
-        this.log(`🕐 Horário atual: ${currentTime}`);
-        this.log(`📝 Última notificação: ${lastNotificationDate} às ${lastNotificationTime}`);
-        
-        if (lastNotificationDate === todayString && lastNotificationTime === currentTime) {
-            this.log('⏭️ Já enviou notificação neste horário hoje');
-            return; // Já enviou neste horário hoje
-        }
-        
-        // Buscar jogos de hoje
-        const todayGames = this.getTodayGames();
-        
-        this.log(`⚽ Jogos encontrados: ${todayGames.length}`);
-        
-        if (todayGames.length === 0) {
-            this.log('📭 Nenhum jogo para hoje - não enviando notificação');
-            return; // Não há jogos hoje
-        }
-        
-        // Criar notificação baseada na quantidade de jogos
-        let title, message;
-        
-        if (todayGames.length === 1) {
-            // Jogo único
-            const game = todayGames[0];
-            const timeA = this.getTeamName(game.timeA);
-            const timeB = this.getTeamName(game.timeB);
-            
-            title = 'HOJE TEM JOGO! 🔥🔥🔥';
-            message = `Hoje, às ${game.hora}, a bola rola para ${timeA} x ${timeB}. Não perca!`;
-            
-        } else if (todayGames.length === 2) {
-            // Rodada dupla
-            const game1 = todayGames[0];
-            const game2 = todayGames[1];
-            const timeA1 = this.getTeamName(game1.timeA);
-            const timeB1 = this.getTeamName(game1.timeB);
-            const timeA2 = this.getTeamName(game2.timeA);
-            const timeB2 = this.getTeamName(game2.timeB);
-            
-            title = 'HOJE TEM RODADA DUPLA! 🔥🔥🔥';
-            message = `Hoje, às ${game1.hora}, a bola rola para ${timeA1} x ${timeB1} e logo em seguida, às ${game2.hora}, a bola rola para ${timeA2} x ${timeB2}. Não perca!`;
-        } else {
-            // Mais de 2 jogos
-            title = 'HOJE TEM JOGOS! 🔥🔥🔥';
-            message = `Hoje tem ${todayGames.length} jogos! Primeiro jogo às ${todayGames[0].hora}. Não perca!`;
-        }
-        
-        this.log(`📢 Enviando notificação: ${title}`);
-        
-        // Enviar notificação
-        this.sendNotification(title, message, this.getOptimalIcon());
-        
-        // Salvar que já enviou hoje neste horário
-        localStorage.setItem('lastGameNotificationDate', todayString);
-        localStorage.setItem('lastGameNotificationTime', currentTime);
-        
-        this.log(`✅ Notificação de jogo enviada: ${title}`);
-    }
-    
-    getTodayGames() {
-        const today = new Date();
-        // Formato YYYY-MM-DD para comparar com o banco
-        const todayDateString = today.toISOString().split('T')[0];
-        
-        this.log(`🔍 Buscando jogos para hoje: ${todayDateString}`);
-        
-        // Buscar na rodada atual
-        if (!this.rodadas || this.rodadas.length === 0) {
-            this.log('⚠️ Nenhuma rodada carregada', 'WARN');
-            return [];
-        }
-        
-        const todayGames = [];
-        
-        this.rodadas.forEach(rodada => {
-            if (rodada.jogos) {
-                rodada.jogos.forEach(jogo => {
-                    this.log(`📅 Verificando jogo: data=${jogo.data}, hoje=${todayDateString}`);
-                    
-                    // Comparar diretamente com formato YYYY-MM-DD
-                    if (jogo.data === todayDateString) {
-                        this.log(`✅ Jogo encontrado para hoje!`);
-                        todayGames.push(jogo);
-                    }
-                });
-            }
-        });
-        
-        this.log(`⚽ Total de jogos encontrados para hoje: ${todayGames.length}`);
-        
-        // Ordenar por horário
-        todayGames.sort((a, b) => {
-            const timeA = a.hora.split(':').map(Number);
-            const timeB = b.hora.split(':').map(Number);
-            return (timeA[0] * 60 + timeA[1]) - (timeB[0] * 60 + timeB[1]);
-        });
-        
-        return todayGames;
-    }
-    
-    getTeamName(teamId) {
-        const team = this.times.find(t => t.id === teamId);
-        return team ? team.nome : 'Time';
-    }
-
-    // ==================== DADOS DO FIREBASE ====================
+    // ==================== NOTIFICAÇÕES DE JOGOS ====================
     loadTimesRealtime() {
         onSnapshot(collection(db, "times"), (snapshot) => {
             this.times = snapshot.docs.map(doc => ({
