@@ -137,6 +137,7 @@
                     log('📝 Criando nova subscription...', 'info');
                     
                     const vapidKey = 'BOhtY4OV28BYdfrjYvpTmyrp34WcUExr_uCwgs8KeRLWL3WdMREX3VcFqC2SwJYWCwDoMzKv-Okmv82JaweRK5M';
+                    log('🔑 Usando chave VAPID: ' + vapidKey.substring(0, 20) + '...', 'info');
                     const applicationServerKey = urlBase64ToUint8Array(vapidKey);
                     
                     subscription = await registration.pushManager.subscribe({
