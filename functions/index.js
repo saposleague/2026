@@ -363,7 +363,7 @@ async function sendToWebPush(title, body) {
       successCount++;
     } catch (error) {
       failureCount++;
-      console.error(`❌ Erro ao enviar Web Push: ${error.statusCode}`);
+      console.error(`❌ Erro Web Push [${sub.id}]: ${error.statusCode} - ${error.body || error.message}`);
       
       // Marcar subscriptions inválidas para remoção (410 = Gone)
       if (error.statusCode === 410 || error.statusCode === 404) {
