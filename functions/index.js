@@ -339,16 +339,16 @@ async function sendToWebPush(title, body) {
     return { success: 0, failure: 0 };
   }
   
-  // Criar payload da notificação
+  // Criar payload da notificação (formato compatível com iOS)
   const payload = JSON.stringify({
-    title: title,
-    body: body,
-    icon: '/images/web-app-manifest-192x192.png',
-    badge: '/images/favicon-96x96.png',
-    tag: 'sapos-league',
-    data: {
-      type: 'game-notification',
-      timestamp: Date.now()
+    notification: {
+      title: title,
+      body: body,
+      icon: '/images/web-app-manifest-192x192.png',
+      badge: '/images/favicon-96x96.png',
+      tag: 'sapos-league',
+      requireInteraction: false,
+      vibrate: [200, 100, 200]
     }
   });
   
@@ -440,8 +440,55 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
     // Enviar para FCM
     const fcmResult = await sendToFCM(title, body);
     
-    // Enviar para iOS
-    const iosResult = await sendToWebPush(title, body);
+    // Enviar para iOS com captura de erros detalhados
+    let iosResult = { success: 0, failure: 0 };
+    const iosErrors = [];
+    
+    try {
+      const subscriptions = [];
+      iosSubsSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.subscription) {
+          subscriptions.push({
+            id: doc.id,
+            subscription: data.subscription
+          });
+        }
+      });
+      
+      const payload = JSON.stringify({
+        notification: {
+          title: title,
+          body: body,
+          icon: '/images/web-app-manifest-192x192.png',
+          badge: '/images/favicon-96x96.png',
+          tag: 'sapos-league',
+          requireInteraction: false,
+          vibrate: [200, 100, 200]
+        }
+      });
+      
+      for (const sub of subscriptions) {
+        try {
+          await webpush.sendNotification(sub.subscription, payload);
+          iosResult.success++;
+        } catch (error) {
+          iosResult.failure++;
+          iosErrors.push({
+            id: sub.id,
+            statusCode: error.statusCode,
+            message: error.message,
+            body: error.body
+          });
+        }
+      }
+    } catch (error) {
+      iosErrors.push({
+        general: true,
+        message: error.message,
+        stack: error.stack
+      });
+    }
     
     const totalSent = fcmResult.success + iosResult.success;
     const totalFailed = fcmResult.failure + iosResult.failure;
@@ -454,7 +501,7 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
       sent: totalSent,
       failed: totalFailed,
       fcm: { sent: fcmResult.success, failed: fcmResult.failure, total: fcmCount },
-      ios: { sent: iosResult.success, failed: iosResult.failure, total: iosCount },
+      ios: { sent: iosResult.success, failed: iosResult.failure, total: iosCount, errors: iosErrors },
       games: games.length,
       date: todayString,
       title: title,
