@@ -468,74 +468,6 @@
     </button>
   </div>
   
-  <!-- Botão de Debug de Notificações -->
-  <div style="position: fixed; bottom: 80px; right: 20px; z-index: 1000;">
-    <button id="toggle-logs" style="
-      background: #9c27b0;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 25px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
-      font-size: 14px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    ">📋 Mostrar Logs</button>
-    
-    <button id="test-notification" style="
-      background: #ff9800;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 25px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
-      font-size: 14px;
-      font-weight: 600;
-      margin-top: 10px;
-      display: block;
-      transition: all 0.3s ease;
-    ">🔔 Testar Notificação</button>
-  </div>
-  
-  <!-- Container de Logs -->
-  <div id="debug-logs" style="
-    position: fixed;
-    bottom: 180px;
-    right: 20px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 400px;
-    background: rgba(0, 0, 0, 0.95);
-    color: white;
-    border-radius: 12px;
-    padding: 15px;
-    display: none;
-    z-index: 999;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-  ">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px;">
-      <strong style="color: #9c27b0;">🔍 Debug Logs</strong>
-      <button onclick="document.getElementById('log-content').innerHTML = ''" style="
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 11px;
-      ">Limpar</button>
-    </div>
-    <div id="log-content" style="
-      max-height: 320px;
-      overflow-y: auto;
-      line-height: 1.4;
-    "></div>
-  </div>
-  
   </div> <!-- Fim do main-app-content -->
 
   <script>
@@ -582,41 +514,6 @@
   <script type="module" src="js/web-push-ios.js"></script>
   <script type="module" src="js/pwa-complete.js"></script>
   <script src="js/pwa-install.js"></script>
-  
-  <!-- Script de teste de notificações -->
-  <script type="module">
-    // Aguardar carregamento do PWA Complete
-    setTimeout(() => {
-      const testButton = document.getElementById('test-notification');
-      
-      if (testButton) {
-        testButton.addEventListener('click', () => {
-          if (window.pwaComplete) {
-            window.pwaComplete.log('🧪 TESTE MANUAL: Verificando jogos de hoje...');
-            
-            // Forçar verificação de jogos
-            const todayGames = window.pwaComplete.getTodayGames();
-            
-            if (todayGames.length > 0) {
-              window.pwaComplete.log(`✅ ${todayGames.length} jogo(s) encontrado(s)!`);
-              window.pwaComplete.sendDailyGameNotification();
-            } else {
-              window.pwaComplete.log('❌ Nenhum jogo encontrado para hoje');
-              
-              // Enviar notificação de teste mesmo assim
-              window.pwaComplete.sendNotification(
-                '🧪 Teste de Notificação',
-                'Se você viu isso, as notificações estão funcionando!',
-                window.pwaComplete.getOptimalIcon()
-              );
-            }
-          } else {
-            alert('PWA Complete ainda não foi carregado. Aguarde alguns segundos.');
-          }
-        });
-      }
-    }, 2000);
-  </script>
 </body>
 </html>
 
