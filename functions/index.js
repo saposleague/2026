@@ -68,14 +68,14 @@ exports.notifyWeekGames = functions.pubsub
   });
 
 /**
- * TESTE - Notificações de Segunda a Quarta às 10:38
+ * TESTE - Notificações de Segunda a Quarta às 10:50
  * Avisa sobre jogos de quinta-feira
  */
 exports.notifyWeekGamesTest = functions.pubsub
-  .schedule('38 10 * * 1,2,3') // Segunda, Terça, Quarta às 10:38 (TESTE)
+  .schedule('50 10 * * 1,2,3') // Segunda, Terça, Quarta às 10:50 (TESTE)
   .timeZone('America/Sao_Paulo')
   .onRun(async (context) => {
-    console.log('🧪 TESTE - Verificando jogos da semana (quinta-feira - 10:38)...');
+    console.log('🧪 TESTE - Verificando jogos da semana (quinta-feira - 10:50)...');
     
     try {
       // Calcular data da próxima quinta-feira
