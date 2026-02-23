@@ -9,8 +9,8 @@ admin.initializeApp();
 // Configurar Web Push VAPID
 webpush.setVapidDetails(
   'mailto:contato@saposleague.com',
-  'BOhtY4OV28BYdfrjYvpTmyrp34WcUExr_uCwgs8KeRLWL3WdMREX3VcFqC2SwJYWCwDoMzKv-Okmv82JaweRK5M',
-  '1kH9DbsiSlEcQwBjyoBTGNU0p6zvf6C9MXEtFFEfUAg'
+  'BCGlPwG2538voWXXYiSV-y6P1jIWN60aYHdcNUQcS4rpWe-eJpo5bK4-HJHkcbDRzD-S0jaW-sXeRL8XsGLPBts',
+  'YOUR_PRIVATE_VAPID_KEY_HERE'
 );
 
 /**

@@ -398,6 +398,7 @@ async function clearPendingNotifications() {
 // ==================== NOTIFICAÇÕES PUSH AVANÇADAS ====================
 self.addEventListener('push', (event) => {
   console.log('[SW] Push recebido:', event);
+  console.log('[SW] Push data:', event.data ? event.data.text() : 'sem dados');
   
   let notificationData = getDefaultNotificationData();
 
@@ -405,6 +406,8 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       const pushData = event.data.json();
+      console.log('[SW] Push JSON:', pushData);
+      
       notificationData = {
         ...notificationData,
         ...pushData,
@@ -430,17 +433,23 @@ self.addEventListener('push', (event) => {
       }
       
     } catch (e) {
+      console.log('[SW] Erro ao parsear JSON, usando texto:', e);
       notificationData.body = event.data.text() || notificationData.body;
     }
   }
 
+  console.log('[SW] Mostrando notificação:', notificationData.title);
   const options = createNotificationOptions(notificationData);
 
   event.waitUntil(
     Promise.all([
       self.registration.showNotification(notificationData.title, options),
       logNotification(notificationData)
-    ])
+    ]).then(() => {
+      console.log('[SW] Notificação exibida com sucesso');
+    }).catch(error => {
+      console.error('[SW] Erro ao exibir notificação:', error);
+    })
   );
 });
 
@@ -449,8 +458,8 @@ function getDefaultNotificationData() {
   return {
     title: '⚽ Sapos League',
     body: 'Nova atualização disponível!',
-    icon: '/web-app-manifest-192x192.png',
-    badge: '/favicon-96x96.png',
+    icon: '/images/web-app-manifest-192x192.png',
+    badge: '/images/favicon-96x96.png',
     tag: 'sapos-league'
   };
 }
@@ -462,21 +471,21 @@ function createNotificationOptions(data) {
     icon: data.icon,
     badge: data.badge,
     tag: data.tag,
-    vibrate: [200, 100, 200, 100, 200],
-    requireInteraction: data.requireInteraction || false,
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
     silent: false,
     renotify: true,
     timestamp: Date.now(),
     actions: [
       {
         action: 'view',
-        title: '👀 Ver Detalhes',
-        icon: '/favicon-48x48.png'
+        title: '👀 Ver',
+        icon: '/images/favicon-48x48.png'
       },
       {
         action: 'close',
         title: '❌ Fechar',
-        icon: '/favicon-48x48.png'
+        icon: '/images/favicon-48x48.png'
       }
     ],
     data: {
