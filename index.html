@@ -432,12 +432,12 @@
   <!-- Header fixo -->
   <header>SAPOS LEAGUE</header>
 
-  <!-- Botão de Debug iOS (flutuante) -->
-  <a href="debug-ios.html" id="btn-debug-ios" style="
+  <!-- Botão de Teste iOS (flutuante) -->
+  <a href="test-ios-push.html" id="btn-test-ios" style="
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background: #ff9800;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 15px 20px;
     border-radius: 50px;
@@ -445,14 +445,23 @@
     font-weight: bold;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     z-index: 9999;
-    display: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 14px;
-  ">🍎 Debug iOS</a>
+    transition: all 0.3s ease;
+  " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+    <span style="font-size: 18px;">🍎</span>
+    <span>Teste iOS</span>
+  </a>
 
   <script>
-    // Mostrar botão apenas em iOS
+    // Mostrar botão de teste iOS apenas em dispositivos iOS
     if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-      document.getElementById('btn-debug-ios').style.display = 'block';
+      const btnTestIOS = document.getElementById('btn-test-ios');
+      if (btnTestIOS) {
+        btnTestIOS.style.display = 'flex';
+      }
     }
   </script>
   
