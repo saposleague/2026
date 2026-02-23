@@ -216,24 +216,28 @@ async function sendToFCM(title, body) {
       await admin.messaging().send({
         notification: {
           title: title,
-          body: body,
-          imageUrl: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png'
+          body: body
         },
         android: {
           notification: {
             icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
-            color: '#2e7d32'
+            color: '#2e7d32',
+            imageUrl: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png'
           }
         },
         webpush: {
           notification: {
             icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
             badge: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png'
+          },
+          fcmOptions: {
+            link: 'https://sapos-league.web.app/'
           }
         },
         data: {
           type: 'game-notification',
-          timestamp: Date.now().toString()
+          timestamp: Date.now().toString(),
+          icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png'
         },
         token: token
       });

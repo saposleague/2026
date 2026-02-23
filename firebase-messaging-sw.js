@@ -23,13 +23,13 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification?.title || 'Sapos League';
   const notificationOptions = {
     body: payload.notification?.body || 'Nova notificação',
-    icon: payload.notification?.icon || '/images/web-app-manifest-192x192.png',
-    badge: '/images/web-app-manifest-192x192.png',
+    icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
+    badge: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
     tag: payload.notification?.tag || 'sapos-league',
     data: payload.data || {},
     vibrate: [200, 100, 200],
     requireInteraction: false,
-    image: payload.notification?.image
+    image: payload.notification?.image || payload.data?.icon
   };
 
   return self.registration.showNotification(notificationTitle, notificationOptions);
