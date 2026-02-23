@@ -1,5 +1,5 @@
 // Service Worker para Sapos League PWA - Versão Robusta
-const CACHE_VERSION = '2.1.1';
+const CACHE_VERSION = '2.1.2';
 const CACHE_NAME = `sapos-league-v${CACHE_VERSION}`;
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
@@ -459,7 +459,7 @@ function getDefaultNotificationData() {
     title: '⚽ Sapos League',
     body: 'Nova atualização disponível!',
     icon: '/images/web-app-manifest-192x192.png',
-    badge: '/images/favicon-96x96.png',
+    badge: '/images/web-app-manifest-192x192.png',
     tag: 'sapos-league'
   };
 }
