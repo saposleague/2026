@@ -18,13 +18,23 @@ class WebPushIOS {
         try {
             console.log('🍎 [iOS] Inicializando Web Push...');
 
-            // Verificar se é iOS
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+            // Verificar se é iOS (detecção mais precisa)
+            const isIOS = (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) || 
                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            
+            // Verificar se é Android (para evitar falsos positivos)
+            const isAndroid = /Android/.test(navigator.userAgent);
             
             console.log('🍎 [iOS] User Agent:', navigator.userAgent);
             console.log('🍎 [iOS] Platform:', navigator.platform);
             console.log('🍎 [iOS] É iOS?', isIOS);
+            console.log('🍎 [iOS] É Android?', isAndroid);
+            
+            // Se for Android, não executar
+            if (isAndroid) {
+                console.log('🤖 [iOS] Android detectado, usando FCM em vez de Web Push');
+                return;
+            }
             
             if (!isIOS) {
                 console.log('🍎 [iOS] Não é iOS, pulando...');
