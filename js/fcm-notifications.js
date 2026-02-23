@@ -177,9 +177,10 @@ class FCMNotifications {
         const notification = new Notification(title, {
             body: body,
             icon: icon || '/images/web-app-manifest-192x192.png',
-            badge: '/images/favicon-96x96.png',
+            badge: '/images/web-app-manifest-192x192.png',
             tag: 'sapos-league-fcm',
-            data: data
+            data: data,
+            vibrate: [200, 100, 200]
         });
 
         notification.onclick = () => {

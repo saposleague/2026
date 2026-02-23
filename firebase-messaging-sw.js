@@ -24,11 +24,12 @@ messaging.onBackgroundMessage((payload) => {
   const notificationOptions = {
     body: payload.notification?.body || 'Nova notificação',
     icon: payload.notification?.icon || '/images/web-app-manifest-192x192.png',
-    badge: payload.notification?.badge || '/images/favicon-96x96.png',
+    badge: '/images/web-app-manifest-192x192.png',
     tag: payload.notification?.tag || 'sapos-league',
     data: payload.data || {},
     vibrate: [200, 100, 200],
-    requireInteraction: false
+    requireInteraction: false,
+    image: payload.notification?.image
   };
 
   return self.registration.showNotification(notificationTitle, notificationOptions);

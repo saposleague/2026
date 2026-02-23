@@ -216,7 +216,20 @@ async function sendToFCM(title, body) {
       await admin.messaging().send({
         notification: {
           title: title,
-          body: body
+          body: body,
+          imageUrl: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png'
+        },
+        android: {
+          notification: {
+            icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
+            color: '#2e7d32'
+          }
+        },
+        webpush: {
+          notification: {
+            icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
+            badge: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png'
+          }
         },
         data: {
           type: 'game-notification',
