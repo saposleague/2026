@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnóstico de Notificações</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      color: #2e7d32;
+      text-align: center;
+    }
+    
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .section h2 {
+      margin-top: 0;
+      color: #333;
+      font-size: 18px;
+    }
+    
+    .status {
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    
+    .status.ok {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .status.error {
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    .status.warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .info {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px 0;
+      font-family: monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    
+    button {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 5px;
+    }
+    
+    button:hover {
+      background: #1b5e20;
+    }
+    
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔔 Diagnóstico de Notificações</h1>
+  
+  <div class="section">
+    <h2>1. Informações do Dispositivo</h2>
+    <div id="device-info" class="loading">Carregando...</div>
+  </div>
+  
+  <div class="section">
+    <h2>2. Suporte a Notificações</h2>
+    <div id="notification-support" class="loading">Verificando...</div>
+  </div>
+  
+  <div class="section">
+    <h2>3. Permissão de Notificações</h2>
+    <div id="permission-status" class="loading">Verificando...</div>
+    <button id="request-permission" style="display: none;">Solicitar Permissão</button>
+  </div>
+  
+  <div class="section">
+    <h2>4. Service Worker</h2>
+    <div id="sw-status" class="loading">Verificando...</div>
+  </div>
+  
+  <div class="section">
+    <h2>5. Token FCM</h2>
+    <div id="fcm-status" class="loading">Verificando...</div>
+    <button id="register-token" style="display: none;">Registrar Token</button>
+  </div>
+  
+  <div class="section">
+    <h2>6. Teste de Notificação</h2>
+    <div id="test-status"></div>
+    <button id="test-notification" disabled>Enviar Notificação de Teste</button>
+    <button id="force-notification" onclick="window.open('https://us-central1-sapos-league.cloudfunctions.net/forceTestNotification', '_blank')">Forçar Notificação (Backend)</button>
+  </div>
+
+  <script type="module">
+    import { app } from './js/firebase-config.js';
+    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-messaging.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    const db = getFirestore(app);
+    let messaging = null;
+    let currentToken = null;
+
+    // 1. Informações do dispositivo
+    function showDeviceInfo() {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+      const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+      
+      document.getElementById('device-info').innerHTML = `
+        <div class="info">
+          <strong>User Agent:</strong> ${navigator.userAgent}<br>
+          <strong>Platform:</strong> ${navigator.platform}<br>
+          <strong>iOS:</strong> ${isIOS ? 'Sim' : 'Não'}<br>
+          <strong>Android:</strong> ${isAndroid ? 'Sim' : 'Não'}<br>
+          <strong>PWA Instalado:</strong> ${isStandalone ? 'Sim' : 'Não'}
+        </div>
+      `;
+    }
+
+    // 2. Suporte a notificações
+    function checkNotificationSupport() {
+      const hasNotification = 'Notification' in window;
+      const hasSW = 'serviceWorker' in navigator;
+      const hasPush = 'PushManager' in window;
+      
+      let html = '';
+      
+      if (hasNotification) {
+        html += '<div class="status ok">✅ Notification API suportada</div>';
+      } else {
+        html += '<div class="status error">❌ Notification API não suportada</div>';
+      }
+      
+      if (hasSW) {
+        html += '<div class="status ok">✅ Service Worker suportado</div>';
+      } else {
+        html += '<div class="status error">❌ Service Worker não suportado</div>';
+      }
+      
+      if (hasPush) {
+        html += '<div class="status ok">✅ Push API suportada</div>';
+      } else {
+        html += '<div class="status error">❌ Push API não suportada</div>';
+      }
+      
+      document.getElementById('notification-support').innerHTML = html;
+    }
+
+    // 3. Permissão
+    function checkPermission() {
+      const permission = Notification.permission;
+      let html = '';
+      
+      if (permission === 'granted') {
+        html = '<div class="status ok">✅ Permissão concedida</div>';
+      } else if (permission === 'denied') {
+        html = '<div class="status error">❌ Permissão negada - Você precisa habilitar nas configurações do navegador</div>';
+      } else {
+        html = '<div class="status warning">⚠️ Permissão não solicitada</div>';
+        document.getElementById('request-permission').style.display = 'inline-block';
+      }
+      
+      document.getElementById('permission-status').innerHTML = html;
+    }
+
+    // 4. Service Worker
+    async function checkServiceWorker() {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        
+        if (registration) {
+          const sw = registration.active || registration.installing || registration.waiting;
+          document.getElementById('sw-status').innerHTML = `
+            <div class="status ok">✅ Service Worker registrado</div>
+            <div class="info">
+              <strong>Scope:</strong> ${registration.scope}<br>
+              <strong>Estado:</strong> ${sw ? sw.state : 'desconhecido'}
+            </div>
+          `;
+        } else {
+          document.getElementById('sw-status').innerHTML = '<div class="status error">❌ Service Worker não registrado</div>';
+        }
+      } catch (error) {
+        document.getElementById('sw-status').innerHTML = `<div class="status error">❌ Erro: ${error.message}</div>`;
+      }
+    }
+
+    // 5. Token FCM
+    async function checkFCMToken() {
+      try {
+        if (Notification.permission !== 'granted') {
+          document.getElementById('fcm-status').innerHTML = '<div class="status warning">⚠️ Permissão necessária para obter token</div>';
+          return;
+        }
+
+        messaging = getMessaging(app);
+        const registration = await navigator.serviceWorker.ready;
+        
+        const token = await getToken(messaging, {
+          vapidKey: 'BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg',
+          serviceWorkerRegistration: registration
+        });
+
+        if (token) {
+          currentToken = token;
+          
+          // Verificar se está no Firestore
+          const tokensRef = collection(db, 'fcmTokens');
+          const q = query(tokensRef, where('token', '==', token));
+          const snapshot = await getDocs(q);
+          
+          const inDatabase = !snapshot.empty;
+          
+          document.getElementById('fcm-status').innerHTML = `
+            <div class="status ok">✅ Token FCM obtido</div>
+            <div class="info">
+              <strong>Token:</strong> ${token.substring(0, 50)}...<br>
+              <strong>No banco de dados:</strong> ${inDatabase ? 'Sim ✅' : 'Não ❌'}
+            </div>
+            ${!inDatabase ? '<div class="status warning">⚠️ Token não está salvo no Firestore</div>' : ''}
+          `;
+          
+          if (!inDatabase) {
+            document.getElementById('register-token').style.display = 'inline-block';
+          }
+          
+          document.getElementById('test-notification').disabled = false;
+        } else {
+          document.getElementById('fcm-status').innerHTML = '<div class="status error">❌ Não foi possível obter token FCM</div>';
+        }
+      } catch (error) {
+        document.getElementById('fcm-status').innerHTML = `
+          <div class="status error">❌ Erro ao obter token</div>
+          <div class="info">${error.message}</div>
+        `;
+        console.error('Erro FCM:', error);
+      }
+    }
+
+    // Solicitar permissão
+    document.getElementById('request-permission').addEventListener('click', async () => {
+      const permission = await Notification.requestPermission();
+      checkPermission();
+      
+      if (permission === 'granted') {
+        await checkFCMToken();
+      }
+    });
+
+    // Registrar token
+    document.getElementById('register-token').addEventListener('click', async () => {
+      if (window.fcmNotifications) {
+        await window.fcmNotifications.registerToken();
+        await checkFCMToken();
+      } else {
+        alert('FCM Notifications não inicializado. Recarregue a página.');
+      }
+    });
+
+    // Teste de notificação local
+    document.getElementById('test-notification').addEventListener('click', () => {
+      if (Notification.permission === 'granted') {
+        new Notification('🧪 Teste Local', {
+          body: 'Se você viu isso, as notificações locais funcionam!',
+          icon: './images/web-app-manifest-192x192.png',
+          badge: './images/teste-notificacao.png'
+        });
+        document.getElementById('test-status').innerHTML = '<div class="status ok">✅ Notificação local enviada</div>';
+      }
+    });
+
+    // Executar diagnóstico
+    async function runDiagnostic() {
+      showDeviceInfo();
+      checkNotificationSupport();
+      checkPermission();
+      await checkServiceWorker();
+      
+      if (Notification.permission === 'granted') {
+        await checkFCMToken();
+      }
+    }
+
+    // Aguardar carregamento
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', runDiagnostic);
+    } else {
+      runDiagnostic();
+    }
+  </script>
+</body>
+</html>
