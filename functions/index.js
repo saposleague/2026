@@ -565,3 +565,60 @@ exports.testWeekNotification = functions.https.onRequest(async (req, res) => {
   }
 });
 
+
+/**
+ * Função para forçar teste de notificação (sempre envia)
+ */
+exports.forceTestNotification = functions.https.onRequest(async (req, res) => {
+  try {
+    console.log('🧪 Teste forçado de notificação iniciado...');
+    
+    const title = '🧪 Teste de Notificação';
+    const body = 'Se você recebeu isso, as notificações estão funcionando perfeitamente!';
+    
+    // Contar dispositivos registrados
+    const fcmTokensSnapshot = await admin.firestore().collection('fcmTokens').get();
+    const iosSubsSnapshot = await admin.firestore().collection('webPushSubscriptions').get();
+    
+    const fcmCount = fcmTokensSnapshot.size;
+    const iosCount = iosSubsSnapshot.size;
+    
+    console.log(`📱 Dispositivos FCM: ${fcmCount}`);
+    console.log(`🍎 Dispositivos iOS: ${iosCount}`);
+    
+    if (fcmCount === 0 && iosCount === 0) {
+      res.json({
+        success: false,
+        message: 'Nenhum dispositivo registrado'
+      });
+      return;
+    }
+    
+    // Enviar notificação
+    const fcmResult = await sendToFCM(title, body);
+    const iosResult = await sendToWebPush(title, body);
+    
+    const totalSent = fcmResult.success + iosResult.success;
+    const totalFailed = fcmResult.failure + iosResult.failure;
+    
+    console.log(`✅ Total enviadas: ${totalSent}`);
+    console.log(`❌ Total falhas: ${totalFailed}`);
+    
+    res.json({
+      success: true,
+      sent: totalSent,
+      failed: totalFailed,
+      fcm: { sent: fcmResult.success, failed: fcmResult.failure, total: fcmCount },
+      ios: { sent: iosResult.success, failed: iosResult.failure, total: iosCount },
+      title: title,
+      body: body
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro ao enviar notificação de teste forçado:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
