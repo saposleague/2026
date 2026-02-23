@@ -18,11 +18,10 @@ class WebPushIOS {
         try {
             console.log('🍎 [iOS] Inicializando Web Push...');
 
-            // Verificar se é iOS (detecção mais precisa)
+            // Verificar se é iOS ou Android
             const isIOS = (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) || 
                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
             
-            // Verificar se é Android (para evitar falsos positivos)
             const isAndroid = /Android/.test(navigator.userAgent);
             
             console.log('🍎 [iOS] User Agent:', navigator.userAgent);
@@ -30,54 +29,48 @@ class WebPushIOS {
             console.log('🍎 [iOS] É iOS?', isIOS);
             console.log('🍎 [iOS] É Android?', isAndroid);
             
-            // Se for Android, não executar - PRIORIDADE MÁXIMA
-            if (isAndroid) {
-                console.log('🤖 [iOS] Android detectado, usando FCM em vez de Web Push');
-                return;
-            }
-            
-            // Se não for iOS, não executar
-            if (!isIOS) {
-                console.log('🍎 [iOS] Não é iOS, pulando...');
+            // Aceitar iOS ou Android (Web Push funciona em ambos)
+            if (!isIOS && !isAndroid) {
+                console.log('🍎 [iOS] Não é iOS nem Android, pulando...');
                 return;
             }
 
-            console.log('🍎 [iOS] Dispositivo iOS detectado');
+            console.log('📱 [Web Push] Dispositivo móvel detectado');
 
             // Verificar suporte a notificações
             if (!('Notification' in window)) {
-                console.log('❌ [iOS] Notificações não suportadas');
+                console.log('❌ [Web Push] Notificações não suportadas');
                 return;
             }
 
             // Verificar suporte a Service Worker
             if (!('serviceWorker' in navigator)) {
-                console.log('❌ [iOS] Service Worker não suportado');
+                console.log('❌ [Web Push] Service Worker não suportado');
                 return;
             }
 
             // Verificar suporte a Push API
             if (!('PushManager' in window)) {
-                console.log('❌ [iOS] Push API não suportada');
+                console.log('❌ [Web Push] Push API não suportada');
                 return;
             }
 
-            console.log('✅ [iOS] Todos os recursos suportados');
-            console.log('✅ [iOS] Permissão atual:', Notification.permission);
+            console.log('✅ [Web Push] Todos os recursos suportados');
+            console.log('✅ [Web Push] Permissão atual:', Notification.permission);
 
             // Aguardar permissão
             if (Notification.permission === 'granted') {
-                console.log('✅ [iOS] Permissão já concedida - registrando...');
+                console.log('✅ [Web Push] Permissão já concedida - registrando...');
                 await this.subscribe();
             } else if (Notification.permission === 'default') {
-                console.log('⏳ [iOS] Aguardando permissão...');
+                console.log('⏳ [Web Push] Aguardando permissão...');
             } else {
-                console.log('❌ [iOS] Permissão negada');
+                console.log('❌ [Web Push] Permissão negada');
             }
 
         } catch (error) {
-            console.error('❌ [iOS] Erro ao inicializar:', error);
-            console.error('❌ [iOS] Stack:', error.stack);
+            console.error('❌ [Web Push] Erro ao inicializar:', error);
+            console.error('❌ [Web Push] Stack:', error.stack);
         }
     }
 
@@ -121,29 +114,33 @@ class WebPushIOS {
 
     async saveSubscription(subscription) {
         try {
-            console.log('💾 [iOS] Salvando subscription no Firestore...');
+            console.log('💾 [Web Push] Salvando subscription no Firestore...');
 
             // Converter subscription para JSON
             const subscriptionJSON = subscription.toJSON();
             
             // Criar ID único baseado no endpoint
             const subscriptionId = this.hashString(subscriptionJSON.endpoint);
-            console.log('🔑 [iOS] Subscription ID:', subscriptionId);
+            console.log('🔑 [Web Push] Subscription ID:', subscriptionId);
+            
+            // Detectar plataforma
+            const isAndroid = /Android/.test(navigator.userAgent);
+            const platform = isAndroid ? 'android' : 'ios';
 
             // Salvar no Firestore
             await setDoc(doc(db, 'webPushSubscriptions', subscriptionId), {
                 subscription: subscriptionJSON,
                 endpoint: subscriptionJSON.endpoint,
-                platform: 'ios',
+                platform: platform,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
                 userAgent: navigator.userAgent
             }, { merge: true });
 
-            console.log('✅ [iOS] Subscription salva no Firestore');
+            console.log(`✅ [Web Push] Subscription salva no Firestore (${platform})`);
 
         } catch (error) {
-            console.error('❌ [iOS] Erro ao salvar subscription:', error);
+            console.error('❌ [Web Push] Erro ao salvar subscription:', error);
             throw error;
         }
     }

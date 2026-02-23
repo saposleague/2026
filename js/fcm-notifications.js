@@ -18,6 +18,11 @@ class FCMNotifications {
 
     async init() {
         try {
+            console.log('🔔 [FCM] FCM desabilitado - usando Web Push API para todos os dispositivos');
+            return;
+            
+            // Código FCM desabilitado - Web Push funciona melhor
+            /*
             console.log('🔔 [FCM] Iniciando...');
             
             // Verificar se o navegador suporta notificações
@@ -60,6 +65,7 @@ class FCMNotifications {
 
             // Solicitar permissão e registrar token
             await this.requestPermissionAndRegisterToken();
+            */
 
         } catch (error) {
             console.error('❌ [FCM] Erro ao inicializar:', error);
