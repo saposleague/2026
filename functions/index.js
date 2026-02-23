@@ -219,16 +219,21 @@ async function sendToFCM(title, body) {
           body: body
         },
         android: {
+          priority: 'high',
           notification: {
-            icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
             color: '#2e7d32',
-            imageUrl: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png'
+            channelId: 'sapos-league-games',
+            priority: 'high',
+            defaultSound: true,
+            defaultVibrateTimings: true
           }
         },
         webpush: {
           notification: {
             icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
-            badge: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png'
+            badge: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
+            vibrate: [200, 100, 200],
+            requireInteraction: false
           },
           fcmOptions: {
             link: 'https://sapos-league.web.app/'
@@ -236,8 +241,7 @@ async function sendToFCM(title, body) {
         },
         data: {
           type: 'game-notification',
-          timestamp: Date.now().toString(),
-          icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png'
+          timestamp: Date.now().toString()
         },
         token: token
       });
