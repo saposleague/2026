@@ -463,3 +463,105 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
     });
   }
 });
+
+/**
+ * Função para testar notificações de segunda a quarta manualmente
+ */
+exports.testWeekNotification = functions.https.onRequest(async (req, res) => {
+  try {
+    console.log('🧪 Teste manual de notificação da semana iniciado...');
+    
+    // Calcular data da próxima quinta-feira
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui
+    
+    let daysUntilThursday;
+    if (dayOfWeek === 0) daysUntilThursday = 4; // Domingo -> Quinta
+    else if (dayOfWeek === 1) daysUntilThursday = 3; // Segunda -> Quinta
+    else if (dayOfWeek === 2) daysUntilThursday = 2; // Terça -> Quinta
+    else if (dayOfWeek === 3) daysUntilThursday = 1; // Quarta -> Quinta
+    else if (dayOfWeek === 4) daysUntilThursday = 7; // Quinta -> Próxima quinta
+    else if (dayOfWeek === 5) daysUntilThursday = 6; // Sexta -> Quinta
+    else daysUntilThursday = 5; // Sábado -> Quinta
+    
+    const thursday = new Date(today);
+    thursday.setDate(today.getDate() + daysUntilThursday);
+    const thursdayString = thursday.toISOString().split('T')[0];
+    
+    console.log(`📅 Buscando jogos para quinta-feira: ${thursdayString}`);
+    
+    // Buscar jogos de quinta-feira
+    const games = await getGamesForDate(thursdayString);
+    
+    console.log(`⚽ Jogos encontrados: ${games.length}`);
+    
+    if (games.length === 0) {
+      res.json({
+        success: false,
+        message: 'Nenhum jogo encontrado para quinta-feira',
+        date: thursdayString,
+        daysUntil: daysUntilThursday
+      });
+      return;
+    }
+    
+    // Criar mensagem
+    const title = games.length === 1 
+      ? `Jogo Quinta-Feira - ${games[0].rodada}ª Rodada`
+      : `Jogos Quinta-Feira - ${games[0].rodada}ª Rodada`;
+    const body = games.map(g => `${g.timeA} x ${g.timeB} às ${g.hora}`).join('\n');
+    
+    console.log(`📢 Título: ${title}`);
+    console.log(`📝 Mensagem: ${body}`);
+    
+    // Contar dispositivos registrados
+    const fcmTokensSnapshot = await admin.firestore().collection('fcmTokens').get();
+    const iosSubsSnapshot = await admin.firestore().collection('webPushSubscriptions').get();
+    
+    const fcmCount = fcmTokensSnapshot.size;
+    const iosCount = iosSubsSnapshot.size;
+    
+    console.log(`📱 Dispositivos FCM: ${fcmCount}`);
+    console.log(`🍎 Dispositivos iOS: ${iosCount}`);
+    
+    if (fcmCount === 0 && iosCount === 0) {
+      res.json({
+        success: false,
+        message: 'Nenhum dispositivo registrado',
+        games: games.length
+      });
+      return;
+    }
+    
+    // Enviar notificação
+    const fcmResult = await sendToFCM(title, body);
+    const iosResult = await sendToWebPush(title, body);
+    
+    const totalSent = fcmResult.success + iosResult.success;
+    const totalFailed = fcmResult.failure + iosResult.failure;
+    
+    console.log(`✅ Total enviadas: ${totalSent}`);
+    console.log(`❌ Total falhas: ${totalFailed}`);
+    
+    res.json({
+      success: true,
+      sent: totalSent,
+      failed: totalFailed,
+      fcm: { sent: fcmResult.success, failed: fcmResult.failure, total: fcmCount },
+      ios: { sent: iosResult.success, failed: iosResult.failure, total: iosCount },
+      games: games.length,
+      thursdayDate: thursdayString,
+      daysUntil: daysUntilThursday,
+      title: title,
+      body: body
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro ao enviar notificação de teste da semana:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
