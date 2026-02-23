@@ -68,60 +68,6 @@ exports.notifyWeekGames = functions.pubsub
   });
 
 /**
- * TESTE - Notificações de Segunda a Quarta às 10:50
- * Avisa sobre jogos de quinta-feira
- */
-exports.notifyWeekGamesTest = functions.pubsub
-  .schedule('50 10 * * 1,2,3') // Segunda, Terça, Quarta às 10:50 (TESTE)
-  .timeZone('America/Sao_Paulo')
-  .onRun(async (context) => {
-    console.log('🧪 TESTE - Verificando jogos da semana (quinta-feira - 10:50)...');
-    
-    try {
-      // Calcular data da próxima quinta-feira
-      const today = new Date();
-      const dayOfWeek = today.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui
-      
-      let daysUntilThursday;
-      if (dayOfWeek === 1) daysUntilThursday = 3; // Segunda -> Quinta
-      else if (dayOfWeek === 2) daysUntilThursday = 2; // Terça -> Quinta
-      else if (dayOfWeek === 3) daysUntilThursday = 1; // Quarta -> Quinta
-      else return null; // Não deveria acontecer
-      
-      const thursday = new Date(today);
-      thursday.setDate(today.getDate() + daysUntilThursday);
-      const thursdayString = thursday.toISOString().split('T')[0]; // YYYY-MM-DD
-      
-      console.log(`🔍 Buscando jogos para quinta-feira: ${thursdayString}`);
-      
-      // Buscar jogos de quinta-feira
-      const games = await getGamesForDate(thursdayString);
-      
-      if (games.length === 0) {
-        console.log('📭 Nenhum jogo encontrado para quinta-feira');
-        return null;
-      }
-      
-      console.log(`⚽ ${games.length} jogo(s) encontrado(s) para quinta-feira`);
-      
-      // Criar mensagem
-      const title = games.length === 1 
-        ? `Jogo Quinta-Feira - ${games[0].rodada}ª Rodada`
-        : `Jogos Quinta-Feira - ${games[0].rodada}ª Rodada`;
-      const body = games.map(g => `${g.timeA} x ${g.timeB} às ${g.hora}`).join('\n');
-      
-      // Enviar notificação
-      await sendNotificationToAll(title, body);
-      
-      return { success: true, games: games.length };
-      
-    } catch (error) {
-      console.error('❌ Erro ao enviar notificações da semana (teste):', error);
-      throw error;
-    }
-  });
-
-/**
  * Notificações de Quinta às 00:00, 12:00 e 19:00
  * Avisa sobre jogos de hoje
  */

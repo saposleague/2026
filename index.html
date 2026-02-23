@@ -431,39 +431,6 @@
   
   <!-- Header fixo -->
   <header>SAPOS LEAGUE</header>
-
-  <!-- Botão de Teste iOS (flutuante) -->
-  <a href="test-ios-push.html" id="btn-test-ios" style="
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 15px 20px;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    transition: all 0.3s ease;
-  " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-    <span style="font-size: 18px;">🍎</span>
-    <span>Teste iOS</span>
-  </a>
-
-  <script>
-    // Mostrar botão de teste iOS apenas em dispositivos iOS
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-      const btnTestIOS = document.getElementById('btn-test-ios');
-      if (btnTestIOS) {
-        btnTestIOS.style.display = 'flex';
-      }
-    }
-  </script>
   
   <!-- Navegação de Fases (abaixo do header) -->
   <div class="fase-navigation">
