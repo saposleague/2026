@@ -32,6 +32,22 @@ class FCMNotifications {
                 return;
             }
 
+            // Verificar se é Android ou Chrome (FCM é para esses)
+            const isAndroid = /Android/.test(navigator.userAgent);
+            const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge|Edg/.test(navigator.userAgent);
+            const isEdge = /Edge|Edg/.test(navigator.userAgent);
+            
+            console.log('🔔 [FCM] User Agent:', navigator.userAgent);
+            console.log('🔔 [FCM] É Android?', isAndroid);
+            console.log('🔔 [FCM] É Chrome?', isChrome);
+            console.log('🔔 [FCM] É Edge?', isEdge);
+            
+            // FCM deve ser usado em Android, Chrome e Edge
+            if (!isAndroid && !isChrome && !isEdge) {
+                console.log('❌ [FCM] Não é Android/Chrome/Edge - pulando FCM');
+                return;
+            }
+
             console.log('🔔 [FCM] Inicializando Firebase Cloud Messaging...');
             console.log('🔔 [FCM] Permissão atual:', Notification.permission);
 

@@ -30,12 +30,13 @@ class WebPushIOS {
             console.log('🍎 [iOS] É iOS?', isIOS);
             console.log('🍎 [iOS] É Android?', isAndroid);
             
-            // Se for Android, não executar
+            // Se for Android, não executar - PRIORIDADE MÁXIMA
             if (isAndroid) {
                 console.log('🤖 [iOS] Android detectado, usando FCM em vez de Web Push');
                 return;
             }
             
+            // Se não for iOS, não executar
             if (!isIOS) {
                 console.log('🍎 [iOS] Não é iOS, pulando...');
                 return;
