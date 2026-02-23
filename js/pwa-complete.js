@@ -470,10 +470,8 @@ class PWAComplete {
                     this.sendWelcomeNotification();
                     
                     // Registrar token FCM para notificações push (Android/Chrome)
-                    if (window.fcmNotifications) {
-                        this.log('🔔 Registrando token FCM...');
-                        await window.fcmNotifications.onPermissionGranted();
-                    }
+                    this.log('🔔 Tentando registrar token FCM...');
+                    await this.registerFCMToken();
                     
                     // Registrar Web Push para iOS
                     if (window.webPushIOS) {
@@ -900,6 +898,33 @@ class PWAComplete {
     }
 
     // ==================== PERSISTÊNCIA ====================
+    
+    async registerFCMToken() {
+        // Tentar registrar token FCM com retry
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        while (attempts < maxAttempts) {
+            if (window.fcmNotifications) {
+                this.log('✅ fcmNotifications encontrado, registrando token...');
+                try {
+                    await window.fcmNotifications.onPermissionGranted();
+                    this.log('✅ Token FCM registrado com sucesso!');
+                    return true;
+                } catch (error) {
+                    this.log('❌ Erro ao registrar token FCM: ' + error.message, 'ERROR');
+                    return false;
+                }
+            }
+            
+            this.log(`⏳ Aguardando fcmNotifications carregar... (tentativa ${attempts + 1}/${maxAttempts})`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            attempts++;
+        }
+        
+        this.log('❌ fcmNotifications não carregou após ' + maxAttempts + ' tentativas', 'ERROR');
+        return false;
+    }
 }
 
 // Inicializar sistema completo
