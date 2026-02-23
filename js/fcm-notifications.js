@@ -81,7 +81,7 @@ class FCMNotifications {
 
             // Obter token FCM
             const token = await getToken(this.messaging, {
-                vapidKey: 'BCGlPwG2538voWXXYiSV-y6P1jIWN60aYHdcNUQcS4rpWe-eJpo5bK4-HJHkcbDRzD-S0jaW-sXeRL8XsGLPBts',
+                vapidKey: 'BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg',
                 serviceWorkerRegistration: registration
             });
 

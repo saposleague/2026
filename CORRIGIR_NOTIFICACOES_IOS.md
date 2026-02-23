@@ -11,40 +11,27 @@ As notificações não funcionam no iPhone porque:
 
 ## 🔧 Passos para Corrigir
 
-### 1. Gerar Par de Chaves VAPID (se necessário)
+### ✅ Chaves VAPID Configuradas
 
-Se você não tem a chave privada correspondente à chave pública `BCGlPwG2538voWXXYiSV-y6P1jIWN60aYHdcNUQcS4rpWe-eJpo5bK4-HJHkcbDRzD-S0jaW-sXeRL8XsGLPBts`, você precisa gerar um novo par:
+As chaves VAPID já foram geradas e configuradas em todos os arquivos:
 
-```bash
-cd functions
-npx web-push generate-vapid-keys
-```
+**Chave Pública:** `BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg`
+**Chave Privada:** `NFZcjl9zuoiUVOSaUtBI9oF1C4cRgyANQ3mYeHAMnCI`
 
-Isso vai gerar algo como:
-```
-Public Key: BCGlPwG2538voWXXYiSV-y6P1jIWN60aYHdcNUQcS4rpWe-eJpo5bK4-HJHkcbDRzD-S0jaW-sXeRL8XsGLPBts
-Private Key: sua-chave-privada-aqui
-```
+Arquivos atualizados:
+- ✅ `functions/index.js` - Backend com chave privada
+- ✅ `js/fcm-notifications.js` - FCM com chave pública
+- ✅ `js/web-push-ios.js` - Web Push iOS com chave pública
+- ✅ `debug-ios.html` - Debug com chave pública
+- ✅ `test-ios-push.html` - Teste com chave pública
 
-### 2. Atualizar a Chave Privada no Backend
-
-Edite `functions/index.js` e substitua `YOUR_PRIVATE_VAPID_KEY_HERE` pela sua chave privada:
-
-```javascript
-webpush.setVapidDetails(
-  'mailto:contato@saposleague.com',
-  'BCGlPwG2538voWXXYiSV-y6P1jIWN60aYHdcNUQcS4rpWe-eJpo5bK4-HJHkcbDRzD-S0jaW-sXeRL8XsGLPBts',
-  'SUA_CHAVE_PRIVADA_AQUI'  // ← Coloque aqui
-);
-```
-
-### 3. Fazer Deploy das Functions
+### 1. Fazer Deploy das Functions
 
 ```bash
-firebase deploy --only functions
+firebase deploy --only functions,hosting
 ```
 
-### 4. Testar no iPhone
+### 2. Testar no iPhone
 
 #### A. Desinstalar o PWA atual
 1. Pressione e segure o ícone do app
@@ -62,11 +49,11 @@ firebase deploy --only functions
 #### D. Testar notificações
 1. Abra o PWA instalado
 2. Aceite as permissões de notificação quando solicitado
-3. Acesse `https://seu-site.com/debug-ios.html`
+3. Acesse `https://seu-site.com/test-ios-push.html`
 4. Clique em "Testar Web Push"
 5. Verifique os logs
 
-### 5. Enviar Notificação de Teste
+### 3. Enviar Notificação de Teste
 
 Acesse a função de teste:
 ```

@@ -10,39 +10,21 @@
 
 ## 🔧 O que você precisa fazer AGORA
 
-### 1️⃣ Configurar a Chave Privada VAPID
+### ✅ Chaves VAPID já configuradas!
 
-A chave privada está como `YOUR_PRIVATE_VAPID_KEY_HERE` no arquivo `functions/index.js`.
+As chaves VAPID foram geradas e já estão configuradas em todos os arquivos:
 
-**Opção A: Se você tem a chave privada**
-- Substitua `YOUR_PRIVATE_VAPID_KEY_HERE` pela sua chave privada
+**Chave Pública:** `BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg`
+**Chave Privada:** `NFZcjl9zuoiUVOSaUtBI9oF1C4cRgyANQ3mYeHAMnCI`
 
-**Opção B: Se você NÃO tem a chave privada**
-```bash
-cd functions
-npx web-push generate-vapid-keys
-```
-
-Isso vai gerar um novo par de chaves. Você precisará:
-1. Copiar a chave PÚBLICA e substituir em TODOS os arquivos:
-   - `js/fcm-notifications.js` (linha ~95)
-   - `js/web-push-ios.js` (linha ~75)
-   - `debug-ios.html` (linha ~115)
-   - `test-ios-push.html` (linha ~245)
-
-2. Copiar a chave PRIVADA e colocar em `functions/index.js` (linha ~11)
-
-### 2️⃣ Fazer Deploy
+### 1️⃣ Fazer Deploy
 
 ```bash
-# Deploy das functions
-firebase deploy --only functions
-
-# Se você mudou as chaves VAPID, também faça deploy do hosting
-firebase deploy --only hosting
+# Deploy das functions e hosting
+firebase deploy --only functions,hosting
 ```
 
-### 3️⃣ Testar no iPhone
+### 2️⃣ Testar no iPhone
 
 #### Passo 1: Limpar tudo
 1. Desinstale o PWA atual (pressione e segure o ícone → Remover)
@@ -53,14 +35,14 @@ firebase deploy --only hosting
 2. Toque em compartilhar → "Adicionar à Tela de Início"
 3. Abra o PWA instalado
 
-#### Passo 3: Testar
+#### Passo 4: Enviar notificação de teste
 1. Acesse `https://seu-site.com/test-ios-push.html` no PWA
 2. Clique em "🔔 Solicitar Permissão"
 3. Aceite as notificações
 4. Clique em "📝 Registrar Push"
 5. Verifique se aparece "✅ TUDO PRONTO!"
 
-#### Passo 4: Enviar notificação de teste
+#### Passo 5: Enviar notificação de teste
 Acesse no navegador:
 ```
 https://us-central1-SEU-PROJETO.cloudfunctions.net/testNotification
