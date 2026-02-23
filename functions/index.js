@@ -51,9 +51,10 @@ exports.notifyWeekGames = functions.pubsub
       console.log(`⚽ ${games.length} jogo(s) encontrado(s) para quinta-feira`);
       
       // Criar mensagem
-      const title = games.length === 1 ? 'Jogo da Semana' : 'Jogos da Semana';
-      const rodada = games[0].rodada;
-      const body = createGameMessage(games, rodada);
+      const title = games.length === 1 
+        ? `Jogo Quinta-Feira - ${games[0].rodada}ª Rodada`
+        : `Jogos Quinta-Feira - ${games[0].rodada}ª Rodada`;
+      const body = games.map(g => `${g.timeA} x ${g.timeB} às ${g.hora}`).join('\n');
       
       // Enviar notificação
       await sendNotificationToAll(title, body);
@@ -93,50 +94,10 @@ exports.notifyTodayGames = functions.pubsub
       console.log(`⚽ ${games.length} jogo(s) encontrado(s) para hoje`);
       
       // Criar mensagem
-      const title = games.length === 1 ? 'Jogo Hoje' : 'Jogos Hoje';
-      const rodada = games[0].rodada;
-      const body = createGameMessage(games, rodada);
-      
-      // Enviar notificação
-      await sendNotificationToAll(title, body);
-      
-      return { success: true, games: games.length };
-      
-    } catch (error) {
-      console.error('❌ Erro ao enviar notificações de hoje:', error);
-      throw error;
-    }
-  });
-
-/**
- * Notificação de TESTE - Quinta às 16:40
- */
-exports.notifyTodayGamesTest = functions.pubsub
-  .schedule('40 16 * * 4') // Quinta às 16:40 (TESTE)
-  .timeZone('America/Sao_Paulo')
-  .onRun(async (context) => {
-    console.log('🧪 TESTE - Verificando jogos de hoje (quinta-feira - 16:40)...');
-    
-    try {
-      const today = new Date();
-      const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD
-      
-      console.log(`🔍 Buscando jogos para hoje: ${todayString}`);
-      
-      // Buscar jogos de hoje
-      const games = await getGamesForDate(todayString);
-      
-      if (games.length === 0) {
-        console.log('📭 Nenhum jogo encontrado para hoje');
-        return null;
-      }
-      
-      console.log(`⚽ ${games.length} jogo(s) encontrado(s) para hoje`);
-      
-      // Criar mensagem
-      const title = games.length === 1 ? 'Jogo Hoje' : 'Jogos Hoje';
-      const rodada = games[0].rodada;
-      const body = createGameMessage(games, rodada);
+      const title = games.length === 1 
+        ? `Jogo Hoje - ${games[0].rodada}ª Rodada`
+        : `Jogos Hoje - ${games[0].rodada}ª Rodada`;
+      const body = games.map(g => `${g.timeA} x ${g.timeB} às ${g.hora}`).join('\n');
       
       // Enviar notificação
       await sendNotificationToAll(title, body);
@@ -194,21 +155,6 @@ async function getGamesForDate(dateString) {
   });
   
   return games;
-}
-
-/**
- * Cria mensagem formatada com os jogos
- */
-function createGameMessage(games, rodada) {
-  const rodadaOrdinal = `${rodada}ª Rodada`;
-  
-  if (games.length === 1) {
-    const game = games[0];
-    return `${rodadaOrdinal}\n${game.timeA} x ${game.timeB} às ${game.hora}`;
-  } else {
-    const gamesList = games.map(g => `${g.timeA} x ${g.timeB} às ${g.hora}`).join('\n');
-    return `${rodadaOrdinal}\n${gamesList}`;
-  }
 }
 
 /**
@@ -411,9 +357,10 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
     }
     
     // Criar mensagem
-    const title = games.length === 1 ? 'Jogo Hoje' : 'Jogos Hoje';
-    const rodada = games[0].rodada;
-    const body = createGameMessage(games, rodada);
+    const title = games.length === 1 
+      ? `Jogo Hoje - ${games[0].rodada}ª Rodada`
+      : `Jogos Hoje - ${games[0].rodada}ª Rodada`;
+    const body = games.map(g => `${g.timeA} x ${g.timeB} às ${g.hora}`).join('\n');
     
     console.log(`📢 Título: ${title}`);
     console.log(`📝 Mensagem: ${body}`);
