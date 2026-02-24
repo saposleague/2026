@@ -12,9 +12,9 @@ Status: ✅ Totalmente funcional
 
 ## 🌐 Acesso
 
-**URL Principal:** https://saposleague.github.io/teste/  
-**Painel Admin:** https://saposleague.github.io/teste/painel.html  
-**Debug (desenvolvimento):** https://saposleague.github.io/teste/debug.html
+**URL Principal:** https://saposleague.github.io/2026/  
+**Painel Admin:** https://saposleague.github.io/2026/painel.html  
+**Debug (desenvolvimento):** https://saposleague.github.io/2026/debug.html
 
 ---
 
@@ -112,14 +112,14 @@ Status: ✅ Totalmente funcional
 ## 📱 Instalação para Usuários
 
 ### iPhone (iOS 16.4+)
-1. Abra o Safari e acesse https://saposleague.github.io/teste/
+1. Abra o Safari e acesse https://saposleague.github.io/2026/
 2. Toque no botão de compartilhar
 3. "Adicionar à Tela de Início"
 4. Abra o app instalado
 5. Aceite as notificações quando solicitado
 
 ### Android
-1. Abra o Chrome e acesse https://saposleague.github.io/teste/
+1. Abra o Chrome e acesse https://saposleague.github.io/2026/
 2. Toque em "Instalar" quando aparecer
 3. Ou Menu → "Adicionar à tela inicial"
 4. Abra o app instalado
@@ -152,7 +152,7 @@ curl https://us-central1-sapos-league.cloudfunctions.net/testWeekNotification
 3. Procure por erros ou falhas
 
 ### Página de Debug
-- Acesse https://saposleague.github.io/teste/debug.html
+- Acesse https://saposleague.github.io/2026/debug.html
 - Ferramenta completa para testar notificações
 - Mostra informações do dispositivo e APIs suportadas
 - Permite testar subscription e notificações locais
@@ -240,7 +240,7 @@ curl https://us-central1-sapos-league.cloudfunctions.net/testWeekNotification
 ## 📞 Suporte
 
 ### Ferramentas de Debug
-- **Página Debug:** https://saposleague.github.io/teste/debug.html
+- **Página Debug:** https://saposleague.github.io/2026/debug.html
 - **Firebase Console:** https://console.firebase.google.com/project/sapos-league
 - **Funções de teste manuais**
 
