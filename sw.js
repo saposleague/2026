@@ -12,7 +12,6 @@ const STATIC_ASSETS = [
   './painel.html',
   './admin.html',
   './offline.html',
-  './debug.html',
   './css/index.css',
   './css/painel.css',
   './css/admin.css',

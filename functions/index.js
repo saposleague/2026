@@ -312,7 +312,7 @@ async function sendToWebPush(title, body) {
       title: title,
       body: body,
       icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
-      badge: 'https://sapos-league.web.app/images/teste-notificacao.png',
+      badge: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
       tag: 'sapos-league',
       requireInteraction: false,
       vibrate: [200, 100, 200]
@@ -429,7 +429,7 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
           title: title,
           body: body,
           icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
-          badge: 'https://sapos-league.web.app/images/teste-notificacao.png',
+          badge: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
           tag: 'sapos-league',
           requireInteraction: false,
           vibrate: [200, 100, 200]
