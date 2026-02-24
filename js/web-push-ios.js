@@ -16,7 +16,7 @@ class WebPushIOS {
 
     async init() {
         try {
-            console.log('🍎 [iOS] Inicializando Web Push...');
+            console.log('📱 [Web Push] Inicializando Web Push...');
 
             // Verificar se é iOS ou Android
             const isIOS = (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) || 
@@ -24,18 +24,14 @@ class WebPushIOS {
             
             const isAndroid = /Android/.test(navigator.userAgent);
             
-            console.log('🍎 [iOS] User Agent:', navigator.userAgent);
-            console.log('🍎 [iOS] Platform:', navigator.platform);
-            console.log('🍎 [iOS] É iOS?', isIOS);
-            console.log('🍎 [iOS] É Android?', isAndroid);
+            console.log('📱 [Web Push] User Agent:', navigator.userAgent);
+            console.log('📱 [Web Push] Platform:', navigator.platform);
+            console.log('📱 [Web Push] É iOS?', isIOS);
+            console.log('📱 [Web Push] É Android?', isAndroid);
             
-            // Aceitar iOS ou Android (Web Push funciona em ambos)
-            if (!isIOS && !isAndroid) {
-                console.log('🍎 [iOS] Não é iOS nem Android, pulando...');
-                return;
-            }
-
-            console.log('📱 [Web Push] Dispositivo móvel detectado');
+            // Web Push funciona em iOS, Android e outros navegadores modernos
+            // Não vamos restringir por plataforma, apenas verificar suporte
+            console.log('📱 [Web Push] Verificando suporte a notificações...');
 
             // Verificar suporte a notificações
             if (!('Notification' in window)) {
@@ -76,17 +72,17 @@ class WebPushIOS {
 
     async subscribe() {
         try {
-            console.log('📝 [iOS] Registrando subscription...');
+            console.log('📝 [Web Push] Registrando subscription...');
 
             // Aguardar Service Worker estar pronto
             const registration = await navigator.serviceWorker.ready;
-            console.log('✅ [iOS] Service Worker pronto');
+            console.log('✅ [Web Push] Service Worker pronto');
 
             // Verificar se já existe subscription
             let subscription = await registration.pushManager.getSubscription();
 
             if (!subscription) {
-                console.log('📝 [iOS] Criando nova subscription...');
+                console.log('📝 [Web Push] Criando nova subscription...');
                 
                 // Criar nova subscription
                 subscription = await registration.pushManager.subscribe({
@@ -94,53 +90,70 @@ class WebPushIOS {
                     applicationServerKey: this.urlBase64ToUint8Array('BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg')
                 });
 
-                console.log('✅ [iOS] Subscription criada');
+                console.log('✅ [Web Push] Subscription criada');
             } else {
-                console.log('✅ [iOS] Subscription já existe');
+                console.log('✅ [Web Push] Subscription já existe');
             }
 
             this.subscription = subscription;
+            console.log('📋 [Web Push] Subscription endpoint:', subscription.endpoint);
 
             // Salvar no Firestore
             await this.saveSubscription(subscription);
 
-            console.log('✅ [iOS] Subscription salva com sucesso!');
+            console.log('✅ [Web Push] Subscription salva com sucesso!');
 
         } catch (error) {
-            console.error('❌ [iOS] Erro ao criar subscription:', error);
-            console.error('❌ [iOS] Detalhes:', error.message);
+            console.error('❌ [Web Push] Erro ao criar subscription:', error);
+            console.error('❌ [Web Push] Detalhes:', error.message);
+            console.error('❌ [Web Push] Stack:', error.stack);
         }
     }
 
     async saveSubscription(subscription) {
         try {
             console.log('💾 [Web Push] Salvando subscription no Firestore...');
+            console.log('📋 [Web Push] Subscription completa:', JSON.stringify(subscription.toJSON(), null, 2));
 
             // Converter subscription para JSON
             const subscriptionJSON = subscription.toJSON();
+            console.log('📋 [Web Push] Subscription JSON:', subscriptionJSON);
             
             // Criar ID único baseado no endpoint
             const subscriptionId = this.hashString(subscriptionJSON.endpoint);
             console.log('🔑 [Web Push] Subscription ID:', subscriptionId);
+            console.log('🔗 [Web Push] Endpoint:', subscriptionJSON.endpoint);
             
             // Detectar plataforma
             const isAndroid = /Android/.test(navigator.userAgent);
-            const platform = isAndroid ? 'android' : 'ios';
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const platform = isAndroid ? 'android' : (isIOS ? 'ios' : 'other');
+            console.log('📱 [Web Push] Plataforma detectada:', platform);
 
-            // Salvar no Firestore
-            await setDoc(doc(db, 'webPushSubscriptions', subscriptionId), {
+            // Preparar dados para salvar
+            const dataToSave = {
                 subscription: subscriptionJSON,
                 endpoint: subscriptionJSON.endpoint,
                 platform: platform,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
                 userAgent: navigator.userAgent
-            }, { merge: true });
+            };
+            
+            console.log('💾 [Web Push] Dados a salvar:', dataToSave);
+            console.log('💾 [Web Push] Salvando no documento: webPushSubscriptions/' + subscriptionId);
 
-            console.log(`✅ [Web Push] Subscription salva no Firestore (${platform})`);
+            // Salvar no Firestore
+            await setDoc(doc(db, 'webPushSubscriptions', subscriptionId), dataToSave, { merge: true });
+
+            console.log(`✅ [Web Push] Subscription salva no Firestore com sucesso (${platform})`);
+            console.log(`✅ [Web Push] Documento ID: ${subscriptionId}`);
 
         } catch (error) {
             console.error('❌ [Web Push] Erro ao salvar subscription:', error);
+            console.error('❌ [Web Push] Código do erro:', error.code);
+            console.error('❌ [Web Push] Mensagem:', error.message);
+            console.error('❌ [Web Push] Stack:', error.stack);
             throw error;
         }
     }
@@ -171,7 +184,8 @@ class WebPushIOS {
     }
 
     async onPermissionGranted() {
-        console.log('🍎 [iOS] onPermissionGranted chamado!');
+        console.log('📱 [Web Push] onPermissionGranted chamado!');
+        console.log('📱 [Web Push] Permissão concedida - registrando subscription...');
         await this.subscribe();
     }
 }

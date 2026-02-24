@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debug - Notificações Push</title>
+  
+  <meta name="theme-color" content="#2e7d32">
+  <link rel="manifest" href="./site.webmanifest">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2em;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .card h2 {
+      margin-bottom: 15px;
+      font-size: 1.3em;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+      padding-bottom: 10px;
+    }
+    
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .info-label {
+      font-weight: 600;
+      opacity: 0.8;
+    }
+    
+    .info-value {
+      text-align: right;
+      word-break: break-all;
+      max-width: 60%;
+    }
+    
+    .status-ok {
+      color: #4caf50;
+      font-weight: bold;
+    }
+    
+    .status-error {
+      color: #f44336;
+      font-weight: bold;
+    }
+    
+    .status-warning {
+      color: #ff9800;
+      font-weight: bold;
+    }
+    
+    button {
+      background: #4caf50;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 1em;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    button:hover {
+      background: #45a049;
+      transform: translateY(-2px);
+    }
+    
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    #logs {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      border-radius: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-left: 3px solid #4caf50;
+      padding-left: 10px;
+    }
+    
+    .log-error {
+      border-left-color: #f44336;
+      color: #ffcdd2;
+    }
+    
+    .log-warn {
+      border-left-color: #ff9800;
+      color: #ffe0b2;
+    }
+    
+    .log-info {
+      border-left-color: #2196f3;
+      color: #bbdefb;
+    }
+    
+    .timestamp {
+      opacity: 0.6;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔔 Debug - Notificações Push</h1>
+    
+    <div class="card">
+      <h2>📱 Informações do Dispositivo</h2>
+      <div class="info-row">
+        <span class="info-label">User Agent:</span>
+        <span class="info-value" id="user-agent"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Plataforma:</span>
+        <span class="info-value" id="platform"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">É Android:</span>
+        <span class="info-value" id="is-android"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">É iOS:</span>
+        <span class="info-value" id="is-ios"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">É PWA:</span>
+        <span class="info-value" id="is-pwa"></span>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>🔧 Suporte a APIs</h2>
+      <div class="info-row">
+        <span class="info-label">Notification API:</span>
+        <span class="info-value" id="has-notification"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Service Worker:</span>
+        <span class="info-value" id="has-sw"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Push Manager:</span>
+        <span class="info-value" id="has-push"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Permissão Atual:</span>
+        <span class="info-value" id="permission"></span>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>🎯 Ações</h2>
+      <button id="btn-request-permission">Solicitar Permissão</button>
+      <button id="btn-subscribe">Criar Subscription</button>
+      <button id="btn-check-subscription">Verificar Subscription</button>
+      <button id="btn-test-notification">Testar Notificação Local</button>
+      <button id="btn-clear-logs">Limpar Logs</button>
+    </div>
+    
+    <div class="card">
+      <h2>📋 Logs</h2>
+      <div id="logs"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getFirestore, collection, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { app } from './js/firebase-config.js';
+
+    const db = getFirestore(app);
+    
+    // Elementos
+    const logsDiv = document.getElementById('logs');
+    
+    // Função de log
+    function log(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.className = `log-entry log-${type}`;
+      entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+      logsDiv.appendChild(entry);
+      logsDiv.scrollTop = logsDiv.scrollHeight;
+      
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+    
+    // Detectar informações do dispositivo
+    function detectDevice() {
+      const ua = navigator.userAgent;
+      const isAndroid = /Android/.test(ua);
+      const isIOS = /iPad|iPhone|iPod/.test(ua);
+      const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+      
+      document.getElementById('user-agent').textContent = ua;
+      document.getElementById('platform').textContent = navigator.platform;
+      document.getElementById('is-android').innerHTML = isAndroid ? '<span class="status-ok">✅ Sim</span>' : '<span class="status-error">❌ Não</span>';
+      document.getElementById('is-ios').innerHTML = isIOS ? '<span class="status-ok">✅ Sim</span>' : '<span class="status-error">❌ Não</span>';
+      document.getElementById('is-pwa').innerHTML = isPWA ? '<span class="status-ok">✅ Sim</span>' : '<span class="status-error">❌ Não</span>';
+      
+      log(`Dispositivo detectado: ${isAndroid ? 'Android' : isIOS ? 'iOS' : 'Outro'}`);
+      log(`PWA: ${isPWA ? 'Sim' : 'Não'}`);
+    }
+    
+    // Verificar suporte a APIs
+    function checkAPIs() {
+      const hasNotification = 'Notification' in window;
+      const hasSW = 'serviceWorker' in navigator;
+      const hasPush = 'PushManager' in window;
+      const permission = hasNotification ? Notification.permission : 'não suportado';
+      
+      document.getElementById('has-notification').innerHTML = hasNotification ? '<span class="status-ok">✅ Suportado</span>' : '<span class="status-error">❌ Não suportado</span>';
+      document.getElementById('has-sw').innerHTML = hasSW ? '<span class="status-ok">✅ Suportado</span>' : '<span class="status-error">❌ Não suportado</span>';
+      document.getElementById('has-push').innerHTML = hasPush ? '<span class="status-ok">✅ Suportado</span>' : '<span class="status-error">❌ Não suportado</span>';
+      
+      let permissionHTML;
+      if (permission === 'granted') {
+        permissionHTML = '<span class="status-ok">✅ Concedida</span>';
+      } else if (permission === 'denied') {
+        permissionHTML = '<span class="status-error">❌ Negada</span>';
+      } else if (permission === 'default') {
+        permissionHTML = '<span class="status-warning">⏳ Não solicitada</span>';
+      } else {
+        permissionHTML = '<span class="status-error">❌ Não suportado</span>';
+      }
+      document.getElementById('permission').innerHTML = permissionHTML;
+      
+      log(`APIs: Notification=${hasNotification}, SW=${hasSW}, Push=${hasPush}`);
+      log(`Permissão: ${permission}`);
+    }
+    
+    // Solicitar permissão
+    async function requestPermission() {
+      log('Solicitando permissão...', 'info');
+      
+      try {
+        const permission = await Notification.requestPermission();
+        log(`Permissão: ${permission}`, permission === 'granted' ? 'info' : 'error');
+        checkAPIs();
+        
+        if (permission === 'granted') {
+          log('✅ Permissão concedida! Agora você pode criar uma subscription.', 'info');
+        }
+      } catch (error) {
+        log(`❌ Erro ao solicitar permissão: ${error.message}`, 'error');
+      }
+    }
+    
+    // Criar subscription
+    async function createSubscription() {
+      log('Criando subscription...', 'info');
+      
+      try {
+        if (!('serviceWorker' in navigator)) {
+          throw new Error('Service Worker não suportado');
+        }
+        
+        log('Aguardando Service Worker...', 'info');
+        const registration = await navigator.serviceWorker.ready;
+        log('✅ Service Worker pronto', 'info');
+        
+        // Verificar subscription existente
+        let subscription = await registration.pushManager.getSubscription();
+        
+        if (subscription) {
+          log('⚠️ Subscription já existe', 'warn');
+          log(`Endpoint: ${subscription.endpoint.substring(0, 50)}...`, 'info');
+        } else {
+          log('Criando nova subscription...', 'info');
+          
+          const vapidKey = 'BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg';
+          
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(vapidKey)
+          });
+          
+          log('✅ Subscription criada!', 'info');
+          log(`Endpoint: ${subscription.endpoint.substring(0, 50)}...`, 'info');
+        }
+        
+        // Salvar no Firestore
+        log('Salvando no Firestore...', 'info');
+        const subscriptionJSON = subscription.toJSON();
+        const subscriptionId = hashString(subscriptionJSON.endpoint);
+        
+        const isAndroid = /Android/.test(navigator.userAgent);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const platform = isAndroid ? 'android' : (isIOS ? 'ios' : 'other');
+        
+        await setDoc(doc(db, 'webPushSubscriptions', subscriptionId), {
+          subscription: subscriptionJSON,
+          endpoint: subscriptionJSON.endpoint,
+          platform: platform,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          userAgent: navigator.userAgent
+        }, { merge: true });
+        
+        log(`✅ Salvo no Firestore! ID: ${subscriptionId}`, 'info');
+        log(`Plataforma: ${platform}`, 'info');
+        
+      } catch (error) {
+        log(`❌ Erro: ${error.message}`, 'error');
+        console.error(error);
+      }
+    }
+    
+    // Verificar subscription
+    async function checkSubscription() {
+      log('Verificando subscription...', 'info');
+      
+      try {
+        if (!('serviceWorker' in navigator)) {
+          throw new Error('Service Worker não suportado');
+        }
+        
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        
+        if (subscription) {
+          log('✅ Subscription encontrada!', 'info');
+          log(`Endpoint: ${subscription.endpoint}`, 'info');
+          
+          const subscriptionJSON = subscription.toJSON();
+          log(`Keys: ${JSON.stringify(subscriptionJSON.keys)}`, 'info');
+        } else {
+          log('❌ Nenhuma subscription encontrada', 'warn');
+        }
+      } catch (error) {
+        log(`❌ Erro: ${error.message}`, 'error');
+      }
+    }
+    
+    // Testar notificação local
+    async function testNotification() {
+      log('Testando notificação local...', 'info');
+      
+      try {
+        if (Notification.permission !== 'granted') {
+          throw new Error('Permissão não concedida');
+        }
+        
+        const registration = await navigator.serviceWorker.ready;
+        
+        await registration.showNotification('🔔 Teste de Notificação', {
+          body: 'Esta é uma notificação de teste do Sapos League!',
+          icon: './images/web-app-manifest-192x192.png',
+          badge: './images/favicon-96x96.png',
+          vibrate: [200, 100, 200],
+          tag: 'test-notification'
+        });
+        
+        log('✅ Notificação enviada!', 'info');
+      } catch (error) {
+        log(`❌ Erro: ${error.message}`, 'error');
+      }
+    }
+    
+    // Funções auxiliares
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+    
+    function hashString(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return 'sub_' + Math.abs(hash).toString(36);
+    }
+    
+    // Event listeners
+    document.getElementById('btn-request-permission').addEventListener('click', requestPermission);
+    document.getElementById('btn-subscribe').addEventListener('click', createSubscription);
+    document.getElementById('btn-check-subscription').addEventListener('click', checkSubscription);
+    document.getElementById('btn-test-notification').addEventListener('click', testNotification);
+    document.getElementById('btn-clear-logs').addEventListener('click', () => {
+      logsDiv.innerHTML = '';
+      log('Logs limpos', 'info');
+    });
+    
+    // Inicializar
+    detectDevice();
+    checkAPIs();
+    log('Debug page carregada', 'info');
+  </script>
+</body>
+</html>

@@ -469,15 +469,46 @@ class PWAComplete {
                     
                     this.sendWelcomeNotification();
                     
-                    // Registrar token FCM para notificações push (Android/Chrome)
-                    this.log('🔔 Tentando registrar token FCM...');
-                    await this.registerFCMToken();
-                    
-                    // Registrar Web Push para iOS
+                    // Registrar Web Push para iOS e Android
                     if (window.webPushIOS) {
-                        this.log('🍎 Registrando Web Push iOS...');
-                        await window.webPushIOS.onPermissionGranted();
+                        this.log('📱 [Web Push] Registrando Web Push...');
+                        try {
+                            await window.webPushIOS.onPermissionGranted();
+                            this.log('✅ [Web Push] Registro concluído com sucesso!');
+                        } catch (error) {
+                            this.log('❌ [Web Push] Erro ao registrar: ' + error.message, 'ERROR');
+                            this.log('❌ [Web Push] Stack: ' + error.stack, 'ERROR');
+                        }
+                    } else {
+                        this.log('⚠️ [Web Push] webPushIOS não está disponível', 'WARN');
+                        this.log('⚠️ [Web Push] Tentando aguardar carregamento...', 'WARN');
+                        
+                        // Tentar aguardar o carregamento do módulo
+                        let attempts = 0;
+                        const maxAttempts = 10;
+                        
+                        while (attempts < maxAttempts && !window.webPushIOS) {
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            attempts++;
+                            this.log(`⏳ [Web Push] Aguardando... (${attempts}/${maxAttempts})`, 'WARN');
+                        }
+                        
+                        if (window.webPushIOS) {
+                            this.log('✅ [Web Push] Módulo carregado, registrando...');
+                            try {
+                                await window.webPushIOS.onPermissionGranted();
+                                this.log('✅ [Web Push] Registro concluído com sucesso!');
+                            } catch (error) {
+                                this.log('❌ [Web Push] Erro ao registrar: ' + error.message, 'ERROR');
+                            }
+                        } else {
+                            this.log('❌ [Web Push] Módulo não carregou após ' + maxAttempts + ' tentativas', 'ERROR');
+                        }
                     }
+                    
+                    // Registrar token FCM para notificações push (Android/Chrome) - DESABILITADO
+                    // this.log('🔔 Tentando registrar token FCM...');
+                    // await this.registerFCMToken();
                 } else if (permission === 'denied') {
                     this.log('❌ Permissão negada pelo usuário', 'WARN');
                     
