@@ -306,13 +306,13 @@ async function sendToWebPush(title, body) {
     return { success: 0, failure: 0 };
   }
   
-  // Criar payload da notificação (formato compatível com iOS)
+  // Criar payload da notificação (formato compatível com iOS e Android)
   const payload = JSON.stringify({
     notification: {
       title: title,
       body: body,
-      icon: '/images/web-app-manifest-192x192.png',
-      badge: '/images/favicon-96x96.png',
+      icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
+      badge: 'https://sapos-league.web.app/images/teste-notificacao.png',
       tag: 'sapos-league',
       requireInteraction: false,
       vibrate: [200, 100, 200]
@@ -428,8 +428,8 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
         notification: {
           title: title,
           body: body,
-          icon: '/images/web-app-manifest-192x192.png',
-          badge: '/images/favicon-96x96.png',
+          icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
+          badge: 'https://sapos-league.web.app/images/teste-notificacao.png',
           tag: 'sapos-league',
           requireInteraction: false,
           vibrate: [200, 100, 200]
