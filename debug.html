@@ -35,7 +35,8 @@
   <h1>🔍 Debug Notificações</h1>
   <button onclick="testPermission()">Testar Permissão</button>
   <button onclick="testWebPush()">Testar Web Push</button>
-  <button onclick="clearLogs()">Limpar</button>
+  <button onclick="unregisterAll()">Limpar Tudo</button>
+  <button onclick="clearLogs()">Limpar Logs</button>
   <div id="logs"></div>
 
   <script type="module">
@@ -49,6 +50,26 @@
 
     window.clearLogs = function() {
       document.getElementById('logs').innerHTML = '';
+    };
+
+    window.unregisterAll = async function() {
+      log('🗑️ Limpando tudo...');
+      
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        
+        if (subscription) {
+          await subscription.unsubscribe();
+          log('✅ Subscription removida');
+        } else {
+          log('⚠️ Nenhuma subscription para remover');
+        }
+        
+        log('✅ Pronto! Agora tente "Testar Web Push" novamente');
+      } catch (error) {
+        log('❌ Erro: ' + error.message, true);
+      }
     };
 
     window.testPermission = async function() {
@@ -111,6 +132,11 @@
             }
           } catch (error) {
             log('❌ Erro ao criar subscription: ' + error.message, true);
+            log('Erro nome: ' + error.name, true);
+            log('Erro código: ' + (error.code || 'N/A'), true);
+            if (error.stack) {
+              log('Stack: ' + error.stack.substring(0, 200), true);
+            }
           }
         }
         
