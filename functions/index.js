@@ -230,13 +230,13 @@ async function sendToFCM(title, body) {
         },
         webpush: {
           notification: {
-            icon: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
-            badge: 'https://sapos-league.web.app/images/web-app-manifest-192x192.png',
+            icon: 'https://saposleague.github.io/teste/images/web-app-manifest-192x192.png',
+            badge: 'https://saposleague.github.io/teste/images/web-app-manifest-192x192.png',
             vibrate: [200, 100, 200],
             requireInteraction: false
           },
           fcmOptions: {
-            link: 'https://sapos-league.web.app/'
+            link: 'https://saposleague.github.io/teste/'
           }
         },
         data: {
@@ -311,8 +311,8 @@ async function sendToWebPush(title, body) {
     notification: {
       title: title,
       body: body,
-      icon: 'https://saposleague.com/images/web-app-manifest-192x192.png',
-      badge: 'https://saposleague.com/images/favicon-96x96.png',
+      icon: 'https://saposleague.github.io/teste/images/web-app-manifest-192x192.png',
+      badge: 'https://saposleague.github.io/teste/images/favicon-96x96.png',
       tag: 'sapos-league',
       requireInteraction: false,
       vibrate: [200, 100, 200]
@@ -428,8 +428,8 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
         notification: {
           title: title,
           body: body,
-          icon: 'https://saposleague.com/images/web-app-manifest-192x192.png',
-          badge: 'https://saposleague.com/images/favicon-96x96.png',
+          icon: 'https://saposleague.github.io/teste/images/web-app-manifest-192x192.png',
+          badge: 'https://saposleague.github.io/teste/images/favicon-96x96.png',
           tag: 'sapos-league',
           requireInteraction: false,
           vibrate: [200, 100, 200]
