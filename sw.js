@@ -1,5 +1,5 @@
 // Service Worker para Sapos League PWA - Versão Robusta
-const CACHE_VERSION = '2.2.2';
+const CACHE_VERSION = '2.2.3';
 const CACHE_NAME = `sapos-league-v${CACHE_VERSION}`;
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
@@ -458,8 +458,8 @@ function getDefaultNotificationData() {
   return {
     title: '⚽ Sapos League',
     body: 'Nova atualização disponível!',
-    icon: '/images/web-app-manifest-192x192.png',
-    badge: '/images/favicon-96x96.png',
+    icon: 'https://saposleague.com/images/web-app-manifest-192x192.png',
+    badge: 'https://saposleague.com/images/favicon-96x96.png',
     tag: 'sapos-league'
   };
 }
@@ -468,8 +468,8 @@ function getDefaultNotificationData() {
 function createNotificationOptions(data) {
   return {
     body: data.body,
-    icon: data.icon || '/images/web-app-manifest-192x192.png',
-    badge: data.badge || '/images/favicon-96x96.png',
+    icon: data.icon || 'https://saposleague.com/images/web-app-manifest-192x192.png',
+    badge: data.badge || 'https://saposleague.com/images/favicon-96x96.png',
     tag: data.tag,
     vibrate: [200, 100, 200],
     requireInteraction: false,
@@ -480,12 +480,12 @@ function createNotificationOptions(data) {
       {
         action: 'view',
         title: '👀 Ver',
-        icon: '/images/favicon-96x96.png'
+        icon: 'https://saposleague.com/images/favicon-96x96.png'
       },
       {
         action: 'close',
         title: '❌ Fechar',
-        icon: '/images/favicon-96x96.png'
+        icon: 'https://saposleague.com/images/favicon-96x96.png'
       }
     ],
     data: {

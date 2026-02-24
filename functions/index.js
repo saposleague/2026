@@ -311,8 +311,8 @@ async function sendToWebPush(title, body) {
     notification: {
       title: title,
       body: body,
-      icon: '/images/web-app-manifest-192x192.png',
-      badge: '/images/favicon-96x96.png',
+      icon: 'https://saposleague.com/images/web-app-manifest-192x192.png',
+      badge: 'https://saposleague.com/images/favicon-96x96.png',
       tag: 'sapos-league',
       requireInteraction: false,
       vibrate: [200, 100, 200]
@@ -428,8 +428,8 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
         notification: {
           title: title,
           body: body,
-          icon: '/images/web-app-manifest-192x192.png',
-          badge: '/images/favicon-96x96.png',
+          icon: 'https://saposleague.com/images/web-app-manifest-192x192.png',
+          badge: 'https://saposleague.com/images/favicon-96x96.png',
           tag: 'sapos-league',
           requireInteraction: false,
           vibrate: [200, 100, 200]
