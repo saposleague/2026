@@ -60,6 +60,8 @@ class WebPushIOS {
                 await this.subscribe();
             } else if (Notification.permission === 'default') {
                 console.log('⏳ [Web Push] Aguardando permissão...');
+                // Monitorar mudanças de permissão
+                this.startPermissionMonitoring();
             } else {
                 console.log('❌ [Web Push] Permissão negada');
             }
@@ -68,6 +70,23 @@ class WebPushIOS {
             console.error('❌ [Web Push] Erro ao inicializar:', error);
             console.error('❌ [Web Push] Stack:', error.stack);
         }
+    }
+
+    startPermissionMonitoring() {
+        // Verificar permissão periodicamente (fallback)
+        const checkInterval = setInterval(async () => {
+            if (Notification.permission === 'granted') {
+                console.log('✅ [Web Push] Permissão concedida detectada - registrando...');
+                clearInterval(checkInterval);
+                await this.subscribe();
+            } else if (Notification.permission === 'denied') {
+                console.log('❌ [Web Push] Permissão negada detectada');
+                clearInterval(checkInterval);
+            }
+        }, 1000);
+
+        // Limpar após 30 segundos
+        setTimeout(() => clearInterval(checkInterval), 30000);
     }
 
     async subscribe() {
