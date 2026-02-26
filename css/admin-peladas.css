@@ -1948,3 +1948,136 @@ body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
 .editor-pelada h4 {
     color: var(--text-dark);
 }
+
+
+/* ============================================
+   ESTILOS PARA GERENCIADOR DE JOGADORES APTOS
+   ============================================ */
+
+.jogadores-aptos-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    padding: 20px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.jogador-apto-item {
+    background: var(--container-bg, #ffffff);
+    border: 2px solid var(--border-color, #e0e0e0);
+    border-radius: 12px;
+    padding: 15px;
+    transition: all 0.3s ease;
+}
+
+.jogador-apto-item:hover {
+    border-color: var(--primary-color, #667eea);
+    box-shadow: 0 4px 12px var(--shadow-subtle, rgba(0, 0, 0, 0.1));
+    transform: translateY(-2px);
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.checkbox-container input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: relative;
+    height: 24px;
+    width: 24px;
+    background-color: var(--container-bg, #ffffff);
+    border: 2px solid var(--border-color, #ccc);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.checkbox-container:hover .checkmark {
+    border-color: var(--primary-color, #667eea);
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 7px;
+    top: 3px;
+    width: 6px;
+    height: 11px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.jogador-nome-apto {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-dark, #333);
+    flex: 1;
+}
+
+/* Animação para checkboxes */
+@keyframes checkboxPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    animation: checkboxPulse 0.3s ease;
+}
+
+/* Scrollbar personalizada para lista de jogadores aptos */
+.jogadores-aptos-lista::-webkit-scrollbar {
+    width: 8px;
+}
+
+.jogadores-aptos-lista::-webkit-scrollbar-track {
+    background: var(--background-light, #f5f5f5);
+    border-radius: 10px;
+}
+
+.jogadores-aptos-lista::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+.jogadores-aptos-lista::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* Responsividade para lista de jogadores aptos */
+@media (max-width: 768px) {
+    .jogadores-aptos-lista {
+        grid-template-columns: 1fr;
+        max-height: 400px;
+    }
+}

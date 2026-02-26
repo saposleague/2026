@@ -5,6 +5,7 @@
 let teamsData = [];
 let playersData = [];
 let presencasData = [];
+let jogadoresAptosData = [];
 let lastCacheUpdate = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
@@ -192,9 +193,10 @@ async function loadAllData() {
         console.log('🎨 Renderizando interface...');
         renderTeamsAndPlayers();
         
-        // Carrega presenças em background (não bloqueia a interface)
-        console.log('⚽ Carregando presenças em background...');
+        // Carrega presenças e jogadores aptos em background (não bloqueia a interface)
+        console.log('⚽ Carregando presenças e jogadores aptos em background...');
         loadPresencasInBackground();
+        loadJogadoresAptosInBackground();
         
         // Salva no cache
         saveToCache();
@@ -253,6 +255,33 @@ function updateInterfaceWithPresencas() {
     
     // Atualiza o cache com as presenças
     saveToCache();
+}
+
+// Carrega jogadores aptos em background
+async function loadJogadoresAptosInBackground() {
+    try {
+        const client = getSupabaseClient();
+        if (!client) {
+            console.warn('⚠️ Cliente Supabase não disponível para carregar jogadores aptos');
+            return;
+        }
+
+        const { data: aptos, error } = await client
+            .from('jogadores_aptos')
+            .select('jogador_id');
+
+        if (error) throw error;
+        jogadoresAptosData = aptos ? aptos.map(a => a.jogador_id) : [];
+        
+        console.log('✅ Jogadores aptos carregados:', jogadoresAptosData.length);
+        
+        // Atualiza a interface com os jogadores aptos
+        renderTeamsAndPlayers();
+        
+    } catch (error) {
+        console.error('Erro ao carregar jogadores aptos:', error);
+        // Continua funcionando mesmo sem jogadores aptos
+    }
 }
 
 // Mostra loading otimizado
@@ -346,14 +375,17 @@ function renderTeamsAndPlayers() {
 
 // 6. CÁLCULO DO STATUS DOS JOGADORES
 function getPlayerStatus(playerId) {
+    // Verifica se o jogador está marcado como apto manualmente
+    const isAptoManual = jogadoresAptosData.includes(playerId);
+    
     const playerPresencas = presencasData.filter(presenca => 
         presenca.jogadores && presenca.jogadores.id === playerId
     );
 
     if (playerPresencas.length === 0) {
         return {
-            apto: false,
-            diasUltimaPresenca: 'Nunca jogou',
+            apto: isAptoManual, // Se marcado como apto, fica verde mesmo sem jogar
+            diasUltimaPresenca: 'Não participou de nenhuma pelada',
             ultimaPresenca: null
         };
     }
@@ -380,11 +412,12 @@ function getPlayerStatus(playerId) {
         dataUltimaUTC: dataUltimaUTC.toISOString().split('T')[0],
         diffTime: diffTime,
         diffDays: diffDays,
-        interpretacao: `Jogou há ${diffDays} dias atrás`
+        interpretacao: `Jogou há ${diffDays} dias atrás`,
+        isAptoManual: isAptoManual
     });
 
     return {
-        apto: diffDays <= 30,
+        apto: isAptoManual || diffDays <= 30, // Apto manual OU jogou nos últimos 30 dias
         diasUltimaPresenca: diffDays,
         ultimaPresenca: ultimaPresenca.data_pelada
     };

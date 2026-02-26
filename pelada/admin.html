@@ -104,6 +104,13 @@
             <p class="management-desc">Visualize, edite e gerencie todas as peladas cadastradas no sistema.</p>
             <button class="btn btn-manage" onclick="abrirGerenciadorPeladas()">🔍 Ver e Editar Peladas</button>
         </div>
+
+        <div class="management-section">
+            <div class="management-icon">✅</div>
+            <h2 class="management-title">Gerenciar Jogadores Aptos</h2>
+            <p class="management-desc">Marque jogadores como aptos manualmente, independente da última participação.</p>
+            <button class="btn btn-manage" onclick="abrirGerenciadorAptos()">👥 Gerenciar Aptos</button>
+        </div>
     </div>
 
     <!-- Modal de confirmação -->
@@ -134,6 +141,57 @@
             </div>
             <div class="modal-footer">
                 <button id="btn-ok" class="btn btn-primary">👍 OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DO GERENCIADOR DE JOGADORES APTOS -->
+    <div id="modal-aptos-overlay" class="gerenciador-modal-overlay" style="display: none;">
+        <div id="modal-aptos-content" class="modal-gerenciador">
+            <!-- Cabeçalho do Modal -->
+            <div class="modal-header-gerenciador">
+                <div class="modal-title">
+                    <div class="modal-icon">✅</div>
+                    <span>Gerenciar Jogadores Aptos</span>
+                </div>
+                <button class="close-btn" onclick="fecharGerenciadorAptos()">
+                    <span>×</span>
+                </button>
+            </div>
+
+            <!-- Corpo do Modal -->
+            <div class="modal-body-gerenciador">
+                <!-- Filtro por Time -->
+                <div class="filters-section">
+                    <div class="filters-title">
+                        <span>🏟️</span>
+                        <span>Selecione o Time</span>
+                    </div>
+                    <div class="filters-grid">
+                        <div class="filter-group" style="grid-column: 1 / -1;">
+                            <label class="filter-label">Time:</label>
+                            <select id="filtro-time-aptos" class="filter-select" onchange="carregarJogadoresTime()">
+                                <option value="">Selecione um time...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Jogadores -->
+                <div id="jogadores-aptos-container" class="peladas-list">
+                    <div class="empty-state">
+                        <div class="empty-icon">👆</div>
+                        <div class="empty-title">Selecione um time</div>
+                        <div class="empty-text">
+                            Escolha um time acima para visualizar e gerenciar os jogadores aptos.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botão de Salvar -->
+                <div class="preview-actions" id="btn-salvar-aptos-container" style="display: none;">
+                    <button id="btn-salvar-aptos" class="btn btn-confirmar">💾 Salvar Alterações</button>
+                </div>
             </div>
         </div>
     </div>

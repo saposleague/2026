@@ -2412,3 +2412,249 @@ function mostrarInfoJogador(index, nome, jogadorId, observacoes) {
 
 
 
+
+
+// ============================================
+// GERENCIADOR DE JOGADORES APTOS
+// ============================================
+
+let timesData = [];
+let jogadoresAptosData = [];
+
+// Abrir gerenciador de jogadores aptos
+async function abrirGerenciadorAptos() {
+    try {
+        const modal = document.getElementById('modal-aptos-overlay');
+        if (!modal) {
+            console.error('Modal de aptos não encontrado');
+            return;
+        }
+        
+        modal.style.display = 'flex';
+        document.body.classList.add('modal-open');
+        
+        // Carrega lista de times
+        await carregarTimes();
+        
+    } catch (error) {
+        console.error('Erro ao abrir gerenciador de aptos:', error);
+        showError(`Erro ao carregar dados: ${error.message}`);
+    }
+}
+
+// Fechar gerenciador de jogadores aptos
+function fecharGerenciadorAptos() {
+    const modal = document.getElementById('modal-aptos-overlay');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+    }
+}
+
+// Carregar lista de times
+async function carregarTimes() {
+    try {
+        const client = getSupabaseClient();
+        if (!client) {
+            throw new Error('Cliente Supabase não está disponível');
+        }
+        
+        const { data: times, error } = await client
+            .from('times')
+            .select('id, nome')
+            .order('nome');
+        
+        if (error) throw error;
+        
+        timesData = times || [];
+        
+        // Preenche o select de times
+        const selectTime = document.getElementById('filtro-time-aptos');
+        if (selectTime) {
+            selectTime.innerHTML = '<option value="">Selecione um time...</option>';
+            timesData.forEach(time => {
+                selectTime.innerHTML += `<option value="${time.id}">${time.nome}</option>`;
+            });
+        }
+        
+    } catch (error) {
+        console.error('Erro ao carregar times:', error);
+        showError(`Erro ao carregar times: ${error.message}`);
+    }
+}
+
+// Carregar jogadores do time selecionado
+async function carregarJogadoresTime() {
+    try {
+        const selectTime = document.getElementById('filtro-time-aptos');
+        const timeId = selectTime.value;
+        
+        if (!timeId) {
+            const container = document.getElementById('jogadores-aptos-container');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">👆</div>
+                    <div class="empty-title">Selecione um time</div>
+                    <div class="empty-text">
+                        Escolha um time acima para visualizar e gerenciar os jogadores aptos.
+                    </div>
+                </div>
+            `;
+            document.getElementById('btn-salvar-aptos-container').style.display = 'none';
+            return;
+        }
+        
+        const client = getSupabaseClient();
+        if (!client) {
+            throw new Error('Cliente Supabase não está disponível');
+        }
+        
+        // Carrega jogadores do time
+        const { data: jogadores, error: jogadoresError } = await client
+            .from('jogadores')
+            .select('id, nome')
+            .eq('time_id', timeId)
+            .order('nome');
+        
+        if (jogadoresError) throw jogadoresError;
+        
+        // Carrega jogadores aptos
+        const { data: aptos, error: aptosError } = await client
+            .from('jogadores_aptos')
+            .select('jogador_id');
+        
+        if (aptosError) throw aptosError;
+        
+        jogadoresAptosData = aptos ? aptos.map(a => a.jogador_id) : [];
+        
+        // Renderiza lista de jogadores
+        renderizarJogadoresAptos(jogadores || []);
+        
+        // Mostra botão de salvar
+        document.getElementById('btn-salvar-aptos-container').style.display = 'flex';
+        
+    } catch (error) {
+        console.error('Erro ao carregar jogadores:', error);
+        showError(`Erro ao carregar jogadores: ${error.message}`);
+    }
+}
+
+// Renderizar lista de jogadores com checkboxes
+function renderizarJogadoresAptos(jogadores) {
+    const container = document.getElementById('jogadores-aptos-container');
+    
+    if (jogadores.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">😔</div>
+                <div class="empty-title">Nenhum jogador encontrado</div>
+                <div class="empty-text">
+                    Este time não possui jogadores cadastrados.
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="jogadores-aptos-lista">';
+    
+    jogadores.forEach(jogador => {
+        const isApto = jogadoresAptosData.includes(jogador.id);
+        
+        html += `
+            <div class="jogador-apto-item">
+                <label class="checkbox-container">
+                    <input type="checkbox" 
+                           class="checkbox-apto" 
+                           data-jogador-id="${jogador.id}"
+                           ${isApto ? 'checked' : ''}>
+                    <span class="checkmark"></span>
+                    <span class="jogador-nome-apto">${jogador.nome}</span>
+                </label>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Salvar alterações de jogadores aptos
+async function salvarJogadoresAptos() {
+    try {
+        const btnSalvar = document.getElementById('btn-salvar-aptos');
+        btnSalvar.disabled = true;
+        btnSalvar.textContent = '💾 Salvando...';
+        
+        const client = getSupabaseClient();
+        if (!client) {
+            throw new Error('Cliente Supabase não está disponível');
+        }
+        
+        // Coleta jogadores marcados
+        const checkboxes = document.querySelectorAll('.checkbox-apto');
+        const jogadoresMarcados = [];
+        
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                jogadoresMarcados.push(parseInt(checkbox.dataset.jogadorId));
+            }
+        });
+        
+        // Remove todos os jogadores aptos do time atual
+        const selectTime = document.getElementById('filtro-time-aptos');
+        const timeId = selectTime.value;
+        
+        const { data: jogadoresTime, error: jogadoresError } = await client
+            .from('jogadores')
+            .select('id')
+            .eq('time_id', timeId);
+        
+        if (jogadoresError) throw jogadoresError;
+        
+        const jogadoresTimeIds = jogadoresTime.map(j => j.id);
+        
+        // Remove registros antigos
+        const { error: deleteError } = await client
+            .from('jogadores_aptos')
+            .delete()
+            .in('jogador_id', jogadoresTimeIds);
+        
+        if (deleteError) throw deleteError;
+        
+        // Insere novos registros
+        if (jogadoresMarcados.length > 0) {
+            const registros = jogadoresMarcados.map(jogadorId => ({
+                jogador_id: jogadorId
+            }));
+            
+            const { error: insertError } = await client
+                .from('jogadores_aptos')
+                .insert(registros);
+            
+            if (insertError) throw insertError;
+        }
+        
+        showSuccess('Sucesso!', `${jogadoresMarcados.length} jogador(es) marcado(s) como apto(s).`);
+        
+        btnSalvar.disabled = false;
+        btnSalvar.textContent = '💾 Salvar Alterações';
+        
+    } catch (error) {
+        console.error('Erro ao salvar jogadores aptos:', error);
+        showError(`Erro ao salvar: ${error.message}`);
+        
+        const btnSalvar = document.getElementById('btn-salvar-aptos');
+        btnSalvar.disabled = false;
+        btnSalvar.textContent = '💾 Salvar Alterações';
+    }
+}
+
+// Event listener para o botão de salvar
+document.addEventListener('DOMContentLoaded', function() {
+    const btnSalvar = document.getElementById('btn-salvar-aptos');
+    if (btnSalvar) {
+        btnSalvar.addEventListener('click', salvarJogadoresAptos);
+    }
+});
