@@ -350,7 +350,7 @@ function renderTeamsAndPlayers() {
                     const statusClass = playerStatus.apto ? 'apto' : 'nao-apto';
                     
                     let statusText;
-                    if (playerStatus.diasUltimaPresenca === 'Não participou de nenhuma pelada') {
+                    if (playerStatus.diasUltimaPresenca === 'Nunca jogou') {
                         statusText = playerStatus.diasUltimaPresenca;
                     } else if (playerStatus.apto) {
                         statusText = `Última pelada: ${playerStatus.diasUltimaPresenca} dias atrás`;
@@ -391,7 +391,7 @@ function getPlayerStatus(playerId) {
     if (playerPresencas.length === 0) {
         return {
             apto: isAptoManual, // Se marcado como apto, fica verde mesmo sem jogar
-            diasUltimaPresenca: 'Não participou de nenhuma pelada',
+            diasUltimaPresenca: 'Nunca jogou',
             ultimaPresenca: null
         };
     }
