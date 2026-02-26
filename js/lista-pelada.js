@@ -348,9 +348,15 @@ function renderTeamsAndPlayers() {
                 } else {
                     const playerStatus = getPlayerStatus(player.id);
                     const statusClass = playerStatus.apto ? 'apto' : 'nao-apto';
-                    const statusText = playerStatus.apto ? 
-                        `Última pelada: ${playerStatus.diasUltimaPresenca} dias atrás` :
-                        `${playerStatus.diasUltimaPresenca} dias sem jogar`;
+                    
+                    let statusText;
+                    if (playerStatus.diasUltimaPresenca === 'Não participou de nenhuma pelada') {
+                        statusText = playerStatus.diasUltimaPresenca;
+                    } else if (playerStatus.apto) {
+                        statusText = `Última pelada: ${playerStatus.diasUltimaPresenca} dias atrás`;
+                    } else {
+                        statusText = `${playerStatus.diasUltimaPresenca} dias sem jogar`;
+                    }
 
                     html += `
                         <div class="player-item ${statusClass}" data-player-id="${player.id}" data-player-name="${player.nome}">
