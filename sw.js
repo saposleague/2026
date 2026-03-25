@@ -524,7 +524,7 @@ self.addEventListener('notificationclick', (event) => {
   }
   
   // Determinar URL para abrir
-  const urlToOpen = data.url || '/';
+  const urlToOpen = data.url || '/2026/';
   
   event.waitUntil(
     handleNotificationClick(urlToOpen, data)
