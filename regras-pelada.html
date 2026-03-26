@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Regras da Pelada — SAPOS LEAGUE</title>
+
+  <meta name="description" content="Regulamento oficial da Pelada dos Sapos — Sapos League 2026">
+  <meta name="theme-color" content="#2e7d32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sapos League">
+
+  <link rel="icon" href="./images/web-app-manifest-512x512.png?v=5" type="image/png" sizes="512x512" />
+  <link rel="icon" href="./images/favicon-96x96.png?v=5" type="image/png" sizes="96x96" />
+  <link rel="shortcut icon" href="./images/web-app-manifest-512x512.png?v=5" />
+  <link rel="apple-touch-icon" href="./images/apple-touch-icon.png" />
+  <link rel="manifest" href="./site.webmanifest">
+
+  <link rel="stylesheet" href="css/dark-mode-colors.css">
+  <link rel="stylesheet" href="css/components.css">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--body-bg);
+      color: var(--text-dark);
+      transition: background-color 0.3s ease, color 0.3s ease;
+      min-height: 100vh;
+    }
+
+    .regras-container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    .regras-intro {
+      text-align: center;
+      color: var(--text-medium);
+      font-size: 0.95rem;
+      margin-bottom: 32px;
+      font-style: italic;
+      transition: color 0.3s ease;
+    }
+
+    .regra-card {
+      background: var(--container-bg);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      border-left: 4px solid #2e7d32;
+      box-shadow: 0 2px 8px var(--shadow-light);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .regra-titulo {
+      color: #2e7d32;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .regra-item {
+      color: var(--text-dark);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      padding: 4px 0;
+      padding-left: 12px;
+      border-left: 2px solid var(--border-soft);
+      margin-bottom: 8px;
+      transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .regra-item:last-child { margin-bottom: 0; }
+
+    .regra-item strong { color: var(--text-dark); }
+
+    /* Subcategorias (9.1, 9.2...) */
+    .sub-titulo {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin: 14px 0 6px;
+      transition: color 0.3s ease;
+    }
+
+    .sub-desc {
+      font-size: 0.9rem;
+      color: var(--text-medium);
+      line-height: 1.5;
+      margin-bottom: 6px;
+      transition: color 0.3s ease;
+    }
+
+    .sub-exemplos {
+      font-size: 0.82rem;
+      color: var(--text-medium);
+      font-style: italic;
+      padding-left: 12px;
+      border-left: 2px solid var(--border-soft);
+      margin-bottom: 8px;
+      transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Tabela de penalidades */
+    .penalidades-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+
+    .penalidades-table th {
+      background: #2e7d32;
+      color: white;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .penalidades-table th:first-child { border-radius: 6px 0 0 0; }
+    .penalidades-table th:last-child  { border-radius: 0 6px 0 0; }
+
+    .penalidades-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--text-dark);
+      transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .penalidades-table tr:nth-child(even) td {
+      background: var(--table-row-even);
+      transition: background-color 0.3s ease;
+    }
+
+    .penalidades-table .linha-grave td {
+      color: #c62828;
+      font-weight: 700;
+    }
+
+    /* Rodapé da página */
+    .regras-footer {
+      text-align: center;
+      margin-top: 32px;
+      padding: 20px;
+      background: var(--container-bg);
+      border-radius: 12px;
+      font-style: italic;
+      color: var(--text-medium);
+      font-size: 0.9rem;
+      border-top: 3px solid #2e7d32;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    @media (max-width: 480px) {
+      .regra-card { padding: 16px; }
+      .penalidades-table th,
+      .penalidades-table td { padding: 8px 10px; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <button id="toggle-dark-mode" aria-label="Alternar modo noturno" class="dark-toggle-button"></button>
+
+  <header>SAPOS LEAGUE</header>
+
+  <div class="regras-container">
+
+    <p class="regras-intro">Regulamento Oficial — Pelada dos Sapos</p>
+
+    <!-- 1 -->
+    <div class="regra-card">
+      <div class="regra-titulo">1. Estrutura dos Times</div>
+      <div class="regra-item">Serão formados no máximo <strong>4 times</strong>.</div>
+    </div>
+
+    <!-- 2 -->
+    <div class="regra-card">
+      <div class="regra-titulo">2. Participação e Pagamento</div>
+      <div class="regra-item">Sem pagamento, o jogador <strong>não poderá participar</strong>.</div>
+      <div class="regra-item">Em caso de resistência ao pagamento, o jogador poderá ser <strong>suspenso por tempo indeterminado</strong>.</div>
+    </div>
+
+    <!-- 3 -->
+    <div class="regra-card">
+      <div class="regra-titulo">3. Lista de Participação</div>
+      <div class="regra-item">Os <strong>20 primeiros</strong> da lista terão prioridade até às <strong>18h30</strong>, desde que tenham efetuado o pagamento.</div>
+      <div class="regra-item">Após às 18h30, quem não tiver pago será <strong>retirado da lista</strong>.</div>
+      <div class="regra-item">Jogadores na <strong>"baia"</strong> que pagarem subirão automaticamente para a lista principal.</div>
+    </div>
+
+    <!-- 4 -->
+    <div class="regra-card">
+      <div class="regra-titulo">4. Duração das Partidas</div>
+      <div class="regra-item">Cada partida terá duração de <strong>7 minutos</strong>.</div>
+      <div class="regra-item">O tempo começa imediatamente após o término do jogo anterior.</div>
+      <div class="regra-item">Ao atingir os 7 minutos, a partida só encerra quando a bola sair ou o jogo for interrompido.</div>
+    </div>
+
+    <!-- 5 -->
+    <div class="regra-card">
+      <div class="regra-titulo">5. Jogadores Emprestados</div>
+      <div class="regra-item">O jogador emprestado deverá <strong>retornar ao seu time de origem</strong> quando este for jogar.</div>
+    </div>
+
+    <!-- 6 -->
+    <div class="regra-card">
+      <div class="regra-titulo">6. Regras de Empréstimo</div>
+      <div class="regra-item">Não é permitido pegar jogadores de <strong>4 ou 5 estrelas</strong> emprestados, salvo quando não houver outra opção.</div>
+    </div>
+
+    <!-- 7 -->
+    <div class="regra-card">
+      <div class="regra-titulo">7. Início da Rodada</div>
+      <div class="regra-item">Se a pelada começar com ausências, os times com <strong>maior número de jogadores presentes</strong> iniciam jogando.</div>
+      <div class="regra-item">Após a primeira partida, a <strong>ordem original dos jogos</strong> é mantida.</div>
+    </div>
+
+    <!-- 8 -->
+    <div class="regra-card">
+      <div class="regra-titulo">8. Regras de Jogo</div>
+      <div class="regra-item"><strong>Mão voluntária</strong> em qualquer parte da quadra ou <strong>falta no último jogador</strong>: tiro livre do meio da quadra.</div>
+      <div class="regra-item"><strong>Defesa intencional com a mão pelo goleiro fora da área</strong>: pênalti.</div>
+    </div>
+
+    <!-- 9 -->
+    <div class="regra-card">
+      <div class="regra-titulo">9. Regras de Conduta</div>
+
+      <div class="sub-titulo">9.1 Xingamentos de jogo — tolerados com moderação</div>
+      <div class="sub-desc">Expressões comuns do futebol são permitidas, desde que não sejam direcionadas de forma pessoal ou repetitiva.</div>
+      <div class="sub-exemplos">Exemplos: "vai se fuder" • "tomar no cu" • "porra" • "caralho"</div>
+
+      <div class="sub-titulo">9.2 Ofensas pessoais — proibidas</div>
+      <div class="sub-desc">Não serão toleradas ofensas que ataquem diretamente a pessoa, tenham intenção de humilhar ou envolvam família, vida pessoal ou caráter.</div>
+      <div class="sub-exemplos">Exemplos: "você é um bosta" • "você é um lixo" • ofensas a familiares • ataques pessoais</div>
+
+      <div class="sub-titulo">9.3 Interpretação</div>
+      <div class="regra-item">A avaliação levará em conta o <strong>contexto, tom e intenção</strong>.</div>
+      <div class="regra-item">A organização poderá intervir sempre que houver desrespeito.</div>
+
+      <div class="sub-titulo">9.4 Penalidades</div>
+      <table class="penalidades-table">
+        <thead>
+          <tr><th>Ocorrência</th><th>Penalidade</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1ª ocorrência</td><td>Suspensão de 30 dias</td></tr>
+          <tr><td>2ª ocorrência</td><td>Suspensão de 6 meses</td></tr>
+          <tr><td>3ª ocorrência</td><td>Exclusão definitiva</td></tr>
+          <tr class="linha-grave"><td>Agressão física</td><td>Exclusão definitiva imediata</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="regras-footer">
+      O objetivo principal da pelada é a diversão, o respeito e o bom convívio entre todos. ⚽
+    </div>
+
+  </div>
+
+  <script src="js/dynamic-favicon.js"></script>
+  <script src="js/dark-mode-logic.js"></script>
+</body>
+</html>
