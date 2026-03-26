@@ -38,12 +38,30 @@
       padding: 24px 16px 48px;
     }
 
-    .regras-intro {
+    .regras-hero {
       text-align: center;
+      padding: 32px 24px;
+      margin-bottom: 24px;
+      border-radius: 12px;
+    }
+
+    .regras-hero-icon { display: none; }
+
+    .regras-hero-titulo {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      color: var(--text-dark);
+      transition: color 0.3s ease;
+    }
+
+    .regras-hero-sub {
+      font-size: 1.1rem;
       color: var(--text-medium);
-      font-size: 0.95rem;
-      margin-bottom: 32px;
-      font-style: italic;
+      letter-spacing: 1px;
+      text-transform: uppercase;
       transition: color 0.3s ease;
     }
 
@@ -106,6 +124,25 @@
       border-left: 2px solid var(--border-soft);
       margin-bottom: 8px;
       transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .regra-lista {
+      margin: 8px 0 10px 16px;
+      padding: 0;
+      color: var(--text-medium);
+      font-size: 0.9rem;
+      line-height: 1.8;
+      transition: color 0.3s ease;
+    }
+
+    .aviso-punicao {
+      background: #fff3e0;
+      border-left: 4px solid #e65100;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-size: 0.9rem;
+      color: #bf360c;
     }
 
     /* Tabela de penalidades */
@@ -173,8 +210,11 @@
 
   <div class="regras-container">
 
-    <p class="regras-intro">Regulamento Oficial — Pelada dos Sapos</p>
-
+    <div class="regras-hero">
+      <div class="regras-hero-icon">⚽</div>
+      <h1 class="regras-hero-titulo">Pelada dos Sapos</h1>
+      <p class="regras-hero-sub">Regulamento Oficial</p>
+    </div>
     <!-- 1 -->
     <div class="regra-card">
       <div class="regra-titulo">1. Estrutura dos Times</div>
@@ -220,7 +260,7 @@
     <div class="regra-card">
       <div class="regra-titulo">7. Início da Rodada</div>
       <div class="regra-item">Se a pelada começar com ausências, os times com <strong>maior número de jogadores presentes</strong> iniciam jogando.</div>
-      <div class="regra-item">Após a primeira partida, a <strong>ordem original dos jogos</strong> é mantida.</div>
+      <div class="regra-item">Após a primeira partida, a <strong>ordem original dos jogos</strong> é mantida se todos os times estiverem completos. Caso não estejam completos, o time de fora com mais jogadores presentes joga.</div>
     </div>
 
     <!-- 8 -->
@@ -246,7 +286,20 @@
       <div class="regra-item">A avaliação levará em conta o <strong>contexto, tom e intenção</strong>.</div>
       <div class="regra-item">A organização poderá intervir sempre que houver desrespeito.</div>
 
-      <div class="sub-titulo">9.4 Penalidades</div>
+      <div class="sub-titulo">9.4 Retirada da pelada no dia (medida preventiva)</div>
+      <div class="sub-desc">Com o objetivo de preservar o bom ambiente, o respeito entre os jogadores e o andamento da pelada, a organização (presidente ou responsável do dia) poderá solicitar que um jogador se retire da pelada no dia, sempre que sua conduta estiver gerando ou possa gerar conflitos.</div>
+      <div class="sub-desc" style="margin-top: 6px;">Essa medida poderá ser aplicada em situações como:</div>
+      <ul class="regra-lista">
+        <li>Excesso de xingamentos ou reclamações;</li>
+        <li>Comportamentos que elevem o clima de tensão entre os jogadores;</li>
+        <li>Entradas mais fortes ou atitudes que possam causar discussões;</li>
+        <li>Qualquer ação que comprometa o espírito esportivo e o bom convívio.</li>
+      </ul>
+      <div class="aviso-punicao">
+        ⚠️ Jogador que se recusar a sair quando solicitado ficará suspenso por <strong>3 meses</strong>.
+      </div>
+
+      <div class="sub-titulo">9.5 Penalidades</div>
       <table class="penalidades-table">
         <thead>
           <tr><th>Ocorrência</th><th>Penalidade</th></tr>
@@ -258,6 +311,11 @@
           <tr class="linha-grave"><td>Agressão física</td><td>Exclusão definitiva imediata</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="regra-card">
+      <div class="regra-titulo">10. Casos Omissos</div>
+      <div class="regra-item">Situações não contempladas neste regulamento serão resolvidas pela presidência, que terá autonomia para tomar as medidas necessárias, sempre priorizando a organização, o respeito e o bom funcionamento da pelada.</div>
     </div>
 
     <div class="regras-footer">
