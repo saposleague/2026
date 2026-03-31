@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAPOS LEAGUE - Gerador de Times</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Gerador de times da pelada - Sapos League">
+  <meta name="theme-color" content="#2e7d32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sapos League">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" href="/favicon-48x48.png" sizes="48x48" />
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+  <!-- Manifest -->
+  <link rel="manifest" href="/site.webmanifest">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/dark-mode-colors.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/gerador-times.css">
+</head>
+<body>
+  <!-- Header com navegação -->
+  <div class="page-header">
+    <div class="header-left">
+      <button id="voltar-button" class="btn-voltar">
+        ← Voltar ao Painel
+      </button>
+      <div class="page-subtitle">⚽ Gerador de Times</div>
+    </div>
+    <div class="header-right">
+      <button id="logout-button" class="btn-logout-header">
+        Sair
+      </button>
+    </div>
+  </div>
+
+  <!-- Container Principal -->
+  <div class="container">
+
+    <!-- Card: Lista de Jogadores -->
+    <div class="config-card">
+      <div class="card-header">
+        <h2>👥 Jogadores</h2>
+        <p class="card-subtitle">Selecione os jogadores presentes na pelada</p>
+      </div>
+      <div class="card-body">
+        <div class="lista-acoes">
+          <span id="contador-selecionados" class="contador-texto">0 jogadores selecionados</span>
+          <div class="lista-botoes">
+            <button id="selecionar-todos-button" class="btn btn-secondary btn-sm">Selecionar Todos</button>
+            <button id="limpar-selecao-button" class="btn btn-secondary btn-sm">Limpar Seleção</button>
+          </div>
+        </div>
+        <div id="lista-jogadores-container">
+          <p class="loading-text">Carregando jogadores...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Configuração da Pelada -->
+    <div class="config-card">
+      <div class="card-header">
+        <h2>⚙️ Configuração da Pelada</h2>
+        <p class="card-subtitle">Defina o formato antes de gerar os times</p>
+      </div>
+      <div class="card-body">
+        <div class="config-grid">
+          <div class="config-item">
+            <label for="num-times-select" class="config-label">Número de Times</label>
+            <select id="num-times-select" class="form-select-config">
+              <option value="2">2 times</option>
+              <option value="3">3 times</option>
+              <option value="4">4 times</option>
+              <option value="5">5 times</option>
+              <option value="6">6 times</option>
+            </select>
+          </div>
+          <div class="config-item">
+            <label for="jogadores-por-time-select" class="config-label">Jogadores por Time</label>
+            <select id="jogadores-por-time-select" class="form-select-config">
+              <option value="2">2 jogadores</option>
+              <option value="3">3 jogadores</option>
+              <option value="4">4 jogadores</option>
+              <option value="5" selected>5 jogadores</option>
+              <option value="6">6 jogadores</option>
+              <option value="7">7 jogadores</option>
+              <option value="8">8 jogadores</option>
+              <option value="9">9 jogadores</option>
+              <option value="10">10 jogadores</option>
+              <option value="11">11 jogadores</option>
+              <option value="12">12 jogadores</option>
+              <option value="13">13 jogadores</option>
+              <option value="14">14 jogadores</option>
+              <option value="15">15 jogadores</option>
+            </select>
+          </div>
+          <div class="config-item config-item-total">
+            <span class="config-label">Total Necessário</span>
+            <span id="total-necessario" class="total-valor">10 jogadores</span>
+          </div>
+        </div>
+
+        <div id="alerta-diferenca" class="alerta-diferenca" style="display:none;"></div>
+
+        <!-- Toggle Separar Goleiros -->
+        <div class="toggle-goleiros">
+          <label class="toggle-label">
+            <input type="checkbox" id="separar-goleiros-toggle">
+            <span class="toggle-slider"></span>
+            <span class="toggle-texto">🧤 Separar Goleiros</span>
+          </label>
+          <p class="toggle-descricao">Quando ativo, marque um goleiro por time antes de gerar.</p>
+        </div>
+
+        <div id="aviso-goleiros" class="aviso-goleiros" style="display:none;"></div>
+
+        <div class="button-section">
+          <button id="gerar-times-button" class="btn btn-primary" disabled>
+            🎲 Gerar Times
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Resultado (oculto inicialmente) -->
+    <div id="resultado-card" class="config-card" style="display:none;">
+      <div class="card-header">
+        <h2>🏆 Times Gerados</h2>
+        <p class="card-subtitle">Arraste jogadores entre os cards para fazer ajustes</p>
+      </div>
+      <div class="card-body">
+        <div id="resumo-forcas" class="resumo-forcas"></div>
+        <div id="times-resultado" class="times-grid"></div>
+        <div id="nota-genericos" class="nota-genericos" style="display:none;"></div>
+        <div class="button-section resultado-botoes">
+          <button id="gerar-novamente-button" class="btn btn-secondary">🔄 Gerar Novamente</button>
+          <button id="desfazer-troca-button" class="btn btn-secondary" disabled>↩️ Desfazer Troca</button>
+          <button id="copiar-times-button" class="btn btn-success">📋 Copiar Times</button>
+          <button id="exportar-imagem-button" class="btn btn-primary">🖼️ Exportar Imagem</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal de Mensagem -->
+  <div id="mensagem-popup" class="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h2>💬 Mensagem</h2>
+      </div>
+      <div class="popup-body">
+        <p id="mensagem-texto"></p>
+        <button id="mensagem-ok-button" class="btn btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação -->
+  <div id="confirmacao-popup" class="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h2>✅ Confirmação</h2>
+      </div>
+      <div class="popup-body">
+        <p id="confirmacao-texto"></p>
+        <div class="popup-buttons">
+          <button id="confirmar-sim-button" class="btn btn-success">Sim</button>
+          <button id="confirmar-nao-button" class="btn btn-secondary">Não</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Cópia Manual (fallback) -->
+  <div id="copia-manual-popup" class="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h2>📋 Copiar Times</h2>
+      </div>
+      <div class="popup-body">
+        <p>Selecione e copie o texto abaixo:</p>
+        <textarea id="copia-manual-texto" class="copia-manual-textarea" readonly></textarea>
+        <button id="copia-manual-fechar" class="btn btn-primary">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/dynamic-favicon.js"></script>
+  <!-- Supabase via CDN (deve ser carregado antes do module) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script type="module" src="js/gerador-times.js"></script>
+</body>
+</html>
