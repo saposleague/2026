@@ -193,6 +193,7 @@ function toggleSelecao(id) {
 function selecionarTodos() {
   state.jogadores.forEach(j => { j.selecionado = true; });
   renderizarLista(state.jogadores);
+  aplicarFiltroAtual();
   atualizarContador();
   atualizarTotalNecessario();
 }
@@ -200,8 +201,20 @@ function selecionarTodos() {
 function limparSelecao() {
   state.jogadores.forEach(j => { j.selecionado = false; });
   renderizarLista(state.jogadores);
+  aplicarFiltroAtual();
   atualizarContador();
   atualizarTotalNecessario();
+}
+
+function aplicarFiltroAtual() {
+  const input = document.getElementById('busca-jogador-input');
+  if (!input) return;
+  const termo = input.value.toLowerCase().trim();
+  if (!termo) return;
+  document.querySelectorAll('.jogador-item').forEach(li => {
+    const nome = li.querySelector('.jogador-nome')?.textContent.toLowerCase() || '';
+    li.style.display = nome.includes(termo) ? '' : 'none';
+  });
 }
 
 function atualizarContador() {
@@ -397,6 +410,15 @@ function renderizarSeletorGoleiros() {
 
 document.getElementById('selecionar-todos-button').addEventListener('click', selecionarTodos);
 document.getElementById('limpar-selecao-button').addEventListener('click', limparSelecao);
+
+document.getElementById('busca-jogador-input').addEventListener('input', (e) => {
+  const termo = e.target.value.toLowerCase().trim();
+  const items = document.querySelectorAll('.jogador-item');
+  items.forEach(li => {
+    const nome = li.querySelector('.jogador-nome')?.textContent.toLowerCase() || '';
+    li.style.display = nome.includes(termo) ? '' : 'none';
+  });
+});
 
 document.getElementById('num-times-select').addEventListener('change', (e) => {
   state.config.numTimes = parseInt(e.target.value);

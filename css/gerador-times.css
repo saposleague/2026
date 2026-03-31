@@ -181,6 +181,39 @@ body {
   margin-top: 2rem;
 }
 
+/* Busca de jogador */
+.busca-jogador-wrapper {
+  position: relative;
+  margin-bottom: 0.75rem;
+}
+
+.busca-icone {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.busca-jogador-input {
+  width: 100%;
+  padding: 0.55rem 0.75rem 0.55rem 2.25rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #333;
+  background: #f8f9fa;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.busca-jogador-input:focus {
+  outline: none;
+  border-color: #2e7d32;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+}
+
 /* Lista de Jogadores */
 .lista-acoes {
   display: flex;
