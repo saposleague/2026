@@ -13,7 +13,7 @@ Status: ✅ Totalmente funcional
 ## 🌐 Acesso
 
 **URL Principal:** https://saposleague.github.io/2026/  
-**Painel Admin:** https://saposleague.github.io/2026/painel.html  
+**Painel Admin:** https://saposleague.github.io/2026/rodadas.html  
 **Debug (desenvolvimento):** https://saposleague.github.io/2026/debug.html
 
 ---

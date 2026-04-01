@@ -60,18 +60,17 @@ export const PWA_CONFIG = {
   STATIC_ASSETS: [
     '/',
     '/index.html',
-    '/painel.html',
+    '/rodadas.html',
     '/admin.html',
     '/offline.html',
     '/css/index.css',
-    '/css/painel.css',
+    '/css/rodadas.css',
     '/css/admin.css',
     '/css/components.css',
     '/css/dark-mode-colors.css',
     '/css/favicon-display.css',
-    '/css/painel-dark-mode.css',
     '/js/index.js',
-    '/js/painel.js',
+    '/js/rodadas.js',
     '/js/admin.js',
     '/js/firebase-config.js',
     '/js/dark-mode-logic.js',
@@ -124,7 +123,7 @@ export const PWA_CONFIG = {
   // URLs e endpoints
   URLS: {
     HOME: '/',
-    ADMIN: '/painel.html',
+    ADMIN: '/rodadas.html',
     LOGIN: '/admin.html',
     PELADAS: '/pelada/',
     OFFLINE: '/offline.html'

@@ -99,7 +99,7 @@
       "name": "Painel Admin",
       "short_name": "Admin",
       "description": "Acessar painel administrativo",
-      "url": "./painel.html",
+      "url": "./rodadas.html",
       "icons": [
         {
           "src": "./images/favicon-96x96.png",
