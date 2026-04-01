@@ -32,20 +32,26 @@ document.getElementById('logout-button').addEventListener('click', async () => {
 
 async function carregarStats() {
   try {
-    // Times e rodadas do Firebase
-    const [timesSnap, rodadasSnap] = await Promise.all([
+    // Times e rodadas do Firebase (soma fase1 + fase2 + final)
+    const [timesSnap, fase1Snap, fase2Snap, finalSnap] = await Promise.all([
       getDocs(collection(db, 'times')),
       getDocs(collection(db, 'rodadas2026_fase1')),
+      getDocs(collection(db, 'rodadas2026_fase2')),
+      getDocs(collection(db, 'rodadas2026_final')),
     ]);
-    document.getElementById('stat-times').textContent = timesSnap.size;
-    document.getElementById('stat-rodadas').textContent = rodadasSnap.size;
 
-    // Rodadas pendentes (sem resultado)
+    document.getElementById('stat-times').textContent = timesSnap.size;
+    const totalRodadas = fase1Snap.size + fase2Snap.size + finalSnap.size;
+    document.getElementById('stat-rodadas').textContent = totalRodadas;
+
+    // Rodadas pendentes (sem resultado) — soma das 3 fases
     let pendentes = 0;
-    rodadasSnap.forEach(doc => {
-      const jogos = doc.data().jogos || [];
-      const semResultado = jogos.some(j => j.golsA == null && j.golsB == null);
-      if (semResultado) pendentes++;
+    [fase1Snap, fase2Snap, finalSnap].forEach(snap => {
+      snap.forEach(doc => {
+        const jogos = doc.data().jogos || [];
+        const semResultado = jogos.some(j => j.golsA == null && j.golsB == null);
+        if (semResultado) pendentes++;
+      });
     });
     document.getElementById('stat-pendentes').textContent = pendentes;
 
