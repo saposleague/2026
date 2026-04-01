@@ -427,6 +427,7 @@ document.getElementById('gerar-novamente-button').addEventListener('click', gera
 document.getElementById('copiar-times-button').addEventListener('click', () => copiarTimes(state.times));
 document.getElementById('exportar-imagem-button').addEventListener('click', () => exportarImagem());
 document.getElementById('desfazer-troca-button').addEventListener('click', desfazerTroca);
+document.getElementById('trocar-jogadores-button').addEventListener('click', executarTroca);
 
 // ─── ALGORITMO DE BALANCEAMENTO (Tarefa 8) ────────────────────────────────
 
@@ -555,6 +556,10 @@ function renderizarTimes(times) {
   atualizarResumo(times);
   inicializarDragAndDrop();
 
+  // Reset seleção de troca
+  selecaoTroca.length = 0;
+  atualizarBotaoTroca();
+
   // Nota de genéricos
   const totalGenericos = times.flatMap(t => t.jogadores).filter(j => j.generico).length;
   if (totalGenericos > 0) {
@@ -618,6 +623,8 @@ function criarItemJogadorTime(jogador, timeId) {
 
   li.appendChild(nivelEl);
   li.appendChild(nomeEl);
+
+  li.addEventListener('click', () => selecionarParaTroca(li));
   return li;
 }
 
@@ -641,151 +648,66 @@ function atualizarResumo(times) {
   `;
 }
 
-// ─── DRAG AND DROP (mouse events — mais confiável que HTML5 DnD) ──────────
+// ─── SELEÇÃO PARA TROCA ───────────────────────────────────────────────────
 
-let drag = {
-  ativo: false,
-  jogadorId: null,
-  timeOrigemId: null,
-  ghost: null,
-  origem: null,
-};
+const selecaoTroca = []; // máx 2 itens: [{ jogadorId, timeId }]
 
-function inicializarDragAndDrop() {
-  document.querySelectorAll('.time-jogador-item').forEach(li => {
-    li.addEventListener('mousedown', iniciarDrag);
-  });
+function selecionarParaTroca(li) {
+  const jogadorId = li.dataset.jogadorId;
+  const timeId = li.dataset.timeId;
+
+  // Se já está selecionado, desseleciona
+  const idx = selecaoTroca.findIndex(s => s.jogadorId === jogadorId);
+  if (idx !== -1) {
+    selecaoTroca.splice(idx, 1);
+    li.classList.remove('selecionado-troca');
+    atualizarBotaoTroca();
+    return;
+  }
+
+  // Máximo 2 selecionados
+  if (selecaoTroca.length >= 2) return;
+
+  selecaoTroca.push({ jogadorId, timeId });
+  li.classList.add('selecionado-troca');
+  atualizarBotaoTroca();
 }
 
-function iniciarDrag(e) {
-  if (e.button !== 0) return; // só botão esquerdo
-  e.preventDefault();
+function atualizarBotaoTroca() {
+  const btn = document.getElementById('trocar-jogadores-button');
+  const info = document.getElementById('troca-info');
 
-  const li = e.currentTarget;
-  drag.jogadorId = li.dataset.jogadorId;
-  drag.timeOrigemId = li.dataset.timeId;
-  drag.origem = li;
-  drag.ativo = true;
-
-  // Criar ghost visual
-  drag.ghost = li.cloneNode(true);
-  drag.ghost.classList.add('drag-ghost');
-  drag.ghost.style.width = li.offsetWidth + 'px';
-  posicionarGhost(e);
-  document.body.appendChild(drag.ghost);
-
-  li.classList.add('dragging');
-
-  document.addEventListener('mousemove', moverDrag);
-  document.addEventListener('mouseup', soltarDrag);
-}
-
-function moverDrag(e) {
-  if (!drag.ativo) return;
-  posicionarGhost(e);
-
-  // Limpar highlights
-  document.querySelectorAll('.time-card').forEach(c => c.classList.remove('drop-target'));
-  document.querySelectorAll('.time-jogador-item').forEach(i => i.classList.remove('drop-target-jogador'));
-
-  // Esconder ghost temporariamente para usar elementFromPoint
-  drag.ghost.style.display = 'none';
-  const alvo = document.elementFromPoint(e.clientX, e.clientY);
-  drag.ghost.style.display = '';
-
-  if (!alvo) return;
-
-  const jogadorAlvo = alvo.closest('.time-jogador-item');
-  const cardAlvo = alvo.closest('.time-card');
-
-  if (jogadorAlvo && jogadorAlvo !== drag.origem && jogadorAlvo.dataset.timeId !== drag.timeOrigemId) {
-    jogadorAlvo.classList.add('drop-target-jogador');
-  } else if (cardAlvo && cardAlvo.dataset.timeId !== drag.timeOrigemId) {
-    cardAlvo.classList.add('drop-target');
+  if (selecaoTroca.length === 0) {
+    btn.disabled = true;
+    info.textContent = 'Clique em dois jogadores de times diferentes para trocar.';
+  } else if (selecaoTroca.length === 1) {
+    btn.disabled = true;
+    info.textContent = 'Selecione mais um jogador de outro time.';
+  } else {
+    const mesmosTime = selecaoTroca[0].timeId === selecaoTroca[1].timeId;
+    if (mesmosTime) {
+      btn.disabled = true;
+      info.textContent = '⚠️ Os dois jogadores estão no mesmo time. Selecione de times diferentes.';
+    } else {
+      btn.disabled = false;
+      info.textContent = '✅ Pronto! Clique em "Trocar" para confirmar.';
+    }
   }
 }
 
-function soltarDrag(e) {
-  if (!drag.ativo) return;
+function executarTroca() {
+  if (selecaoTroca.length !== 2) return;
+  const [a, b] = selecaoTroca;
+  if (a.timeId === b.timeId) return;
 
-  document.removeEventListener('mousemove', moverDrag);
-  document.removeEventListener('mouseup', soltarDrag);
-
-  // Esconder ghost para elementFromPoint funcionar
-  if (drag.ghost) {
-    drag.ghost.style.display = 'none';
-  }
-
-  const alvo = document.elementFromPoint(e.clientX, e.clientY);
-
-  // Remover ghost e classes
-  if (drag.ghost) drag.ghost.remove();
-  drag.ghost = null;
-  if (drag.origem) drag.origem.classList.remove('dragging');
-  document.querySelectorAll('.time-card').forEach(c => c.classList.remove('drop-target'));
-  document.querySelectorAll('.time-jogador-item').forEach(i => i.classList.remove('drop-target-jogador'));
-
-  const jogadorId = drag.jogadorId;
-  const timeOrigemId = drag.timeOrigemId;
-  resetDrag();
-
-  if (!alvo) return;
-
-  const jogadorAlvo = alvo.closest('.time-jogador-item');
-  const cardAlvo = alvo.closest('.time-card');
-
-  if (jogadorAlvo && jogadorAlvo !== drag.origem && jogadorAlvo.dataset.timeId !== timeOrigemId) {
-    trocarJogadoresDireto(jogadorId, timeOrigemId, jogadorAlvo.dataset.jogadorId, jogadorAlvo.dataset.timeId);
-  } else if (cardAlvo && cardAlvo.dataset.timeId !== timeOrigemId) {
-    moverJogador(jogadorId, timeOrigemId, cardAlvo.dataset.timeId);
-  }
-}
-
-function posicionarGhost(e) {
-  if (!drag.ghost) return;
-  drag.ghost.style.left = (e.clientX + 12) + 'px';
-  drag.ghost.style.top = (e.clientY - 10) + 'px';
-}
-
-function resetDrag() {
-  drag.ativo = false;
-  drag.jogadorId = null;
-  drag.timeOrigemId = null;
-  drag.origem = null;
-}
-
-// Move jogador de um time para outro
-function moverJogador(jogadorId, timeOrigemId, timeDestinoId) {
+  // Snapshot para desfazer
   const snapshot = state.times.map(t => ({ ...t, jogadores: t.jogadores.map(j => ({ ...j })) }));
   state.historicoDeTrocas.push(snapshot);
 
-  const timeOrigem = state.times.find(t => t.id === timeOrigemId);
-  const timeDestino = state.times.find(t => t.id === timeDestinoId);
-  if (!timeOrigem || !timeDestino) return;
-
-  const idx = timeOrigem.jogadores.findIndex(j => j.id === jogadorId);
-  if (idx === -1) return;
-
-  const [jogador] = timeOrigem.jogadores.splice(idx, 1);
-  timeDestino.jogadores.push(jogador);
-
-  timeOrigem.forca = calcularForca(timeOrigem);
-  timeDestino.forca = calcularForca(timeDestino);
-  renderizarTimes(state.times);
-}
-
-// Troca dois jogadores de times diferentes entre si
-function trocarJogadoresDireto(jogadorAId, timeAId, jogadorBId, timeBId) {
-  const snapshot = state.times.map(t => ({ ...t, jogadores: t.jogadores.map(j => ({ ...j })) }));
-  state.historicoDeTrocas.push(snapshot);
-
-  const timeA = state.times.find(t => t.id === timeAId);
-  const timeB = state.times.find(t => t.id === timeBId);
-  if (!timeA || !timeB) return;
-
-  const idxA = timeA.jogadores.findIndex(j => j.id === jogadorAId);
-  const idxB = timeB.jogadores.findIndex(j => j.id === jogadorBId);
-  if (idxA === -1 || idxB === -1) return;
+  const timeA = state.times.find(t => t.id === a.timeId);
+  const timeB = state.times.find(t => t.id === b.timeId);
+  const idxA = timeA.jogadores.findIndex(j => j.id === a.jogadorId);
+  const idxB = timeB.jogadores.findIndex(j => j.id === b.jogadorId);
 
   const temp = { ...timeA.jogadores[idxA] };
   timeA.jogadores[idxA] = { ...timeB.jogadores[idxB] };
@@ -793,12 +715,19 @@ function trocarJogadoresDireto(jogadorAId, timeAId, jogadorBId, timeBId) {
 
   timeA.forca = calcularForca(timeA);
   timeB.forca = calcularForca(timeB);
+
+  selecaoTroca.length = 0;
   renderizarTimes(state.times);
+}
+
+function inicializarDragAndDrop() {
+  // Mantido vazio — substituído por seleção por clique
 }
 
 function desfazerTroca() {
   if (!state.historicoDeTrocas.length) return;
   state.times = state.historicoDeTrocas.pop();
+  selecaoTroca.length = 0;
   renderizarTimes(state.times);
 }
 

@@ -496,6 +496,45 @@ body {
   margin-left: 1.25rem;
 }
 
+/* Painel de troca */
+.troca-painel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.troca-info {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #495057;
+  min-width: 200px;
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+  color: white;
+  white-space: nowrap;
+}
+
+.btn-warning:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(253, 126, 20, 0.35);
+}
+
+/* Jogador selecionado para troca */
+.time-jogador-item.selecionado-troca {
+  border-color: #fd7e14;
+  background: #fff3e0;
+  box-shadow: 0 0 0 2px rgba(253, 126, 20, 0.35);
+  font-weight: 600;
+}
+
 /* Times Grid */
 .times-grid {
   display: grid;
@@ -562,49 +601,15 @@ body {
   background: white;
   border-radius: 6px;
   font-size: 0.9rem;
-  cursor: grab;
+  cursor: pointer;
   transition: all 0.15s ease;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   user-select: none;
 }
 
 .time-jogador-item:hover {
   border-color: #dee2e6;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-}
-
-.time-jogador-item:active {
-  cursor: grabbing;
-}
-
-.time-jogador-item.dragging {
-  opacity: 0.35;
-  cursor: grabbing;
-}
-
-.time-jogador-item.drop-target-jogador {
-  border-color: #ff9800;
-  background: #fff3e0;
-  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.4);
-  transform: scale(1.02);
-}
-
-/* Ghost de arrasto */
-.drag-ghost {
-  position: fixed;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.85;
-  background: white;
-  border: 2px solid #2e7d32;
-  border-radius: 6px;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.9rem;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: grabbing;
+  background: #f8f9fa;
 }
 
 .time-jogador-item.generico {
