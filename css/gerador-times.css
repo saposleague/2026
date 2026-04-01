@@ -563,8 +563,9 @@ body {
   border-radius: 6px;
   font-size: 0.9rem;
   cursor: grab;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   border: 1px solid transparent;
+  user-select: none;
 }
 
 .time-jogador-item:hover {
@@ -577,7 +578,7 @@ body {
 }
 
 .time-jogador-item.dragging {
-  opacity: 0.5;
+  opacity: 0.35;
   cursor: grabbing;
 }
 
@@ -586,6 +587,24 @@ body {
   background: #fff3e0;
   box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.4);
   transform: scale(1.02);
+}
+
+/* Ghost de arrasto */
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.85;
+  background: white;
+  border: 2px solid #2e7d32;
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: grabbing;
 }
 
 .time-jogador-item.generico {
