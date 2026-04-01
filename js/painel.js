@@ -33,20 +33,19 @@ document.getElementById('logout-button').addEventListener('click', async () => {
 async function carregarStats() {
   try {
     // Times e rodadas do Firebase (soma fase1 + fase2 + final)
-    const [timesSnap, fase1Snap, fase2Snap, finalSnap] = await Promise.all([
+    const [timesSnap, fase1Snap, fase2Snap] = await Promise.all([
       getDocs(collection(db, 'times')),
       getDocs(collection(db, 'rodadas2026_fase1')),
       getDocs(collection(db, 'rodadas2026_fase2')),
-      getDocs(collection(db, 'rodadas2026_final')),
     ]);
 
     document.getElementById('stat-times').textContent = timesSnap.size;
-    const totalRodadas = fase1Snap.size + fase2Snap.size + finalSnap.size;
+    const totalRodadas = fase1Snap.size + fase2Snap.size + 1; // +1 pela grande final
     document.getElementById('stat-rodadas').textContent = totalRodadas;
 
-    // Rodadas pendentes (sem resultado) — soma das 3 fases
+    // Rodadas pendentes (sem resultado) — fase1 + fase2
     let pendentes = 0;
-    [fase1Snap, fase2Snap, finalSnap].forEach(snap => {
+    [fase1Snap, fase2Snap].forEach(snap => {
       snap.forEach(doc => {
         const jogos = doc.data().jogos || [];
         const semResultado = jogos.some(j => j.golsA == null && j.golsB == null);
