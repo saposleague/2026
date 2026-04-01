@@ -458,16 +458,14 @@ document.getElementById('mensagem-ok-button').addEventListener('click', () => {
     fecharPopup('mensagem-popup');
 });
 
-// Fechar popup clicando no overlay
-document.querySelectorAll('.popup-overlay').forEach(popup => {
+// Fechar modal clicando no overlay
+document.querySelectorAll('.sp-modal-overlay').forEach(popup => {
     popup.addEventListener('click', (e) => {
-        if (e.target === popup) {
-            fecharPopup(popup.id);
-        }
+        if (e.target === popup) fecharPopup(popup.id);
     });
 });
 
-// Fechar popup com ESC
+// Fechar com ESC
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         fecharPopup('mensagem-popup');

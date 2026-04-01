@@ -4,171 +4,153 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SAPOS LEAGUE - Gerador de Rodadas</title>
-  
-  <!-- PWA Meta Tags -->
   <meta name="description" content="Gerador de rodadas do Sapos League 2026">
-  <meta name="theme-color" content="#2e7d32">
+  <meta name="theme-color" content="#0a1628">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Sapos League">
-  
+
   <!-- Favicons -->
-  <link rel="icon" type="image/png" href="/favicon-48x48.png" sizes="48x48" />
-  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  
-  <!-- Manifest -->
+  <link rel="icon" href="./images/web-app-manifest-512x512.png?v=5" type="image/png" sizes="512x512" />
+  <link rel="icon" href="./images/web-app-manifest-192x192.png?v=5" type="image/png" sizes="192x192" />
+  <link rel="icon" href="./images/favicon-96x96.png?v=5" type="image/png" sizes="96x96" />
+  <link rel="shortcut icon" href="./images/web-app-manifest-512x512.png?v=5" />
+  <link rel="apple-touch-icon" href="./images/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="57x57" href="./images/favicon-48x48.png" />
+  <link rel="apple-touch-icon" sizes="60x60" href="./images/favicon-48x48.png" />
+  <link rel="apple-touch-icon" sizes="72x72" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="76x76" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="114x114" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="120x120" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="144x144" href="./images/web-app-manifest-192x192.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="./images/web-app-manifest-192x192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png" />
+
   <link rel="manifest" href="/site.webmanifest">
-  
-  <!-- CSS -->
-  <link rel="stylesheet" href="css/dark-mode-colors.css">
-  <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/gerador-rodadas.css">
-  
-  <style>
-    .fase-selector-gerador {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    
-    .fase-selector-gerador label {
-      font-weight: 600;
-      color: #495057;
-    }
-    
-    .form-select-fase-gerador {
-      padding: 0.5rem 1rem;
-      border: 2px solid #dee2e6;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 500;
-      background: white;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    
-    .form-select-fase-gerador:hover {
-      border-color: #2e7d32;
-    }
-    
-    .form-select-fase-gerador:focus {
-      outline: none;
-      border-color: #2e7d32;
-      box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
-    }
-  </style>
 </head>
 <body>
-  <!-- Header com navegação -->
-  <div class="page-header">
-    <div class="header-left">
-      <button id="voltar-button" class="btn-voltar">
-        ← Voltar ao Painel
-      </button>
-      <div class="page-subtitle">⚽ Gerador de Rodadas</div>
+
+  <div class="sp-bg-field"></div>
+  <svg class="sp-lines" viewBox="0 0 420 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="10" width="400" height="200" rx="8" stroke="white" stroke-width="1.5"/>
+    <line x1="210" y1="10" x2="210" y2="210" stroke="white" stroke-width="1.5"/>
+    <circle cx="210" cy="110" r="50" stroke="white" stroke-width="1.5"/>
+    <rect x="10" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"/>
+    <rect x="350" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"/>
+  </svg>
+
+  <!-- Header -->
+  <div class="sp-header">
+    <button id="voltar-button" class="sp-back">← Voltar ao Painel</button>
+    <div class="sp-logo">
+      <div class="sp-logo-icon">⚽</div>
+      <div class="sp-logo-text">SAPOS <span>LEAGUE</span></div>
     </div>
-    <div class="header-right">
-      <button id="logout-button" class="btn-logout-header">
-        Sair
-      </button>
-    </div>
+    <button id="logout-button" class="sp-logout-btn">Sair</button>
   </div>
 
-  <!-- Container Principal -->
-  <div class="container">
+  <!-- Hero -->
+  <div class="sp-hero">
+    <div class="sp-page-badge">🎲 Gerador de Rodadas</div>
+    <h1 class="sp-title">GERAR <span>RODADAS</span></h1>
+    <p class="sp-subtitle">Sistema Turno/Returno: 3 rodadas de ida + 3 de volta</p>
+  </div>
+
+  <!-- Conteúdo -->
+  <div class="sp-content">
+
     <!-- Card de Configuração -->
-    <div class="config-card">
-      <div class="card-header">
-        <h2>🎯 Configuração da Geração</h2>
-        <p class="card-subtitle">Sistema Turno/Returno: 3 rodadas de ida + 3 rodadas de volta</p>
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <div class="sp-card-title">
+          <div class="sp-card-title-icon">🎯</div>
+          Configuração da Geração
+        </div>
       </div>
-      <div class="card-body">
-        <div class="fase-selector-gerador">
-          <label for="fase-select-gerador">Fase:</label>
-          <select id="fase-select-gerador" class="form-select-fase-gerador">
-            <option value="fase1">Primeira Fase</option>
-            <option value="fase2">Segunda Fase</option>
-            <option value="final">Final</option>
-          </select>
-        </div>
-        
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">Times Carregados:</span>
-            <span id="times-count" class="info-value">Carregando...</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Última Rodada:</span>
-            <span id="ultima-rodada" class="info-value">Verificando...</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Próximas Rodadas:</span>
-            <span id="proximas-rodadas" class="info-value">-</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Jogos por Rodada:</span>
-            <span class="info-value">2 jogos</span>
+      <div class="sp-config-body">
+
+        <div class="sp-config-row">
+          <div class="sp-config-field">
+            <div class="sp-config-label">Fase</div>
+            <select id="fase-select-gerador" class="sp-select">
+              <option value="fase1">Primeira Fase</option>
+              <option value="fase2">Segunda Fase</option>
+              <option value="final">Final</option>
+            </select>
           </div>
         </div>
-        
-        <div class="button-section">
-          <button id="gerar-button" class="btn btn-primary" disabled>
+
+        <div class="sp-info-grid">
+          <div class="sp-info-item">
+            <div class="sp-info-label">Times Carregados</div>
+            <div class="sp-info-val" id="times-count">Carregando...</div>
+          </div>
+          <div class="sp-info-item">
+            <div class="sp-info-label">Última Rodada</div>
+            <div class="sp-info-val" id="ultima-rodada">Verificando...</div>
+          </div>
+          <div class="sp-info-item">
+            <div class="sp-info-label">Próximas Rodadas</div>
+            <div class="sp-info-val" id="proximas-rodadas">-</div>
+          </div>
+          <div class="sp-info-item">
+            <div class="sp-info-label">Jogos por Rodada</div>
+            <div class="sp-info-val">2 jogos</div>
+          </div>
+        </div>
+
+        <div class="sp-gerar-row">
+          <button id="gerar-button" class="sp-btn-gerar" disabled>
             🎲 Gerar Turno/Returno (6 Rodadas)
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Card de Prévia (inicialmente oculto) -->
-    <div id="previa-card" class="previa-card" style="display: none;">
-      <div class="card-header">
-        <h2>👀 Prévia das Rodadas Geradas</h2>
-        <p class="card-subtitle">Você pode reorganizar os jogos antes de salvar</p>
+    <!-- Card de Prévia -->
+    <div id="previa-card" class="sp-card" style="display:none;">
+      <div class="sp-card-header">
+        <div class="sp-card-title">
+          <div class="sp-card-title-icon" style="background:rgba(96,165,250,0.15);">👀</div>
+          Prévia das Rodadas Geradas
+        </div>
+        <span style="font-size:12px;color:rgba(255,255,255,0.35);">Reorganize antes de salvar</span>
       </div>
-      <div class="card-body">
+      <div class="sp-config-body">
         <div id="rodadas-preview"></div>
-        
-        <div class="button-section">
-          <button id="salvar-rodadas-button" class="btn btn-success">
-            💾 Salvar Todas as Rodadas
-          </button>
-          <button id="cancelar-button" class="btn btn-secondary">
-            ❌ Cancelar
-          </button>
+        <div class="sp-btn-row" style="justify-content:center;margin-top:8px;">
+          <button id="salvar-rodadas-button" class="sp-btn sp-btn-primary">💾 Salvar Todas as Rodadas</button>
+          <button id="cancelar-button" class="sp-btn sp-btn-danger">❌ Cancelar</button>
         </div>
       </div>
     </div>
+
   </div>
 
   <!-- Modal de Confirmação -->
-  <div id="confirmacao-popup" class="popup-overlay">
-    <div class="popup-content">
-      <div class="popup-header">
-        <h2>✅ Confirmação</h2>
-      </div>
-      <div class="popup-body">
+  <div id="confirmacao-popup" class="sp-modal-overlay">
+    <div class="sp-modal">
+      <div class="sp-modal-header">✅ Confirmação</div>
+      <div class="sp-modal-body">
         <p id="confirmacao-texto"></p>
-        <div class="popup-buttons">
-          <button id="confirmar-sim-button" class="btn btn-success">Sim</button>
-          <button id="confirmar-nao-button" class="btn btn-secondary">Não</button>
+        <div class="sp-btn-row" style="justify-content:center;margin-top:16px;">
+          <button id="confirmar-sim-button" class="sp-btn sp-btn-primary">Sim</button>
+          <button id="confirmar-nao-button" class="sp-btn sp-btn-ghost">Não</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Modal de Mensagem -->
-  <div id="mensagem-popup" class="popup-overlay">
-    <div class="popup-content">
-      <div class="popup-header">
-        <h2>💬 Mensagem</h2>
-      </div>
-      <div class="popup-body">
+  <div id="mensagem-popup" class="sp-modal-overlay">
+    <div class="sp-modal">
+      <div class="sp-modal-header">💬 Mensagem</div>
+      <div class="sp-modal-body">
         <p id="mensagem-texto"></p>
-        <button id="mensagem-ok-button" class="btn btn-primary">OK</button>
+        <div class="sp-btn-row" style="justify-content:center;margin-top:16px;">
+          <button id="mensagem-ok-button" class="sp-btn sp-btn-primary">OK</button>
+        </div>
       </div>
     </div>
   </div>

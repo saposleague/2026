@@ -425,6 +425,14 @@ document.getElementById('jogadores-por-time-select').addEventListener('change', 
 
 document.getElementById('separar-goleiros-toggle').addEventListener('change', toggleSepararGoleiros);
 
+// Conecta o toggle visual ao checkbox real
+document.getElementById('separar-goleiros-visual').addEventListener('click', () => {
+  const cb = document.getElementById('separar-goleiros-toggle');
+  cb.checked = !cb.checked;
+  document.getElementById('separar-goleiros-visual').classList.toggle('on', cb.checked);
+  toggleSepararGoleiros();
+});
+
 document.getElementById('gerar-times-button').addEventListener('click', gerarTimes);
 document.getElementById('gerar-novamente-button').addEventListener('click', gerarTimes);
 document.getElementById('copiar-times-button').addEventListener('click', () => copiarTimes(state.times));
@@ -1050,7 +1058,7 @@ document.getElementById('copia-manual-fechar').addEventListener('click', () => {
   document.getElementById('copia-manual-popup').style.display = 'none';
 });
 
-document.querySelectorAll('.popup-overlay').forEach(popup => {
+document.querySelectorAll('.sp-modal-overlay').forEach(popup => {
   popup.addEventListener('click', (e) => {
     if (e.target === popup) popup.style.display = 'none';
   });
@@ -1058,7 +1066,7 @@ document.querySelectorAll('.popup-overlay').forEach(popup => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    document.querySelectorAll('.popup-overlay').forEach(p => { p.style.display = 'none'; });
+    document.querySelectorAll('.sp-modal-overlay').forEach(p => { p.style.display = 'none'; });
   }
 });
 

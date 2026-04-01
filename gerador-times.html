@@ -4,83 +4,99 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SAPOS LEAGUE - Gerador de Times</title>
-
-  <!-- PWA Meta Tags -->
   <meta name="description" content="Gerador de times da pelada - Sapos League">
-  <meta name="theme-color" content="#2e7d32">
+  <meta name="theme-color" content="#0a1628">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Sapos League">
 
   <!-- Favicons -->
-  <link rel="icon" type="image/png" href="/favicon-48x48.png" sizes="48x48" />
-  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-
-  <!-- Manifest -->
+  <link rel="icon" href="./images/web-app-manifest-512x512.png?v=5" type="image/png" sizes="512x512" />
+  <link rel="icon" href="./images/web-app-manifest-192x192.png?v=5" type="image/png" sizes="192x192" />
+  <link rel="icon" href="./images/favicon-96x96.png?v=5" type="image/png" sizes="96x96" />
+  <link rel="shortcut icon" href="./images/web-app-manifest-512x512.png?v=5" />
+  <link rel="apple-touch-icon" href="./images/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="57x57" href="./images/favicon-48x48.png" />
+  <link rel="apple-touch-icon" sizes="60x60" href="./images/favicon-48x48.png" />
+  <link rel="apple-touch-icon" sizes="72x72" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="76x76" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="114x114" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="120x120" href="./images/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="144x144" href="./images/web-app-manifest-192x192.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="./images/web-app-manifest-192x192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest">
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="css/dark-mode-colors.css">
-  <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/gerador-times.css">
 </head>
 <body>
-  <!-- Header com navegação -->
-  <div class="page-header">
-    <div class="header-left">
-      <button id="voltar-button" class="btn-voltar">
-        ← Voltar ao Painel
-      </button>
-      <div class="page-subtitle">⚽ Gerador de Times</div>
+
+  <div class="sp-bg-field"></div>
+  <svg class="sp-lines" viewBox="0 0 420 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="10" width="400" height="200" rx="8" stroke="white" stroke-width="1.5"/>
+    <line x1="210" y1="10" x2="210" y2="210" stroke="white" stroke-width="1.5"/>
+    <circle cx="210" cy="110" r="50" stroke="white" stroke-width="1.5"/>
+    <rect x="10" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"/>
+    <rect x="350" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"/>
+  </svg>
+
+  <!-- Header -->
+  <div class="sp-header">
+    <button id="voltar-button" class="sp-back">← Voltar ao Painel</button>
+    <div class="sp-logo">
+      <div class="sp-logo-icon">⚽</div>
+      <div class="sp-logo-text">SAPOS <span>LEAGUE</span></div>
     </div>
-    <div class="header-right">
-      <button id="logout-button" class="btn-logout-header">
-        Sair
-      </button>
-    </div>
+    <button id="logout-button" class="sp-logout-btn">Sair</button>
   </div>
 
-  <!-- Container Principal -->
-  <div class="container">
+  <!-- Hero -->
+  <div class="sp-hero">
+    <div class="sp-page-badge">👥 Gerador de Times</div>
+    <h1 class="sp-title">MONTE <span>OS TIMES</span></h1>
+    <p class="sp-subtitle">Selecione os jogadores e configure a pelada</p>
+  </div>
 
-    <!-- Card: Lista de Jogadores -->
-    <div class="config-card">
-      <div class="card-header">
-        <h2>👥 Jogadores</h2>
-        <p class="card-subtitle">Selecione os jogadores presentes na pelada</p>
+  <!-- Conteúdo -->
+  <div class="sp-content">
+
+    <!-- Card: Jogadores -->
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <div class="sp-card-title">
+          <div class="sp-card-title-icon">👥</div>
+          Jogadores
+          <span id="contador-selecionados" class="sp-selected-count">0 selecionados</span>
+        </div>
+        <div class="sp-btn-row">
+          <button id="selecionar-todos-button" class="sp-btn sp-btn-ghost">Selecionar Todos</button>
+          <button id="limpar-selecao-button" class="sp-btn sp-btn-danger">Limpar</button>
+        </div>
       </div>
-      <div class="card-body">
-        <div class="lista-acoes">
-          <span id="contador-selecionados" class="contador-texto">0 jogadores selecionados</span>
-          <div class="lista-botoes">
-            <button id="selecionar-todos-button" class="btn btn-secondary btn-sm">Selecionar Todos</button>
-            <button id="limpar-selecao-button" class="btn btn-secondary btn-sm">Limpar Seleção</button>
-          </div>
-        </div>
-        <div class="busca-jogador-wrapper">
-          <span class="busca-icone">🔍</span>
-          <input type="text" id="busca-jogador-input" class="busca-jogador-input" placeholder="Buscar jogador...">
-        </div>
-        <div id="lista-jogadores-container">
-          <p class="loading-text">Carregando jogadores...</p>
-        </div>
+
+      <div class="sp-search">
+        <span class="sp-search-icon">🔍</span>
+        <input type="text" id="busca-jogador-input" placeholder="Buscar jogador..." />
+      </div>
+
+      <div id="lista-jogadores-container" class="sp-player-list">
+        <p class="sp-loading-text">Carregando jogadores...</p>
       </div>
     </div>
 
-    <!-- Card: Configuração da Pelada -->
-    <div class="config-card">
-      <div class="card-header">
-        <h2>⚙️ Configuração da Pelada</h2>
-        <p class="card-subtitle">Defina o formato antes de gerar os times</p>
+    <!-- Card: Configuração -->
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <div class="sp-card-title">
+          <div class="sp-card-title-icon" style="background:rgba(251,191,36,0.15);">⚙️</div>
+          Configuração da Pelada
+        </div>
       </div>
-      <div class="card-body">
-        <div class="config-grid">
-          <div class="config-item">
-            <label for="num-times-select" class="config-label">Número de Times</label>
-            <select id="num-times-select" class="form-select-config">
+      <div class="sp-config-body">
+
+        <div class="sp-config-row">
+          <div class="sp-config-field">
+            <div class="sp-config-label">Número de Times</div>
+            <select id="num-times-select" class="sp-select">
               <option value="2">2 times</option>
               <option value="3">3 times</option>
               <option value="4">4 times</option>
@@ -88,9 +104,9 @@
               <option value="6">6 times</option>
             </select>
           </div>
-          <div class="config-item">
-            <label for="jogadores-por-time-select" class="config-label">Jogadores por Time</label>
-            <select id="jogadores-por-time-select" class="form-select-config">
+          <div class="sp-config-field">
+            <div class="sp-config-label">Jogadores por Time</div>
+            <select id="jogadores-por-time-select" class="sp-select">
               <option value="2">2 jogadores</option>
               <option value="3">3 jogadores</option>
               <option value="4">4 jogadores</option>
@@ -107,152 +123,153 @@
               <option value="15">15 jogadores</option>
             </select>
           </div>
-          <div class="config-item config-item-total">
-            <span class="config-label">Total Necessário</span>
-            <span id="total-necessario" class="total-valor">10 jogadores</span>
+          <div class="sp-total-box">
+            <div>
+              <div class="sp-total-label">Total</div>
+              <div class="sp-total-val" id="total-necessario">10</div>
+            </div>
+            <span class="sp-total-unit">jogadores</span>
           </div>
         </div>
 
-        <div id="alerta-diferenca" class="alerta-diferenca" style="display:none;"></div>
+        <div id="alerta-diferenca" class="sp-alert sp-alert-warn" style="display:none;"></div>
 
-        <!-- Toggle Separar Goleiros -->
-        <div class="toggle-goleiros">
-          <label class="toggle-label">
-            <input type="checkbox" id="separar-goleiros-toggle">
-            <span class="toggle-slider"></span>
-            <span class="toggle-texto">🧤 Separar Goleiros</span>
-          </label>
-          <p class="toggle-descricao">Quando ativo, marque um goleiro por time antes de gerar.</p>
+        <!-- Toggle Goleiros -->
+        <div class="sp-toggle-row">
+          <div class="sp-toggle" id="separar-goleiros-visual">
+            <div class="sp-toggle-thumb"></div>
+          </div>
+          <div class="sp-toggle-info">
+            <div class="sp-toggle-title">🥅 Separar Goleiros</div>
+            <div class="sp-toggle-desc">Quando ativo, marque um goleiro por time antes de gerar.</div>
+          </div>
+          <input type="checkbox" id="separar-goleiros-toggle" style="display:none;">
         </div>
 
-        <div id="aviso-goleiros" class="aviso-goleiros" style="display:none;"></div>
+        <div id="aviso-goleiros" class="sp-alert sp-alert-warn" style="display:none;"></div>
 
-        <div class="button-section">
-          <button id="gerar-times-button" class="btn btn-primary" disabled>
-            🎲 Gerar Times
-          </button>
+        <div class="sp-gerar-row">
+          <button id="gerar-times-button" class="sp-btn-gerar" disabled>⚽ Gerar Times</button>
         </div>
       </div>
     </div>
 
-    <!-- Card: Resultado (oculto inicialmente) -->
-    <div id="resultado-card" class="config-card" style="display:none;">
-      <div class="card-header">
-        <h2>🏆 Times Gerados</h2>
-        <p class="card-subtitle">Arraste sobre outro jogador para trocar, ou arraste para a área do time para mover</p>
+    <!-- Card: Resultado -->
+    <div id="resultado-card" class="sp-card" style="display:none;">
+      <div class="sp-card-header">
+        <div class="sp-card-title">
+          <div class="sp-card-title-icon" style="background:rgba(251,191,36,0.15);">🏆</div>
+          Times Gerados
+        </div>
+        <span style="font-size:11px;color:rgba(255,255,255,0.3);">Clique em 2 jogadores para trocar</span>
       </div>
-      <div class="card-body">
-        <div id="resumo-forcas" class="resumo-forcas"></div>
+      <div class="sp-config-body">
+
+        <div id="resumo-forcas" class="sp-resumo"></div>
 
         <!-- Painel de troca -->
-        <div class="troca-painel">
-          <span id="troca-info" class="troca-info">Clique em dois jogadores de times diferentes para trocar.</span>
-          <button id="trocar-jogadores-button" class="btn btn-warning" disabled>🔄 Trocar</button>
+        <div class="sp-troca-painel">
+          <span id="troca-info" class="sp-troca-info">Clique em dois jogadores de times diferentes para trocar.</span>
+          <button id="trocar-jogadores-button" class="sp-btn sp-btn-amber" disabled>🔄 Trocar</button>
         </div>
 
-        <div id="times-resultado" class="times-grid"></div>
-        <div id="nota-genericos" class="nota-genericos" style="display:none;"></div>
-        <div class="button-section resultado-botoes">
-          <button id="gerar-novamente-button" class="btn btn-secondary">🔄 Gerar Novamente</button>
-          <button id="desfazer-troca-button" class="btn btn-secondary" disabled>↩️ Desfazer Troca</button>
-          <button id="copiar-times-button" class="btn btn-success">📋 Copiar Times</button>
-          <button id="exportar-imagem-button" class="btn btn-primary">🖼️ Exportar Imagem</button>
-          <button id="registrar-presencas-button" class="btn btn-success">✅ Registrar Presenças</button>
+        <div id="times-resultado" class="sp-times-grid"></div>
+        <div id="nota-genericos" class="sp-nota-genericos" style="display:none;"></div>
+
+        <div class="sp-btn-row sp-resultado-botoes">
+          <button id="gerar-novamente-button" class="sp-btn sp-btn-ghost">🔄 Gerar Novamente</button>
+          <button id="desfazer-troca-button" class="sp-btn sp-btn-ghost" disabled>↩️ Desfazer</button>
+          <button id="copiar-times-button" class="sp-btn sp-btn-primary">📋 Copiar</button>
+          <button id="exportar-imagem-button" class="sp-btn sp-btn-blue">🖼️ Exportar</button>
+          <button id="registrar-presencas-button" class="sp-btn sp-btn-primary">✅ Presenças</button>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Modal de Registro de Presenças -->
-  <div id="presencas-popup" class="popup-overlay">
-    <div class="popup-content">
-      <div class="popup-header">
-        <h2>✅ Registrar Presenças</h2>
-      </div>
-      <div class="popup-body">
-        <div class="presencas-form">
-          <div class="config-item">
-            <label for="presencas-data" class="config-label">Data da Pelada</label>
-            <input type="date" id="presencas-data" class="form-select-config">
-          </div>
-          <div class="config-item" style="margin-top:1rem;">
-            <label for="presencas-obs" class="config-label">Observações (opcional)</label>
-            <textarea id="presencas-obs" class="copia-manual-textarea" placeholder="Ex: Campo do clube, início às 20h..." rows="3"></textarea>
-          </div>
-          <p id="presencas-info" class="presencas-info"></p>
+  <!-- Modal: Presenças -->
+  <div id="presencas-popup" class="sp-modal-overlay">
+    <div class="sp-modal">
+      <div class="sp-modal-header">✅ Registrar Presenças</div>
+      <div class="sp-modal-body">
+        <div class="sp-form-field">
+          <div class="sp-config-label">Data da Pelada</div>
+          <input type="date" id="presencas-data" class="sp-input">
         </div>
-        <div class="popup-buttons" style="margin-top:1.5rem;">
-          <button id="presencas-confirmar" class="btn btn-success">✅ Confirmar</button>
-          <button id="presencas-cancelar" class="btn btn-secondary">Cancelar</button>
+        <div class="sp-form-field" style="margin-top:12px;">
+          <div class="sp-config-label">Observações (opcional)</div>
+          <textarea id="presencas-obs" class="sp-textarea" placeholder="Ex: Campo do clube, início às 20h..." rows="3"></textarea>
+        </div>
+        <p id="presencas-info" class="sp-presencas-info"></p>
+        <div class="sp-btn-row" style="justify-content:center;margin-top:16px;">
+          <button id="presencas-confirmar" class="sp-btn sp-btn-primary">✅ Confirmar</button>
+          <button id="presencas-cancelar" class="sp-btn sp-btn-ghost">Cancelar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal de Exportação -->
-  <div id="exportacao-popup" class="popup-overlay">
-    <div class="popup-content">
-      <div class="popup-header">
-        <h2>🖼️ Exportar Imagem</h2>
-      </div>
-      <div class="popup-body">
-        <p>Como deseja exportar os times?</p>
-        <div class="popup-buttons">
-          <button id="exportacao-whatsapp" class="btn btn-success">📲 Enviar pelo WhatsApp</button>
-          <button id="exportacao-baixar" class="btn btn-primary">⬇️ Baixar imagem</button>
+  <!-- Modal: Exportação -->
+  <div id="exportacao-popup" class="sp-modal-overlay">
+    <div class="sp-modal">
+      <div class="sp-modal-header">🖼️ Exportar Imagem</div>
+      <div class="sp-modal-body">
+        <p style="margin-bottom:16px;">Como deseja exportar os times?</p>
+        <div class="sp-btn-row" style="justify-content:center;">
+          <button id="exportacao-whatsapp" class="sp-btn sp-btn-primary">📲 Enviar pelo WhatsApp</button>
+          <button id="exportacao-baixar" class="sp-btn sp-btn-blue">⬇️ Baixar imagem</button>
         </div>
-        <p id="exportacao-dica" class="exportacao-dica" style="display:none;"></p>
-        <button class="btn btn-secondary" style="margin-top:1rem;" onclick="document.getElementById('exportacao-popup').style.display='none'">Cancelar</button>
+        <p id="exportacao-dica" style="display:none;"></p>
+        <div class="sp-btn-row" style="justify-content:center;margin-top:12px;">
+          <button class="sp-btn sp-btn-ghost" onclick="document.getElementById('exportacao-popup').style.display='none'">Cancelar</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal de Mensagem -->
-  <div id="mensagem-popup" class="popup-overlay">
-    <div class="popup-content">
-      <div class="popup-header">
-        <h2>💬 Mensagem</h2>
-      </div>
-      <div class="popup-body">
+  <!-- Modal: Mensagem -->
+  <div id="mensagem-popup" class="sp-modal-overlay">
+    <div class="sp-modal">
+      <div class="sp-modal-header">💬 Mensagem</div>
+      <div class="sp-modal-body">
         <p id="mensagem-texto"></p>
-        <button id="mensagem-ok-button" class="btn btn-primary">OK</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal de Confirmação -->
-  <div id="confirmacao-popup" class="popup-overlay">
-    <div class="popup-content">
-      <div class="popup-header">
-        <h2>✅ Confirmação</h2>
-      </div>
-      <div class="popup-body">
-        <p id="confirmacao-texto"></p>
-        <div class="popup-buttons">
-          <button id="confirmar-sim-button" class="btn btn-success">Sim</button>
-          <button id="confirmar-nao-button" class="btn btn-secondary">Não</button>
+        <div class="sp-btn-row" style="justify-content:center;margin-top:16px;">
+          <button id="mensagem-ok-button" class="sp-btn sp-btn-primary">OK</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal de Cópia Manual (fallback) -->
-  <div id="copia-manual-popup" class="popup-overlay">
-    <div class="popup-content">
-      <div class="popup-header">
-        <h2>📋 Copiar Times</h2>
+  <!-- Modal: Confirmação -->
+  <div id="confirmacao-popup" class="sp-modal-overlay">
+    <div class="sp-modal">
+      <div class="sp-modal-header">✅ Confirmação</div>
+      <div class="sp-modal-body">
+        <p id="confirmacao-texto"></p>
+        <div class="sp-btn-row" style="justify-content:center;margin-top:16px;">
+          <button id="confirmar-sim-button" class="sp-btn sp-btn-primary">Sim</button>
+          <button id="confirmar-nao-button" class="sp-btn sp-btn-ghost">Não</button>
+        </div>
       </div>
-      <div class="popup-body">
-        <p>Selecione e copie o texto abaixo:</p>
-        <textarea id="copia-manual-texto" class="copia-manual-textarea" readonly></textarea>
-        <button id="copia-manual-fechar" class="btn btn-primary">Fechar</button>
+    </div>
+  </div>
+
+  <!-- Modal: Cópia Manual -->
+  <div id="copia-manual-popup" class="sp-modal-overlay">
+    <div class="sp-modal">
+      <div class="sp-modal-header">📋 Copiar Times</div>
+      <div class="sp-modal-body">
+        <p style="margin-bottom:12px;">Selecione e copie o texto abaixo:</p>
+        <textarea id="copia-manual-texto" class="sp-textarea" readonly></textarea>
+        <div class="sp-btn-row" style="justify-content:center;margin-top:12px;">
+          <button id="copia-manual-fechar" class="sp-btn sp-btn-primary">Fechar</button>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="js/dynamic-favicon.js"></script>
-  <!-- Supabase via CDN (deve ser carregado antes do module) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script type="module" src="js/gerador-times.js"></script>
 </body>
