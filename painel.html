@@ -3,66 +3,98 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SAPOS LEAGUE - Painel</title>
-
+  <title>SAPOS LEAGUE - Painel Admin</title>
   <meta name="description" content="Painel administrativo do Sapos League">
-  <meta name="theme-color" content="#2e7d32">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Sapos League">
-
+  <meta name="theme-color" content="#0a1628">
   <link rel="icon" type="image/png" href="/favicon-48x48.png" sizes="48x48" />
-  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="shortcut icon" href="/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest">
-
-  <link rel="stylesheet" href="css/dark-mode-colors.css">
-  <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/painel.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="page-header">
-    <div class="header-title">⚽ Sapos League</div>
-    <div class="header-user">
-      <span id="user-email" class="user-email"></span>
-      <button id="logout-button" class="btn-logout">Sair</button>
+
+  <div class="sp-bg-field"></div>
+
+  <svg class="sp-lines" viewBox="0 0 420 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="10" width="400" height="200" rx="8" stroke="white" stroke-width="1.5"/>
+    <line x1="210" y1="10" x2="210" y2="210" stroke="white" stroke-width="1.5"/>
+    <circle cx="210" cy="110" r="50" stroke="white" stroke-width="1.5"/>
+    <rect x="10" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"/>
+    <rect x="350" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"/>
+  </svg>
+
+  <div class="sp-header">
+    <div class="sp-logo">
+      <div class="sp-logo-icon">⚽</div>
+      <div class="sp-logo-text">SAPOS <span>LEAGUE</span></div>
+    </div>
+    <div class="sp-header-right">
+      <div class="sp-user-badge">
+        <div class="sp-avatar" id="user-avatar">--</div>
+        <div class="sp-user-info">
+          <div class="sp-user-name" id="user-name">Carregando...</div>
+          <div class="sp-user-role">Administrador</div>
+        </div>
+      </div>
+      <button id="logout-button" class="sp-logout-btn">Sair</button>
     </div>
   </div>
 
-  <div class="container">
-    <div class="painel-titulo">
-      <h1>Painel Administrativo</h1>
-      <p>Selecione uma área para gerenciar</p>
+  <div class="sp-hero">
+    <div class="sp-season-badge">
+      <div class="sp-dot"></div>
+      Temporada 2026
     </div>
+    <h1 class="sp-title">PAINEL <span>ADMIN</span></h1>
+    <p class="sp-subtitle">Gerencie o campeonato e as peladas</p>
+  </div>
 
-    <div class="cards-grid">
-      <a href="rodadas.html" class="painel-card">
-        <div class="card-icon">🏆</div>
-        <div class="card-nome">Rodadas</div>
-        <div class="card-desc">Visualize a classificação e as rodadas do campeonato</div>
-      </a>
-
-      <a href="gerador-rodadas.html" class="painel-card">
-        <div class="card-icon">🎲</div>
-        <div class="card-nome">Gerador de Rodadas</div>
-        <div class="card-desc">Gere automaticamente as rodadas do campeonato</div>
-      </a>
-
-      <a href="gerador-times.html" class="painel-card">
-        <div class="card-icon">👥</div>
-        <div class="card-nome">Gerador de Times</div>
-        <div class="card-desc">Monte times equilibrados para a pelada do dia</div>
-      </a>
-
-      <a href="pelada/admin.html" class="painel-card">
-        <div class="card-icon">📋</div>
-        <div class="card-nome">Gestão de Peladas</div>
-        <div class="card-desc">Cadastre presenças e gerencie as peladas anteriores</div>
-      </a>
+  <div class="sp-stats-row">
+    <div class="sp-stat">
+      <div class="sp-stat-val green" id="stat-times">—</div>
+      <div class="sp-stat-lbl">Times</div>
     </div>
+    <div class="sp-stat">
+      <div class="sp-stat-val" id="stat-rodadas">—</div>
+      <div class="sp-stat-lbl">Rodadas</div>
+    </div>
+    <div class="sp-stat">
+      <div class="sp-stat-val amber" id="stat-pendentes">—</div>
+      <div class="sp-stat-lbl">Rodadas Pendentes</div>
+    </div>
+    <div class="sp-stat">
+      <div class="sp-stat-val green" id="stat-jogadores">—</div>
+      <div class="sp-stat-lbl">Jogadores</div>
+    </div>
+  </div>
+
+  <div class="sp-grid">
+    <a href="rodadas.html" class="sp-card green">
+      <span class="sp-card-arrow">↗</span>
+      <div class="sp-card-icon">🏆</div>
+      <p class="sp-card-name">Rodadas</p>
+      <p class="sp-card-desc">Classificação e rodadas do campeonato</p>
+    </a>
+    <a href="gerador-rodadas.html" class="sp-card blue">
+      <span class="sp-card-arrow">↗</span>
+      <div class="sp-card-icon">🎲</div>
+      <p class="sp-card-name">Gerador de Rodadas</p>
+      <p class="sp-card-desc">Gere as rodadas automaticamente</p>
+    </a>
+    <a href="gerador-times.html" class="sp-card amber">
+      <span class="sp-card-arrow">↗</span>
+      <div class="sp-card-icon">👥</div>
+      <p class="sp-card-name">Gerador de Times</p>
+      <p class="sp-card-desc">Monte times equilibrados para a pelada</p>
+    </a>
+    <a href="pelada/admin.html" class="sp-card coral">
+      <span class="sp-card-arrow">↗</span>
+      <div class="sp-card-icon">📋</div>
+      <p class="sp-card-name">Gestão de Peladas</p>
+      <p class="sp-card-desc">Presenças e peladas anteriores</p>
+    </a>
   </div>
 
   <script src="js/dynamic-favicon.js"></script>
