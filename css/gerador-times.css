@@ -732,6 +732,13 @@ body {
   justify-content: center;
 }
 
+.exportacao-dica {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: 0.75rem;
+  font-style: italic;
+}
+
 .copia-manual-textarea {
   width: 100%;
   min-height: 150px;

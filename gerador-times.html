@@ -163,6 +163,24 @@
 
   </div>
 
+  <!-- Modal de Exportação -->
+  <div id="exportacao-popup" class="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h2>🖼️ Exportar Imagem</h2>
+      </div>
+      <div class="popup-body">
+        <p>Como deseja exportar os times?</p>
+        <div class="popup-buttons">
+          <button id="exportacao-whatsapp" class="btn btn-success">📲 Enviar pelo WhatsApp</button>
+          <button id="exportacao-baixar" class="btn btn-primary">⬇️ Baixar imagem</button>
+        </div>
+        <p id="exportacao-dica" class="exportacao-dica" style="display:none;"></p>
+        <button class="btn btn-secondary" style="margin-top:1rem;" onclick="document.getElementById('exportacao-popup').style.display='none'">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal de Mensagem -->
   <div id="mensagem-popup" class="popup-overlay">
     <div class="popup-content">

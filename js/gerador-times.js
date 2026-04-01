@@ -833,7 +833,6 @@ async function exportarImagem() {
     const COLS = 2;
     const ROWS = Math.ceil(times.length / COLS);
     const CARD_W = 400;
-    const PADDING = 20;
     const HEADER_H = 50;
     const ROW_H = 32;
     const CARD_PADDING = 16;
@@ -851,11 +850,9 @@ async function exportarImagem() {
     canvas.height = canvasH;
     const ctx = canvas.getContext('2d');
 
-    // Fundo
     ctx.fillStyle = '#f0f4f0';
     ctx.fillRect(0, 0, canvasW, canvasH);
 
-    // Título com data atual
     const hoje = new Date();
     const dataFormatada = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     ctx.fillStyle = '#2e7d32';
@@ -869,35 +866,24 @@ async function exportarImagem() {
       const x = GAP + col * (CARD_W + GAP);
       const y = TITLE_H + GAP + row * (CARD_H + GAP);
 
-      // Card background
       ctx.fillStyle = '#ffffff';
       desenharArredondado(ctx, x, y, CARD_W, CARD_H, 12);
       ctx.fill();
 
-      // Borda
       ctx.strokeStyle = '#e0e0e0';
       ctx.lineWidth = 1.5;
       desenharArredondado(ctx, x, y, CARD_W, CARD_H, 12);
       ctx.stroke();
 
-      // Header verde
       ctx.fillStyle = '#2e7d32';
       desenharArredondadoTopo(ctx, x, y, CARD_W, HEADER_H, 12);
       ctx.fill();
 
-      // Nome do time
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 18px Arial, sans-serif';
       ctx.textAlign = 'left';
       ctx.fillText(time.nome, x + CARD_PADDING, y + 32);
 
-      // Força
-      ctx.font = '13px Arial, sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.fillText('Forca: ' + calcularForca(time), x + CARD_W - CARD_PADDING, y + 32);
-
-      // Jogadores
       time.jogadores.forEach((j, ji) => {
         const jy = y + HEADER_H + CARD_PADDING + ji * ROW_H;
 
@@ -906,13 +892,11 @@ async function exportarImagem() {
           ctx.fillRect(x + 8, jy, CARD_W - 16, ROW_H - 2);
         }
 
-        // Estrelas
         ctx.font = '13px Arial, sans-serif';
         ctx.textAlign = 'left';
         ctx.fillStyle = j.generico ? '#e65100' : '#f59e0b';
         ctx.fillText(renderizarEstrelas(j.nivel), x + CARD_PADDING, jy + 20);
 
-        // Nome
         ctx.font = j.generico ? 'italic 14px Arial, sans-serif' : '14px Arial, sans-serif';
         ctx.fillStyle = j.generico ? '#e65100' : '#333333';
         const prefixo = j.goleiro ? '🧤 ' : '';
@@ -920,13 +904,48 @@ async function exportarImagem() {
       });
     });
 
-    const link = document.createElement('a');
-    link.download = 'times-pelada.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    // Converte canvas para Blob
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    const dataUrl = canvas.toDataURL('image/png');
+
+    // Mostra modal com opções
+    mostrarModalExportacao(blob, dataUrl);
   } catch (err) {
     console.error('Erro ao gerar imagem:', err);
     mostrarMensagem('Erro ao gerar imagem. Tente novamente.');
+  }
+}
+
+function mostrarModalExportacao(blob, dataUrl) {
+  const popup = document.getElementById('exportacao-popup');
+  popup.style.display = 'flex';
+
+  // Botão baixar
+  document.getElementById('exportacao-baixar').onclick = () => {
+    const link = document.createElement('a');
+    link.download = 'times-pelada.png';
+    link.href = dataUrl;
+    link.click();
+    popup.style.display = 'none';
+  };
+
+  // Botão WhatsApp — usa Web Share API se disponível, senão abre wa.me
+  const btnWhats = document.getElementById('exportacao-whatsapp');
+  if (navigator.canShare && navigator.canShare({ files: [new File([blob], 'times-pelada.png', { type: 'image/png' })] })) {
+    btnWhats.style.display = '';
+    btnWhats.onclick = async () => {
+      try {
+        const file = new File([blob], 'times-pelada.png', { type: 'image/png' });
+        await navigator.share({ files: [file], title: 'Times da Pelada' });
+        popup.style.display = 'none';
+      } catch (e) {
+        if (e.name !== 'AbortError') mostrarMensagem('Não foi possível compartilhar. Baixe a imagem e envie manualmente.');
+      }
+    };
+  } else {
+    // Desktop: Web Share não suporta arquivos — esconde botão e orienta
+    btnWhats.style.display = 'none';
+    document.getElementById('exportacao-dica').style.display = 'block';
   }
 }
 
