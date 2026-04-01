@@ -157,10 +157,37 @@
           <button id="desfazer-troca-button" class="btn btn-secondary" disabled>↩️ Desfazer Troca</button>
           <button id="copiar-times-button" class="btn btn-success">📋 Copiar Times</button>
           <button id="exportar-imagem-button" class="btn btn-primary">🖼️ Exportar Imagem</button>
+          <button id="registrar-presencas-button" class="btn btn-success">✅ Registrar Presenças</button>
         </div>
       </div>
     </div>
 
+  </div>
+
+  <!-- Modal de Registro de Presenças -->
+  <div id="presencas-popup" class="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h2>✅ Registrar Presenças</h2>
+      </div>
+      <div class="popup-body">
+        <div class="presencas-form">
+          <div class="config-item">
+            <label for="presencas-data" class="config-label">Data da Pelada</label>
+            <input type="date" id="presencas-data" class="form-select-config">
+          </div>
+          <div class="config-item" style="margin-top:1rem;">
+            <label for="presencas-obs" class="config-label">Observações (opcional)</label>
+            <textarea id="presencas-obs" class="copia-manual-textarea" placeholder="Ex: Campo do clube, início às 20h..." rows="3"></textarea>
+          </div>
+          <p id="presencas-info" class="presencas-info"></p>
+        </div>
+        <div class="popup-buttons" style="margin-top:1.5rem;">
+          <button id="presencas-confirmar" class="btn btn-success">✅ Confirmar</button>
+          <button id="presencas-cancelar" class="btn btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Modal de Exportação -->

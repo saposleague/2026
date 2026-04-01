@@ -732,6 +732,17 @@ body {
   justify-content: center;
 }
 
+.presencas-form {
+  text-align: left;
+}
+
+.presencas-info {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
 .exportacao-dica {
   font-size: 0.85rem;
   color: #6c757d;

@@ -429,8 +429,12 @@ document.getElementById('gerar-times-button').addEventListener('click', gerarTim
 document.getElementById('gerar-novamente-button').addEventListener('click', gerarTimes);
 document.getElementById('copiar-times-button').addEventListener('click', () => copiarTimes(state.times));
 document.getElementById('exportar-imagem-button').addEventListener('click', () => exportarImagem());
-document.getElementById('desfazer-troca-button').addEventListener('click', desfazerTroca);
+document.getElementById('registrar-presencas-button').addEventListener('click', abrirModalPresencas);
 document.getElementById('trocar-jogadores-button').addEventListener('click', executarTroca);
+document.getElementById('presencas-confirmar').addEventListener('click', registrarPresencas);
+document.getElementById('presencas-cancelar').addEventListener('click', () => {
+  document.getElementById('presencas-popup').style.display = 'none';
+});
 
 // ─── ALGORITMO DE BALANCEAMENTO (Tarefa 8) ────────────────────────────────
 
@@ -973,6 +977,62 @@ function desenharArredondadoTopo(ctx, x, y, w, h, r) {
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
+}
+
+// ─── REGISTRO DE PRESENÇAS ────────────────────────────────────────────────
+
+function abrirModalPresencas() {
+  const jogadoresSelecionados = state.jogadores.filter(j => j.selecionado && !j.generico);
+  const popup = document.getElementById('presencas-popup');
+
+  // Data padrão = hoje
+  const hoje = new Date().toISOString().split('T')[0];
+  document.getElementById('presencas-data').value = hoje;
+  document.getElementById('presencas-obs').value = '';
+  document.getElementById('presencas-info').textContent =
+    `${jogadoresSelecionados.length} jogador(es) serão registrados.`;
+
+  popup.style.display = 'flex';
+}
+
+async function registrarPresencas() {
+  const data = document.getElementById('presencas-data').value;
+  const obs = document.getElementById('presencas-obs').value.trim() || null;
+
+  if (!data) {
+    mostrarMensagem('Selecione a data da pelada.');
+    return;
+  }
+
+  const jogadores = state.jogadores.filter(j => j.selecionado && !j.generico);
+  if (!jogadores.length) {
+    mostrarMensagem('Nenhum jogador selecionado para registrar.');
+    return;
+  }
+
+  const btn = document.getElementById('presencas-confirmar');
+  btn.disabled = true;
+  btn.textContent = 'Registrando...';
+
+  try {
+    const registros = jogadores.map(j => ({
+      jogador_id: j.id,
+      data_pelada: data,
+      observacoes: obs,
+    }));
+
+    const { error } = await db.from('presencas').insert(registros);
+    if (error) throw error;
+
+    document.getElementById('presencas-popup').style.display = 'none';
+    mostrarMensagem(`✅ ${jogadores.length} presença(s) registrada(s) com sucesso!`);
+  } catch (err) {
+    console.error('Erro ao registrar presenças:', err);
+    mostrarMensagem('Erro ao registrar presenças. Tente novamente.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✅ Confirmar';
+  }
 }
 
 // ─── POPUPS ───────────────────────────────────────────────────────────────
