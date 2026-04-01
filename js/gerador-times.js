@@ -657,7 +657,7 @@ function selecionarParaTroca(li) {
   const timeId = li.dataset.timeId;
 
   // Se já está selecionado, desseleciona
-  const idx = selecaoTroca.findIndex(s => s.jogadorId === jogadorId);
+  const idx = selecaoTroca.findIndex(s => String(s.jogadorId) === String(jogadorId));
   if (idx !== -1) {
     selecaoTroca.splice(idx, 1);
     li.classList.remove('selecionado-troca');
@@ -706,8 +706,20 @@ function executarTroca() {
 
   const timeA = state.times.find(t => t.id === a.timeId);
   const timeB = state.times.find(t => t.id === b.timeId);
-  const idxA = timeA.jogadores.findIndex(j => j.id === a.jogadorId);
-  const idxB = timeB.jogadores.findIndex(j => j.id === b.jogadorId);
+
+  if (!timeA || !timeB) {
+    console.error('Time não encontrado', a.timeId, b.timeId, state.times.map(t => t.id));
+    return;
+  }
+
+  // Comparação com String() para garantir que tipo não cause falha
+  const idxA = timeA.jogadores.findIndex(j => String(j.id) === String(a.jogadorId));
+  const idxB = timeB.jogadores.findIndex(j => String(j.id) === String(b.jogadorId));
+
+  if (idxA === -1 || idxB === -1) {
+    console.error('Jogador não encontrado', a.jogadorId, b.jogadorId);
+    return;
+  }
 
   const temp = { ...timeA.jogadores[idxA] };
   timeA.jogadores[idxA] = { ...timeB.jogadores[idxB] };
