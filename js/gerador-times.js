@@ -209,10 +209,10 @@ function limparSelecao() {
 function aplicarFiltroAtual() {
   const input = document.getElementById('busca-jogador-input');
   if (!input) return;
-  const termo = input.value.toLowerCase().trim();
+  const termo = normalizar(input.value.trim());
   if (!termo) return;
   document.querySelectorAll('.jogador-item').forEach(li => {
-    const nome = li.querySelector('.jogador-nome')?.textContent.toLowerCase() || '';
+    const nome = normalizar(li.querySelector('.jogador-nome')?.textContent || '');
     li.style.display = nome.includes(termo) ? '' : 'none';
   });
 }
@@ -400,11 +400,14 @@ function renderizarSeletorGoleiros() {
 document.getElementById('selecionar-todos-button').addEventListener('click', selecionarTodos);
 document.getElementById('limpar-selecao-button').addEventListener('click', limparSelecao);
 
+function normalizar(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 document.getElementById('busca-jogador-input').addEventListener('input', (e) => {
-  const termo = e.target.value.toLowerCase().trim();
-  const items = document.querySelectorAll('.jogador-item');
-  items.forEach(li => {
-    const nome = li.querySelector('.jogador-nome')?.textContent.toLowerCase() || '';
+  const termo = normalizar(e.target.value.trim());
+  document.querySelectorAll('.jogador-item').forEach(li => {
+    const nome = normalizar(li.querySelector('.jogador-nome')?.textContent || '');
     li.style.display = nome.includes(termo) ? '' : 'none';
   });
 });
