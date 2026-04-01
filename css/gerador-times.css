@@ -30,12 +30,10 @@ body {
 .sp-header {
   position: relative; z-index: 2;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px 0;
-  position: sticky; top: 0;
+  padding: 16px 20px 12px;
   background: rgba(10,22,40,0.85);
   backdrop-filter: blur(12px);
   border-bottom: 0.5px solid rgba(255,255,255,0.06);
-  padding-bottom: 12px;
 }
 
 .sp-back {
@@ -296,39 +294,36 @@ body {
 .sp-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .sp-btn-ghost {
-  background: transparent;
-  border-color: rgba(255,255,255,0.2);
-  color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.85);
 }
-.sp-btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.08); color: #fff; }
 
 .sp-btn-primary {
-  background: rgba(34,197,94,0.15);
-  border-color: rgba(34,197,94,0.4);
+  background: rgba(34,197,94,0.25);
+  border-color: rgba(34,197,94,0.6);
   color: #4ade80;
 }
-.sp-btn-primary:hover:not(:disabled) { background: rgba(34,197,94,0.25); }
 
 .sp-btn-danger {
-  background: rgba(248,113,113,0.1);
-  border-color: rgba(248,113,113,0.3);
+  background: rgba(248,113,113,0.2);
+  border-color: rgba(248,113,113,0.5);
   color: #fca5a5;
 }
-.sp-btn-danger:hover:not(:disabled) { background: rgba(248,113,113,0.2); }
 
 .sp-btn-amber {
-  background: rgba(251,191,36,0.1);
-  border-color: rgba(251,191,36,0.3);
+  background: rgba(251,191,36,0.2);
+  border-color: rgba(251,191,36,0.5);
   color: #fcd34d;
 }
-.sp-btn-amber:hover:not(:disabled) { background: rgba(251,191,36,0.2); }
 
 .sp-btn-blue {
-  background: rgba(96,165,250,0.1);
-  border-color: rgba(96,165,250,0.3);
+  background: rgba(96,165,250,0.2);
+  border-color: rgba(96,165,250,0.5);
   color: #93c5fd;
 }
-.sp-btn-blue:hover:not(:disabled) { background: rgba(96,165,250,0.2); }
+
+.sp-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .sp-gerar-row { display: flex; justify-content: center; padding-top: 4px; }
 

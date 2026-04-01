@@ -862,13 +862,21 @@ async function exportarImagem() {
     canvas.height = canvasH;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#f0f4f0';
+    // Fundo dark
+    ctx.fillStyle = '#0a1628';
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    // Gradiente de campo sutil
+    const grad = ctx.createRadialGradient(canvasW/2, canvasH, 0, canvasW/2, canvasH, canvasH);
+    grad.addColorStop(0, 'rgba(26,74,46,0.5)');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, canvasW, canvasH);
 
     const hoje = new Date();
     const dataFormatada = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    ctx.fillStyle = '#2e7d32';
-    ctx.font = 'bold 28px Arial, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 26px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(`Pelada dos Sapos ${dataFormatada}`, canvasW / 2, 40);
 
@@ -878,20 +886,28 @@ async function exportarImagem() {
       const x = GAP + col * (CARD_W + GAP);
       const y = TITLE_H + GAP + row * (CARD_H + GAP);
 
-      ctx.fillStyle = '#ffffff';
+      // Card background
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
       desenharArredondado(ctx, x, y, CARD_W, CARD_H, 12);
       ctx.fill();
 
-      ctx.strokeStyle = '#e0e0e0';
-      ctx.lineWidth = 1.5;
+      // Borda
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 1;
       desenharArredondado(ctx, x, y, CARD_W, CARD_H, 12);
       ctx.stroke();
 
-      ctx.fillStyle = '#2e7d32';
+      // Header verde escuro
+      ctx.fillStyle = 'rgba(34,197,94,0.2)';
       desenharArredondadoTopo(ctx, x, y, CARD_W, HEADER_H, 12);
       ctx.fill();
 
-      ctx.fillStyle = '#ffffff';
+      // Linha verde no topo do header
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(x + 12, y, CARD_W - 24, 2);
+
+      // Nome do time
+      ctx.fillStyle = '#4ade80';
       ctx.font = 'bold 18px Arial, sans-serif';
       ctx.textAlign = 'left';
       ctx.fillText(time.nome, x + CARD_PADDING, y + 32);
@@ -900,17 +916,19 @@ async function exportarImagem() {
         const jy = y + HEADER_H + CARD_PADDING + ji * ROW_H;
 
         if (ji % 2 === 0) {
-          ctx.fillStyle = '#f8f9fa';
+          ctx.fillStyle = 'rgba(255,255,255,0.04)';
           ctx.fillRect(x + 8, jy, CARD_W - 16, ROW_H - 2);
         }
 
+        // Estrelas
         ctx.font = '13px Arial, sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillStyle = j.generico ? '#e65100' : '#f59e0b';
+        ctx.fillStyle = j.generico ? '#fb923c' : '#fbbf24';
         ctx.fillText(renderizarEstrelas(j.nivel), x + CARD_PADDING, jy + 20);
 
+        // Nome
         ctx.font = j.generico ? 'italic 14px Arial, sans-serif' : '14px Arial, sans-serif';
-        ctx.fillStyle = j.generico ? '#e65100' : '#333333';
+        ctx.fillStyle = j.generico ? '#fb923c' : 'rgba(255,255,255,0.85)';
         const prefixo = j.goleiro ? '🧤 ' : '';
         ctx.fillText(prefixo + j.nome, x + CARD_PADDING + 75, jy + 20);
       });
