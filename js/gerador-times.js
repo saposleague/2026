@@ -474,23 +474,20 @@ function gerarTimes() {
 
   let restantes = [...jogadoresSelecionados];
 
-  // Passo 1: Separar goleiros — distribuir um por time (sem obrigar quantidade exata)
+  // Passo 1: Separar goleiros
   if (separarGoleiros) {
     const goleiros = embaralhar(restantes.filter(j => j.goleiro));
     restantes = restantes.filter(j => !j.goleiro);
-    // Distribui goleiros garantindo que não fiquem dois no mesmo time
     goleiros.forEach((g) => {
-      // Prefere times sem goleiro; se todos já tiverem, usa o greedy normal
       const semGoleiro = times.filter(t => !t.jogadores.some(j => j.goleiro));
       const candidatos = semGoleiro.length > 0 ? semGoleiro : times;
-      candidatos.forEach(t => { t.forca = calcularForca(t); });
-      const minForca = Math.min(...candidatos.map(t => t.forca));
-      const alvo = candidatos.filter(t => t.forca === minForca)[0];
+      const minForca = Math.min(...candidatos.map(t => calcularForca(t)));
+      const alvo = candidatos.filter(t => calcularForca(t) === minForca)[0];
       alvo.jogadores.push({ ...g });
     });
   }
 
-  // Passo 2: Ordenar por nível DESC, embaralhando iguais
+  // Passo 2: Embaralhar jogadores do mesmo nível para aleatoriedade
   const grupos = {};
   restantes.forEach(j => {
     if (!grupos[j.nivel]) grupos[j.nivel] = [];
@@ -502,57 +499,49 @@ function gerarTimes() {
     .sort((a, b) => b - a)
     .flatMap(n => grupos[n]);
 
-  // Passo 3: Distribuição greedy balanceada (respeita limite e minimiza diferença de força)
-  // Estratégia: snake draft — distribui em ordem de força, alternando direção a cada rodada
-  let direcao = 1;
-  let rodada = [];
-  ordenados.forEach((jogador, i) => {
-    rodada.push(jogador);
-    if (rodada.length === numTimes || i === ordenados.length - 1) {
-      // Ordena times por força atual para esta rodada
-      const timesOrdenados = [...times]
-        .filter(t => t.jogadores.length < jogadoresPorTime)
-        .sort((a, b) => calcularForca(a) - calcularForca(b));
+  // Passo 3: Distribuição otimizada
+  // Usa greedy puro: cada jogador vai para o time com menor força que ainda tem vaga.
+  // Após a distribuição greedy, aplica uma fase de melhoria por trocas para minimizar
+  // a diferença máxima entre times.
+  const vagas = Array(numTimes).fill(jogadoresPorTime);
+  // Desconta vagas já usadas pelos goleiros
+  times.forEach((t, i) => { vagas[i] -= t.jogadores.length; });
 
-      if (direcao === 1) {
-        // ida: mais fraco primeiro
-        rodada.forEach((j, idx) => {
-          if (idx < timesOrdenados.length) {
-            timesOrdenados[idx].jogadores.push({ ...j });
-          }
-        });
-      } else {
-        // volta: mais forte primeiro (snake)
-        rodada.forEach((j, idx) => {
-          const t = timesOrdenados[timesOrdenados.length - 1 - idx];
-          if (t) t.jogadores.push({ ...j });
-        });
-      }
-      direcao *= -1;
-      rodada = [];
+  ordenados.forEach(jogador => {
+    // Encontra o time com menor força que ainda tem vaga
+    let melhorTime = null;
+    let melhorForca = Infinity;
+    times.forEach((t, i) => {
+      if (vagas[i] <= 0) return;
+      const f = calcularForca(t);
+      if (f < melhorForca) { melhorForca = f; melhorTime = i; }
+    });
+    if (melhorTime !== null) {
+      times[melhorTime].jogadores.push({ ...jogador });
+      vagas[melhorTime]--;
     }
   });
 
-  // Passo 4: Preencher vagas com genéricos
+  // Fase de melhoria: tenta trocas entre times para reduzir diferença de força
+  melhorarBalanceamento(times);
+
+  // Passo 4: Preencher vagas restantes com genéricos
   const totalNecessario = numTimes * jogadoresPorTime;
   const totalReal = jogadoresSelecionados.length;
-  const vagas = totalNecessario - totalReal;
+  const vagasRestantes = totalNecessario - totalReal;
 
-  if (vagas > 0) {
+  if (vagasRestantes > 0) {
     const mediaGeral = jogadoresSelecionados.reduce((s, j) => s + j.nivel, 0) / (jogadoresSelecionados.length || 1);
     const nivelIdeal = Math.round(Math.max(1, Math.min(5, mediaGeral)));
-
-    for (let i = 0; i < vagas; i++) {
-      times.forEach(t => { t.forca = calcularForca(t); });
-      const comVaga = times.filter(t => t.jogadores.length < jogadoresPorTime);
-      const pool = comVaga.length > 0 ? comVaga : times;
-      const minForca = Math.min(...pool.map(t => t.forca));
-      const alvo = pool.filter(t => t.forca === minForca)[0];
+    for (let i = 0; i < vagasRestantes; i++) {
+      const forcas = times.map(t => calcularForca(t));
+      const minForca = Math.min(...forcas);
+      const alvo = times[forcas.indexOf(minForca)];
       alvo.jogadores.push(criarJogadorGenerico(nivelIdeal, i));
     }
   }
 
-  // Passo 5: Embaralhar ordem interna
+  // Passo 5: Embaralhar ordem interna e calcular força final
   times.forEach(t => {
     embaralhar(t.jogadores);
     t.forca = calcularForca(t);
@@ -561,6 +550,48 @@ function gerarTimes() {
   state.times = times;
   state.historicoDeTrocas = [];
   renderizarTimes(times);
+}
+
+// Melhora o balanceamento trocando jogadores entre times para minimizar diferença de força
+function melhorarBalanceamento(times) {
+  let melhorou = true;
+  let iteracoes = 0;
+  const maxIteracoes = 200;
+
+  while (melhorou && iteracoes < maxIteracoes) {
+    melhorou = false;
+    iteracoes++;
+
+    const forcas = times.map(t => calcularForca(t));
+    const maxF = Math.max(...forcas);
+    const minF = Math.min(...forcas);
+    const diferencaAtual = maxF - minF;
+
+    if (diferencaAtual <= 1) break; // já está ótimo
+
+    const iMax = forcas.indexOf(maxF);
+    const iMin = forcas.indexOf(minF);
+
+    // Tenta trocar cada jogador do time mais forte com cada jogador do time mais fraco
+    for (const jA of times[iMax].jogadores) {
+      for (const jB of times[iMin].jogadores) {
+        const novaForcaMax = maxF - jA.nivel + jB.nivel;
+        const novaForcaMin = minF - jB.nivel + jA.nivel;
+        const novaDiferenca = Math.abs(novaForcaMax - novaForcaMin);
+
+        if (novaDiferenca < diferencaAtual) {
+          // Faz a troca
+          const idxA = times[iMax].jogadores.indexOf(jA);
+          const idxB = times[iMin].jogadores.indexOf(jB);
+          times[iMax].jogadores[idxA] = { ...jB };
+          times[iMin].jogadores[idxB] = { ...jA };
+          melhorou = true;
+          break;
+        }
+      }
+      if (melhorou) break;
+    }
+  }
 }
 
 // ─── EXIBIÇÃO DOS TIMES (Tarefa 9) ────────────────────────────────────────
