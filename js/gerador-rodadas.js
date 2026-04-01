@@ -51,17 +51,6 @@ logoutButton.addEventListener('click', async () => {
     }
 });
 
-// Logout automático ao fechar
-window.addEventListener('beforeunload', async (event) => {
-    try {
-        if (auth.currentUser) {
-            await signOut(auth);
-        }
-    } catch (error) {
-        console.error("Erro ao deslogar automaticamente:", error);
-    }
-});
-
 // --- FUNÇÕES PRINCIPAIS ---
 
 async function carregarTimes() {

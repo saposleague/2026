@@ -41,22 +41,6 @@ if (logoutButton) {
 }
 
 // ----------------------------------------------------
-// Lógica de logout ao fechar a janela/aba (já existente)
-// ----------------------------------------------------
-window.addEventListener('beforeunload', async (event) => {
-    try {
-        if (auth.currentUser) { // Verifica se há um usuário logado
-            await signOut(auth);
-            console.log("Usuário deslogado automaticamente ao fechar a janela/aba.");
-        }
-    } catch (error) {
-        console.error("Erro ao deslogar automaticamente no fechamento:", error);
-    }
-});
-// ----------------------------------------------------
-// FIM DO BLOCO
-// ----------------------------------------------------
-
 async function carregarTimes() {
   const snap = await getDocs(collection(db, "times"));
   const selectA = document.getElementById("timeA");
