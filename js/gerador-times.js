@@ -502,18 +502,35 @@ function gerarTimes() {
     .sort((a, b) => b - a)
     .flatMap(n => grupos[n]);
 
-  // Passo 3: Distribuição greedy (respeitando limite de jogadoresPorTime)
-  ordenados.forEach(jogador => {
-    times.forEach(t => { t.forca = calcularForca(t); });
-    // Só considera times que ainda têm vaga
-    const comVaga = times.filter(t => t.jogadores.length < jogadoresPorTime);
-    const pool = comVaga.length > 0 ? comVaga : times; // fallback se todos cheios
-    const minForca = Math.min(...pool.map(t => t.forca));
-    const candidatos = pool.filter(t => t.forca === minForca);
-    const minQtd = Math.min(...candidatos.map(t => t.jogadores.length));
-    const finalCandidatos = candidatos.filter(t => t.jogadores.length === minQtd);
-    const alvo = finalCandidatos[Math.floor(Math.random() * finalCandidatos.length)];
-    alvo.jogadores.push({ ...jogador });
+  // Passo 3: Distribuição greedy balanceada (respeita limite e minimiza diferença de força)
+  // Estratégia: snake draft — distribui em ordem de força, alternando direção a cada rodada
+  let direcao = 1;
+  let rodada = [];
+  ordenados.forEach((jogador, i) => {
+    rodada.push(jogador);
+    if (rodada.length === numTimes || i === ordenados.length - 1) {
+      // Ordena times por força atual para esta rodada
+      const timesOrdenados = [...times]
+        .filter(t => t.jogadores.length < jogadoresPorTime)
+        .sort((a, b) => calcularForca(a) - calcularForca(b));
+
+      if (direcao === 1) {
+        // ida: mais fraco primeiro
+        rodada.forEach((j, idx) => {
+          if (idx < timesOrdenados.length) {
+            timesOrdenados[idx].jogadores.push({ ...j });
+          }
+        });
+      } else {
+        // volta: mais forte primeiro (snake)
+        rodada.forEach((j, idx) => {
+          const t = timesOrdenados[timesOrdenados.length - 1 - idx];
+          if (t) t.jogadores.push({ ...j });
+        });
+      }
+      direcao *= -1;
+      rodada = [];
+    }
   });
 
   // Passo 4: Preencher vagas com genéricos
