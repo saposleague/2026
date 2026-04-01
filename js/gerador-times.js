@@ -855,11 +855,13 @@ async function exportarImagem() {
     ctx.fillStyle = '#f0f4f0';
     ctx.fillRect(0, 0, canvasW, canvasH);
 
-    // Título
+    // Título com data atual
+    const hoje = new Date();
+    const dataFormatada = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     ctx.fillStyle = '#2e7d32';
     ctx.font = 'bold 28px Arial, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Times da Pelada', canvasW / 2, 40);
+    ctx.fillText(`Pelada dos Sapos ${dataFormatada}`, canvasW / 2, 40);
 
     times.forEach((time, idx) => {
       const col = idx % COLS;
@@ -913,7 +915,7 @@ async function exportarImagem() {
         // Nome
         ctx.font = j.generico ? 'italic 14px Arial, sans-serif' : '14px Arial, sans-serif';
         ctx.fillStyle = j.generico ? '#e65100' : '#333333';
-        const prefixo = j.goleiro ? '[G] ' : '';
+        const prefixo = j.goleiro ? '🧤 ' : '';
         ctx.fillText(prefixo + j.nome, x + CARD_PADDING + 75, jy + 20);
       });
     });
