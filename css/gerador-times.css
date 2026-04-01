@@ -581,6 +581,13 @@ body {
   cursor: grabbing;
 }
 
+.time-jogador-item.drop-target-jogador {
+  border-color: #ff9800;
+  background: #fff3e0;
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.4);
+  transform: scale(1.02);
+}
+
 .time-jogador-item.generico {
   color: #e65100;
   font-style: italic;

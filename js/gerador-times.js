@@ -327,18 +327,10 @@ function atualizarTotalNecessario() {
 }
 
 function validarConfiguracao() {
-  const { numTimes, jogadoresPorTime, separarGoleiros } = state.config;
+  const { numTimes, jogadoresPorTime } = state.config;
   const total = numTimes * jogadoresPorTime;
   const selecionados = state.jogadores.filter(j => j.selecionado).length;
-
-  if (selecionados !== total) return false;
-
-  if (separarGoleiros) {
-    const goleiros = state.jogadores.filter(j => j.selecionado && j.goleiro).length;
-    if (goleiros !== numTimes) return false;
-  }
-
-  return true;
+  return selecionados === total;
 }
 
 function validarBotaoGerar() {
@@ -388,13 +380,10 @@ function toggleGoleiro(id) {
 
 function atualizarAvisoGoleiros() {
   if (!state.config.separarGoleiros) return;
-
-  const { numTimes } = state.config;
   const goleiros = state.jogadores.filter(j => j.selecionado && j.goleiro).length;
   const avisoEl = document.getElementById('aviso-goleiros');
-
-  if (goleiros !== numTimes) {
-    avisoEl.textContent = `⚠️ Você marcou ${goleiros} goleiro(s), mas precisa de exatamente ${numTimes} (um por time). Corrija antes de gerar.`;
+  if (goleiros === 0) {
+    avisoEl.textContent = '⚠️ Nenhum jogador marcado como goleiro. Marque ao menos um para separar.';
     avisoEl.style.display = 'block';
   } else {
     avisoEl.style.display = 'none';
@@ -484,12 +473,19 @@ function gerarTimes() {
 
   let restantes = [...jogadoresSelecionados];
 
-  // Passo 1: Separar goleiros
+  // Passo 1: Separar goleiros — distribuir um por time (sem obrigar quantidade exata)
   if (separarGoleiros) {
     const goleiros = embaralhar(restantes.filter(j => j.goleiro));
     restantes = restantes.filter(j => !j.goleiro);
-    goleiros.forEach((g, i) => {
-      if (i < numTimes) times[i].jogadores.push({ ...g });
+    // Distribui goleiros garantindo que não fiquem dois no mesmo time
+    goleiros.forEach((g) => {
+      // Prefere times sem goleiro; se todos já tiverem, usa o greedy normal
+      const semGoleiro = times.filter(t => !t.jogadores.some(j => j.goleiro));
+      const candidatos = semGoleiro.length > 0 ? semGoleiro : times;
+      candidatos.forEach(t => { t.forca = calcularForca(t); });
+      const minForca = Math.min(...candidatos.map(t => t.forca));
+      const alvo = candidatos.filter(t => t.forca === minForca)[0];
+      alvo.jogadores.push({ ...g });
     });
   }
 
@@ -658,10 +654,43 @@ function inicializarDragAndDrop() {
       dragTimeOrigemId = li.dataset.timeId;
       li.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
+      e.stopPropagation();
     });
     li.addEventListener('dragend', () => {
       li.classList.remove('dragging');
-      document.querySelectorAll('.time-card').forEach(c => c.classList.remove('drop-target'));
+      document.querySelectorAll('.time-card, .time-jogador-item').forEach(el => {
+        el.classList.remove('drop-target', 'drop-target-jogador');
+      });
+    });
+    // Highlight ao passar sobre outro jogador (troca direta)
+    li.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (li.dataset.jogadorId !== dragJogadorId) {
+        li.classList.add('drop-target-jogador');
+      }
+    });
+    li.addEventListener('dragleave', () => {
+      li.classList.remove('drop-target-jogador');
+    });
+    li.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      li.classList.remove('drop-target-jogador');
+      const jogadorDestinoId = li.dataset.jogadorId;
+      const timeDestinoId = li.dataset.timeId;
+      if (!dragJogadorId || dragJogadorId === jogadorDestinoId) return;
+
+      if (dragTimeOrigemId === timeDestinoId) {
+        // Mesmo time: reordenar (sem snapshot)
+        dragJogadorId = null;
+        dragTimeOrigemId = null;
+        return;
+      }
+      // Times diferentes: troca direta entre os dois jogadores
+      trocarJogadoresDireto(dragJogadorId, dragTimeOrigemId, jogadorDestinoId, timeDestinoId);
+      dragJogadorId = null;
+      dragTimeOrigemId = null;
     });
   });
 
@@ -671,15 +700,18 @@ function inicializarDragAndDrop() {
       e.dataTransfer.dropEffect = 'move';
       card.classList.add('drop-target');
     });
-    card.addEventListener('dragleave', () => {
-      card.classList.remove('drop-target');
+    card.addEventListener('dragleave', (e) => {
+      // Só remove se saiu do card de verdade (não entrou num filho)
+      if (!card.contains(e.relatedTarget)) {
+        card.classList.remove('drop-target');
+      }
     });
     card.addEventListener('drop', (e) => {
       e.preventDefault();
       card.classList.remove('drop-target');
       const timeDestinoId = card.dataset.timeId;
       if (dragJogadorId && dragTimeOrigemId && timeDestinoId !== dragTimeOrigemId) {
-        trocarJogadores(dragJogadorId, dragTimeOrigemId, timeDestinoId);
+        moverJogador(dragJogadorId, dragTimeOrigemId, timeDestinoId);
       }
       dragJogadorId = null;
       dragTimeOrigemId = null;
@@ -687,12 +719,9 @@ function inicializarDragAndDrop() {
   });
 }
 
-function trocarJogadores(jogadorId, timeOrigemId, timeDestinoId) {
-  // Salvar snapshot antes da troca
-  const snapshot = state.times.map(t => ({
-    ...t,
-    jogadores: t.jogadores.map(j => ({ ...j })),
-  }));
+// Move jogador de um time para outro (sem troca)
+function moverJogador(jogadorId, timeOrigemId, timeDestinoId) {
+  const snapshot = state.times.map(t => ({ ...t, jogadores: t.jogadores.map(j => ({ ...j })) }));
   state.historicoDeTrocas.push(snapshot);
 
   const timeOrigem = state.times.find(t => t.id === timeOrigemId);
@@ -705,11 +734,37 @@ function trocarJogadores(jogadorId, timeOrigemId, timeDestinoId) {
   const [jogador] = timeOrigem.jogadores.splice(idx, 1);
   timeDestino.jogadores.push(jogador);
 
-  // Recalcular forças
   timeOrigem.forca = calcularForca(timeOrigem);
   timeDestino.forca = calcularForca(timeDestino);
-
   renderizarTimes(state.times);
+}
+
+// Troca dois jogadores de times diferentes entre si
+function trocarJogadoresDireto(jogadorAId, timeAId, jogadorBId, timeBId) {
+  const snapshot = state.times.map(t => ({ ...t, jogadores: t.jogadores.map(j => ({ ...j })) }));
+  state.historicoDeTrocas.push(snapshot);
+
+  const timeA = state.times.find(t => t.id === timeAId);
+  const timeB = state.times.find(t => t.id === timeBId);
+  if (!timeA || !timeB) return;
+
+  const idxA = timeA.jogadores.findIndex(j => j.id === jogadorAId);
+  const idxB = timeB.jogadores.findIndex(j => j.id === jogadorBId);
+  if (idxA === -1 || idxB === -1) return;
+
+  // Troca direta nas posições
+  const temp = { ...timeA.jogadores[idxA] };
+  timeA.jogadores[idxA] = { ...timeB.jogadores[idxB] };
+  timeB.jogadores[idxB] = temp;
+
+  timeA.forca = calcularForca(timeA);
+  timeB.forca = calcularForca(timeB);
+  renderizarTimes(state.times);
+}
+
+// Mantém compatibilidade com chamadas antigas
+function trocarJogadores(jogadorId, timeOrigemId, timeDestinoId) {
+  moverJogador(jogadorId, timeOrigemId, timeDestinoId);
 }
 
 function desfazerTroca() {
