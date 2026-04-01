@@ -502,12 +502,14 @@ function gerarTimes() {
     .sort((a, b) => b - a)
     .flatMap(n => grupos[n]);
 
-  // Passo 3: Distribuição greedy
+  // Passo 3: Distribuição greedy (respeitando limite de jogadoresPorTime)
   ordenados.forEach(jogador => {
-    // Recalcular forças
     times.forEach(t => { t.forca = calcularForca(t); });
-    const minForca = Math.min(...times.map(t => t.forca));
-    const candidatos = times.filter(t => t.forca === minForca);
+    // Só considera times que ainda têm vaga
+    const comVaga = times.filter(t => t.jogadores.length < jogadoresPorTime);
+    const pool = comVaga.length > 0 ? comVaga : times; // fallback se todos cheios
+    const minForca = Math.min(...pool.map(t => t.forca));
+    const candidatos = pool.filter(t => t.forca === minForca);
     const minQtd = Math.min(...candidatos.map(t => t.jogadores.length));
     const finalCandidatos = candidatos.filter(t => t.jogadores.length === minQtd);
     const alvo = finalCandidatos[Math.floor(Math.random() * finalCandidatos.length)];
@@ -525,8 +527,10 @@ function gerarTimes() {
 
     for (let i = 0; i < vagas; i++) {
       times.forEach(t => { t.forca = calcularForca(t); });
-      const minForca = Math.min(...times.map(t => t.forca));
-      const alvo = times.filter(t => t.forca === minForca)[0];
+      const comVaga = times.filter(t => t.jogadores.length < jogadoresPorTime);
+      const pool = comVaga.length > 0 ? comVaga : times;
+      const minForca = Math.min(...pool.map(t => t.forca));
+      const alvo = pool.filter(t => t.forca === minForca)[0];
       alvo.jogadores.push(criarJogadorGenerico(nivelIdeal, i));
     }
   }
