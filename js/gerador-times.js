@@ -827,11 +827,97 @@ async function copiarTimes(times) {
 
 async function exportarImagem() {
   try {
-    if (!window.html2canvas) {
-      await carregarScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    }
-    const el = document.getElementById('times-resultado');
-    const canvas = await html2canvas(el, { backgroundColor: '#ffffff', scale: 2 });
+    const times = state.times;
+    if (!times.length) return;
+
+    const COLS = 2;
+    const ROWS = Math.ceil(times.length / COLS);
+    const CARD_W = 400;
+    const PADDING = 20;
+    const HEADER_H = 50;
+    const ROW_H = 32;
+    const CARD_PADDING = 16;
+    const GAP = 16;
+    const TITLE_H = 60;
+
+    const maxJogadores = Math.max(...times.map(t => t.jogadores.length));
+    const CARD_H = HEADER_H + CARD_PADDING + maxJogadores * ROW_H + CARD_PADDING;
+
+    const canvasW = COLS * CARD_W + (COLS + 1) * GAP;
+    const canvasH = TITLE_H + ROWS * CARD_H + (ROWS + 1) * GAP;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasW;
+    canvas.height = canvasH;
+    const ctx = canvas.getContext('2d');
+
+    // Fundo
+    ctx.fillStyle = '#f0f4f0';
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    // Título
+    ctx.fillStyle = '#2e7d32';
+    ctx.font = 'bold 28px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Times da Pelada', canvasW / 2, 40);
+
+    times.forEach((time, idx) => {
+      const col = idx % COLS;
+      const row = Math.floor(idx / COLS);
+      const x = GAP + col * (CARD_W + GAP);
+      const y = TITLE_H + GAP + row * (CARD_H + GAP);
+
+      // Card background
+      ctx.fillStyle = '#ffffff';
+      desenharArredondado(ctx, x, y, CARD_W, CARD_H, 12);
+      ctx.fill();
+
+      // Borda
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 1.5;
+      desenharArredondado(ctx, x, y, CARD_W, CARD_H, 12);
+      ctx.stroke();
+
+      // Header verde
+      ctx.fillStyle = '#2e7d32';
+      desenharArredondadoTopo(ctx, x, y, CARD_W, HEADER_H, 12);
+      ctx.fill();
+
+      // Nome do time
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 18px Arial, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(time.nome, x + CARD_PADDING, y + 32);
+
+      // Força
+      ctx.font = '13px Arial, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillText('Forca: ' + calcularForca(time), x + CARD_W - CARD_PADDING, y + 32);
+
+      // Jogadores
+      time.jogadores.forEach((j, ji) => {
+        const jy = y + HEADER_H + CARD_PADDING + ji * ROW_H;
+
+        if (ji % 2 === 0) {
+          ctx.fillStyle = '#f8f9fa';
+          ctx.fillRect(x + 8, jy, CARD_W - 16, ROW_H - 2);
+        }
+
+        // Estrelas
+        ctx.font = '13px Arial, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = j.generico ? '#e65100' : '#f59e0b';
+        ctx.fillText(renderizarEstrelas(j.nivel), x + CARD_PADDING, jy + 20);
+
+        // Nome
+        ctx.font = j.generico ? 'italic 14px Arial, sans-serif' : '14px Arial, sans-serif';
+        ctx.fillStyle = j.generico ? '#e65100' : '#333333';
+        const prefixo = j.goleiro ? '[G] ' : '';
+        ctx.fillText(prefixo + j.nome, x + CARD_PADDING + 75, jy + 20);
+      });
+    });
+
     const link = document.createElement('a');
     link.download = 'times-pelada.png';
     link.href = canvas.toDataURL('image/png');
@@ -842,14 +928,30 @@ async function exportarImagem() {
   }
 }
 
-function carregarScript(src) {
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
+function desenharArredondado(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function desenharArredondadoTopo(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
 // ─── POPUPS ───────────────────────────────────────────────────────────────
