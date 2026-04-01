@@ -648,71 +648,70 @@ let dragJogadorId = null;
 let dragTimeOrigemId = null;
 
 function inicializarDragAndDrop() {
+  // Apenas dragstart/dragend nos itens de jogador
   document.querySelectorAll('.time-jogador-item').forEach(li => {
     li.addEventListener('dragstart', (e) => {
       dragJogadorId = li.dataset.jogadorId;
       dragTimeOrigemId = li.dataset.timeId;
       li.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
-      e.stopPropagation();
+      // Sem stopPropagation — deixa o evento chegar ao card
     });
     li.addEventListener('dragend', () => {
       li.classList.remove('dragging');
-      document.querySelectorAll('.time-card, .time-jogador-item').forEach(el => {
-        el.classList.remove('drop-target', 'drop-target-jogador');
-      });
-    });
-    // Highlight ao passar sobre outro jogador (troca direta)
-    li.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (li.dataset.jogadorId !== dragJogadorId) {
-        li.classList.add('drop-target-jogador');
-      }
-    });
-    li.addEventListener('dragleave', () => {
-      li.classList.remove('drop-target-jogador');
-    });
-    li.addEventListener('drop', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      li.classList.remove('drop-target-jogador');
-      const jogadorDestinoId = li.dataset.jogadorId;
-      const timeDestinoId = li.dataset.timeId;
-      if (!dragJogadorId || dragJogadorId === jogadorDestinoId) return;
-
-      if (dragTimeOrigemId === timeDestinoId) {
-        // Mesmo time: reordenar (sem snapshot)
-        dragJogadorId = null;
-        dragTimeOrigemId = null;
-        return;
-      }
-      // Times diferentes: troca direta entre os dois jogadores
-      trocarJogadoresDireto(dragJogadorId, dragTimeOrigemId, jogadorDestinoId, timeDestinoId);
-      dragJogadorId = null;
-      dragTimeOrigemId = null;
+      document.querySelectorAll('.time-card').forEach(c => c.classList.remove('drop-target'));
+      document.querySelectorAll('.time-jogador-item').forEach(i => i.classList.remove('drop-target-jogador'));
     });
   });
 
+  // Todo dragover/drop é tratado no card
   document.querySelectorAll('.time-card').forEach(card => {
     card.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      card.classList.add('drop-target');
-    });
-    card.addEventListener('dragleave', (e) => {
-      // Só remove se saiu do card de verdade (não entrou num filho)
-      if (!card.contains(e.relatedTarget)) {
-        card.classList.remove('drop-target');
+
+      // Limpa highlights anteriores
+      document.querySelectorAll('.time-card').forEach(c => c.classList.remove('drop-target'));
+      document.querySelectorAll('.time-jogador-item').forEach(i => i.classList.remove('drop-target-jogador'));
+
+      // Verifica se está sobre um jogador específico
+      const jogadorAlvo = e.target.closest('.time-jogador-item');
+      if (jogadorAlvo && jogadorAlvo.dataset.jogadorId !== dragJogadorId && jogadorAlvo.dataset.timeId !== dragTimeOrigemId) {
+        jogadorAlvo.classList.add('drop-target-jogador');
+      } else {
+        card.classList.add('drop-target');
       }
     });
+
+    card.addEventListener('dragleave', (e) => {
+      if (!card.contains(e.relatedTarget)) {
+        card.classList.remove('drop-target');
+        document.querySelectorAll('.time-jogador-item').forEach(i => i.classList.remove('drop-target-jogador'));
+      }
+    });
+
     card.addEventListener('drop', (e) => {
       e.preventDefault();
       card.classList.remove('drop-target');
+      document.querySelectorAll('.time-jogador-item').forEach(i => i.classList.remove('drop-target-jogador'));
+
+      if (!dragJogadorId || !dragTimeOrigemId) return;
+
       const timeDestinoId = card.dataset.timeId;
-      if (dragJogadorId && dragTimeOrigemId && timeDestinoId !== dragTimeOrigemId) {
+      const jogadorAlvo = e.target.closest('.time-jogador-item');
+
+      if (
+        jogadorAlvo &&
+        jogadorAlvo.dataset.jogadorId !== dragJogadorId &&
+        jogadorAlvo.dataset.timeId !== dragTimeOrigemId
+      ) {
+        // Soltou sobre jogador de outro time → troca direta
+        trocarJogadoresDireto(dragJogadorId, dragTimeOrigemId, jogadorAlvo.dataset.jogadorId, jogadorAlvo.dataset.timeId);
+      } else if (timeDestinoId !== dragTimeOrigemId) {
+        // Soltou na área do card → move
         moverJogador(dragJogadorId, dragTimeOrigemId, timeDestinoId);
       }
+
       dragJogadorId = null;
       dragTimeOrigemId = null;
     });
