@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAPOS LEAGUE - Jogadores</title>
+  <meta name="description" content="Gerenciar jogadores - Sapos League">
+  <meta name="theme-color" content="#0a1628">
+  <link rel="icon" href="./images/web-app-manifest-512x512.png?v=5" type="image/png" sizes="512x512" />
+  <link rel="icon" href="./images/web-app-manifest-192x192.png?v=5" type="image/png" sizes="192x192" />
+  <link rel="shortcut icon" href="./images/web-app-manifest-512x512.png?v=5" />
+  <link rel="apple-touch-icon" href="./images/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="css/gerador-times.css">
+  <style>
+    .jog-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 0.5px solid rgba(255,255,255,0.05);
+      transition: background 0.15s;
+    }
+    .jog-item:last-child { border-bottom: none; }
+    .jog-item:hover { background: rgba(255,255,255,0.04); }
+    .jog-nome { flex: 1; font-size: 13px; color: rgba(255,255,255,0.85); }
+    .jog-estrelas { font-size: 11px; color: #fbbf24; min-width: 60px; }
+    .jog-actions { display: flex; gap: 6px; }
+    .jog-list { max-height: 420px; overflow-y: auto; }
+    .jog-list::-webkit-scrollbar { width: 4px; }
+    .jog-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    .sp-star-row { display: flex; gap: 6px; margin-top: 4px; }
+    .sp-star {
+      font-size: 22px; cursor: pointer; color: rgba(255,255,255,0.2);
+      transition: color 0.15s; user-select: none;
+    }
+    .sp-star.on { color: #fbbf24; }
+    .sp-form-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
+    .sp-empty { text-align: center; color: rgba(255,255,255,0.3); font-size: 13px; padding: 28px 16px; }
+    .sp-count { font-size: 12px; color: rgba(255,255,255,0.35); }
+  </style>
+</head>
+<body>
+
+  <div class="sp-bg-field"></div>
+  <svg class="sp-lines" viewBox="0 0 420 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="10" width="400" height="200" rx="8" stroke="white" stroke-width="1.5"/>
+    <line x1="210" y1="10" x2="210" y2="210" stroke="white" stroke-width="1.5"/>
+    <circle cx="210" cy="110" r="50" stroke="white" stroke-width="1.5"/>
+    <rect x="10" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"/>
+    <rect x="350" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"/>
+  </svg>
+
+  <!-- Header -->
+  <div class="sp-header">
+    <button id="voltar-button" class="sp-back">← Voltar ao Painel</button>
+    <div class="sp-logo">
+      <div class="sp-logo-icon">⚽</div>
+      <div class="sp-logo-text">SAPOS <span>LEAGUE</span></div>
+    </div>
+    <button id="logout-button" class="sp-logout-btn">Sair</button>
+  </div>
+
+  <!-- Hero -->
+  <div class="sp-hero">
+    <div class="sp-page-badge">👤 Jogadores</div>
+    <h1 class="sp-title">GERENCIAR <span>JOGADORES</span></h1>
+    <p class="sp-subtitle">Adicione, edite ou remova jogadores da pelada</p>
+  </div>
+
+  <div class="sp-content">
+
+    <!-- Card: Adicionar -->
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <div class="sp-card-title">
+          <div class="sp-card-title-icon">➕</div>
+          Adicionar Jogador
+        </div>
+      </div>
+      <div class="sp-config-body">
+        <div class="sp-form-field">
+          <div class="sp-form-label">Nome</div>
+          <input type="text" id="input-nome" class="sp-input" placeholder="Nome do jogador" maxlength="60" />
+        </div>
+        <div class="sp-form-field">
+          <div class="sp-form-label">Nível</div>
+          <div class="sp-star-row" id="star-add">
+            <span class="sp-star" data-v="1">★</span>
+            <span class="sp-star" data-v="2">★</span>
+            <span class="sp-star" data-v="3">★</span>
+            <span class="sp-star" data-v="4">★</span>
+            <span class="sp-star" data-v="5">★</span>
+          </div>
+        </div>
+        <div class="sp-gerar-row">
+          <button id="btn-adicionar" class="sp-btn-gerar" disabled>➕ Adicionar Jogador</button>
+        </div>
+        <div id="msg-add" class="sp-alert" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Card: Lista -->
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <div class="sp-card-title">
+          <div class="sp-card-title-icon" style="background:rgba(96,165,250,0.15);">📋</div>
+          Lista de Jogadores
+          <span id="total-count" class="sp-count"></span>
+        </div>
+      </div>
+      <div class="sp-search">
+        <span class="sp-search-icon">🔍</span>
+        <input type="text" id="busca-input" placeholder="Buscar jogador..." />
+      </div>
+      <div id="lista-jogadores" class="jog-list">
+        <p class="sp-empty">Carregando...</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal: Editar -->
+  <div id="modal-editar" class="sp-modal-overlay">
+    <div class="sp-modal">
+      <div class="sp-modal-header">✏️ Editar Jogador</div>
+      <div class="sp-modal-body" style="display:flex;flex-direction:column;gap:14px;">
+        <input type="hidden" id="edit-id" />
+        <div class="sp-form-field">
+          <div class="sp-form-label">Nome</div>
+          <input type="text" id="edit-nome" class="sp-input" maxlength="60" />
+        </div>
+        <div class="sp-form-field">
+          <div class="sp-form-label">Nível</div>
+          <div class="sp-star-row" id="star-edit">
+            <span class="sp-star" data-v="1">★</span>
+            <span class="sp-star" data-v="2">★</span>
+            <span class="sp-star" data-v="3">★</span>
+            <span class="sp-star" data-v="4">★</span>
+            <span class="sp-star" data-v="5">★</span>
+          </div>
+        </div>
+        <div id="msg-edit" class="sp-alert" style="display:none;"></div>
+        <div class="sp-btn-row" style="justify-content:center;">
+          <button id="btn-salvar" class="sp-btn sp-btn-primary">💾 Salvar</button>
+          <button id="btn-cancelar-edit" class="sp-btn sp-btn-ghost">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar exclusão -->
+  <div id="modal-excluir" class="sp-modal-overlay">
+    <div class="sp-modal">
+      <div class="sp-modal-header">🗑️ Remover Jogador</div>
+      <div class="sp-modal-body">
+        <p id="excluir-texto" style="margin-bottom:20px;"></p>
+        <div class="sp-btn-row" style="justify-content:center;">
+          <button id="btn-confirmar-excluir" class="sp-btn sp-btn-danger">Remover</button>
+          <button id="btn-cancelar-excluir" class="sp-btn sp-btn-ghost">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/dynamic-favicon.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script type="module" src="js/jogadores.js"></script>
+</body>
+</html>
