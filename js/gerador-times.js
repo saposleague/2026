@@ -314,9 +314,11 @@ function atualizarTotalNecessario() {
   if (selecionados !== total) {
     const diff = total - selecionados;
     if (diff > 0) {
-      alertaEl.textContent = `Você selecionou ${selecionados} jogadores, mas a configuração exige ${total}. Faltam ${diff} vagas.`;
+      alertaEl.textContent = `Você selecionou ${selecionados} jogadores. Faltam ${diff} vaga(s) — serão preenchidas automaticamente com jogadores genéricos para equilibrar os times.`;
+      alertaEl.style.color = '';
     } else {
       alertaEl.textContent = `Você selecionou ${selecionados} jogadores, mas a configuração exige ${total}. Há ${Math.abs(diff)} jogadores a mais.`;
+      alertaEl.style.color = '';
     }
     alertaEl.style.display = 'block';
   } else {
@@ -330,7 +332,9 @@ function validarConfiguracao() {
   const { numTimes, jogadoresPorTime } = state.config;
   const total = numTimes * jogadoresPorTime;
   const selecionados = state.jogadores.filter(j => j.selecionado).length;
-  return selecionados === total;
+  // Permite gerar com menos jogadores (serão completados com genéricos)
+  // Só bloqueia se houver jogadores a mais do que o total
+  return selecionados <= total;
 }
 
 function validarBotaoGerar() {
@@ -342,6 +346,7 @@ function validarBotaoGerar() {
     return;
   }
 
+  // Bloqueia apenas se houver jogadores a mais do que o configurado
   btn.disabled = !validarConfiguracao();
   atualizarAvisoGoleiros();
 }
@@ -465,10 +470,11 @@ function calcularDiferenca(times) {
 }
 
 function criarJogadorGenerico(nivel, index) {
+  const n = Math.max(1, Math.min(5, nivel));
   return {
     id: `generico-${index}-${Date.now()}`,
-    nome: `Jogador ${nivel}⭐`,
-    nivel: Math.max(1, Math.min(5, nivel)),
+    nome: `Jogador ${n} estrela${n !== 1 ? 's' : ''}`,
+    nivel: n,
     selecionado: true,
     goleiro: false,
     generico: true,
@@ -540,19 +546,43 @@ function gerarTimes() {
   // Fase de melhoria: tenta trocas entre times para reduzir diferença de força
   melhorarBalanceamento(times);
 
-  // Passo 4: Preencher vagas restantes com genéricos
+  // Passo 4: Preencher vagas restantes com genéricos equilibrados
   const totalNecessario = numTimes * jogadoresPorTime;
   const totalReal = jogadoresSelecionados.length;
   const vagasRestantes = totalNecessario - totalReal;
 
   if (vagasRestantes > 0) {
-    const mediaGeral = jogadoresSelecionados.reduce((s, j) => s + j.nivel, 0) / (jogadoresSelecionados.length || 1);
-    const nivelIdeal = Math.round(Math.max(1, Math.min(5, mediaGeral)));
+    let genericoIndex = 0;
+    // Preenche vaga a vaga, sempre no time com menor força, com nível que equilibra
     for (let i = 0; i < vagasRestantes; i++) {
       const forcas = times.map(t => calcularForca(t));
-      const minForca = Math.min(...forcas);
-      const alvo = times[forcas.indexOf(minForca)];
-      alvo.jogadores.push(criarJogadorGenerico(nivelIdeal, i));
+      const vagasTime = times.map(t => jogadoresPorTime - t.jogadores.length);
+      // Escolhe o time com menor força que ainda tem vaga
+      let alvoIdx = -1;
+      let menorForca = Infinity;
+      times.forEach((t, idx) => {
+        if (vagasTime[idx] > 0 && forcas[idx] < menorForca) {
+          menorForca = forcas[idx];
+          alvoIdx = idx;
+        }
+      });
+      if (alvoIdx === -1) break;
+
+      // Calcula o nível ideal para equilibrar com a média dos outros times
+      const forcasOutros = forcas.filter((_, idx) => idx !== alvoIdx);
+      const mediaOutros = forcasOutros.length
+        ? forcasOutros.reduce((s, f) => s + f, 0) / forcasOutros.length
+        : forcas[alvoIdx];
+      const vagasNoAlvo = vagasTime[alvoIdx];
+      const nivelIdeal = Math.round(
+        Math.max(1, Math.min(5, (mediaOutros - forcas[alvoIdx]) / vagasNoAlvo))
+      ) || Math.round(
+        Math.max(1, Math.min(5,
+          jogadoresSelecionados.reduce((s, j) => s + j.nivel, 0) / (jogadoresSelecionados.length || 1)
+        ))
+      );
+
+      times[alvoIdx].jogadores.push(criarJogadorGenerico(nivelIdeal, genericoIndex++));
     }
   }
 
