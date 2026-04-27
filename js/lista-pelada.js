@@ -351,7 +351,7 @@ function renderTeamsAndPlayers() {
                     
                     let statusText;
                     if (playerStatus.diasUltimaPresenca === 'Nunca jogou') {
-                        statusText = playerStatus.diasUltimaPresenca;
+                        statusText = 'Nunca jogou';
                     } else if (playerStatus.apto) {
                         statusText = `Última pelada: ${playerStatus.diasUltimaPresenca} dias atrás`;
                     } else {
