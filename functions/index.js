@@ -24,19 +24,30 @@ exports.notifyWeekGames = functions.pubsub
     console.log('📅 Verificando jogos da semana (quinta-feira)...');
     
     try {
-      // Calcular data da próxima quinta-feira
-      const today = new Date();
-      const dayOfWeek = today.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui
+      // Calcular data atual no fuso de Brasília (UTC-3)
+      const now = new Date();
+      const brasiliaOffset = -3 * 60; // UTC-3 em minutos
+      const brasiliaTime = new Date(now.getTime() + (brasiliaOffset - now.getTimezoneOffset()) * 60000);
+      const dayOfWeek = brasiliaTime.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui
+      
+      console.log(`📅 Dia da semana em Brasília: ${dayOfWeek} (1=Seg, 2=Ter, 3=Qua)`);
       
       let daysUntilThursday;
       if (dayOfWeek === 1) daysUntilThursday = 3; // Segunda -> Quinta
       else if (dayOfWeek === 2) daysUntilThursday = 2; // Terça -> Quinta
       else if (dayOfWeek === 3) daysUntilThursday = 1; // Quarta -> Quinta
-      else return null; // Não deveria acontecer
+      else {
+        console.log(`⚠️ Dia inesperado (${dayOfWeek}), abortando`);
+        return null;
+      }
       
-      const thursday = new Date(today);
-      thursday.setDate(today.getDate() + daysUntilThursday);
-      const thursdayString = thursday.toISOString().split('T')[0]; // YYYY-MM-DD
+      const thursday = new Date(brasiliaTime);
+      thursday.setDate(brasiliaTime.getDate() + daysUntilThursday);
+      // Formatar data como YYYY-MM-DD usando o fuso de Brasília
+      const year = thursday.getFullYear();
+      const month = String(thursday.getMonth() + 1).padStart(2, '0');
+      const day = String(thursday.getDate()).padStart(2, '0');
+      const thursdayString = `${year}-${month}-${day}`;
       
       console.log(`🔍 Buscando jogos para quinta-feira: ${thursdayString}`);
       
@@ -78,8 +89,14 @@ exports.notifyTodayGames = functions.pubsub
     console.log('🔔 Verificando jogos de hoje (quinta-feira)...');
     
     try {
-      const today = new Date();
-      const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD
+      // Calcular data atual no fuso de Brasília (UTC-3)
+      const now = new Date();
+      const brasiliaOffset = -3 * 60; // UTC-3 em minutos
+      const brasiliaTime = new Date(now.getTime() + (brasiliaOffset - now.getTimezoneOffset()) * 60000);
+      const year = brasiliaTime.getFullYear();
+      const month = String(brasiliaTime.getMonth() + 1).padStart(2, '0');
+      const day = String(brasiliaTime.getDate()).padStart(2, '0');
+      const todayString = `${year}-${month}-${day}`;
       
       console.log(`🔍 Buscando jogos para hoje: ${todayString}`);
       
@@ -237,10 +254,14 @@ async function sendToFCM(title, body) {
           },
           fcmOptions: {
             link: 'https://saposleague.github.io/2026/'
+          },
+          data: {
+            url: 'https://saposleague.github.io/2026/'
           }
         },
         data: {
           type: 'game-notification',
+          url: 'https://saposleague.github.io/2026/',
           timestamp: Date.now().toString()
         },
         token: token
@@ -316,6 +337,9 @@ async function sendToWebPush(title, body) {
       tag: 'sapos-league',
       requireInteraction: false,
       vibrate: [200, 100, 200]
+    },
+    data: {
+      url: 'https://saposleague.github.io/2026/'
     }
   });
   
@@ -433,6 +457,9 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
           tag: 'sapos-league',
           requireInteraction: false,
           vibrate: [200, 100, 200]
+        },
+        data: {
+          url: 'https://saposleague.github.io/2026/'
         }
       });
       

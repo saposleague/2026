@@ -1,5 +1,5 @@
 // Service Worker para Sapos League PWA - Versão Robusta
-const CACHE_VERSION = '2.2.5';
+const CACHE_VERSION = '2.2.6';
 const CACHE_NAME = `sapos-league-v${CACHE_VERSION}`;
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
@@ -399,6 +399,12 @@ self.addEventListener('push', (event) => {
   console.log('[SW] Push recebido:', event);
   console.log('[SW] Push data:', event.data ? event.data.text() : 'sem dados');
   
+  // Se não houver dados no push, ignorar (evita notificações genéricas aleatórias)
+  if (!event.data) {
+    console.log('[SW] Push sem dados - ignorando');
+    return;
+  }
+
   let notificationData = getDefaultNotificationData();
 
   // Processar dados do push
@@ -459,7 +465,8 @@ function getDefaultNotificationData() {
     body: 'Nova atualização disponível!',
     icon: 'https://saposleague.github.io/2026/images/web-app-manifest-192x192.png',
     badge: 'https://saposleague.github.io/2026/images/favicon-96x96.png',
-    tag: 'sapos-league'
+    tag: 'sapos-league',
+    url: 'https://saposleague.github.io/2026/'
   };
 }
 
@@ -490,7 +497,7 @@ function createNotificationOptions(data) {
     data: {
       ...data.data,
       dateOfArrival: Date.now(),
-      url: data.url || '/',
+      url: data.url || 'https://saposleague.github.io/2026/',
       source: 'sapos-league-pwa'
     }
   };
@@ -523,7 +530,7 @@ self.addEventListener('notificationclick', (event) => {
   }
   
   // Determinar URL para abrir
-  const urlToOpen = data.url || '/2026/';
+  const urlToOpen = data.url || 'https://saposleague.github.io/2026/';
   
   event.waitUntil(
     handleNotificationClick(urlToOpen, data)
@@ -538,10 +545,15 @@ async function handleNotificationClick(url, data) {
       includeUncontrolled: true 
     });
     
-    // Procurar janela existente
+    // Procurar janela existente do site
     for (const client of clients) {
-      if (client.url.includes(self.location.origin)) {
+      if (client.url.includes('saposleague.github.io')) {
         await client.focus();
+        
+        // Navegar para a URL correta se necessário
+        if (!client.url.includes('/2026/')) {
+          client.navigate(url);
+        }
         
         // Enviar dados para o cliente
         client.postMessage({
@@ -571,6 +583,10 @@ async function handleNotificationClick(url, data) {
     }
   } catch (error) {
     console.error('[SW] Erro ao processar clique na notificação:', error);
+    // Tentar abrir a URL mesmo em caso de erro
+    if (self.clients.openWindow) {
+      self.clients.openWindow(url);
+    }
   }
 }
 
