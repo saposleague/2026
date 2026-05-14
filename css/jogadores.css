@@ -1,0 +1,92 @@
+/* ============================================================
+   jogadores.css
+   Estilos específicos da página de gerenciamento de jogadores
+   ============================================================ */
+
+.jog-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s;
+}
+
+.jog-item:last-child {
+  border-bottom: none;
+}
+
+.jog-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.jog-nome {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.jog-estrelas {
+  font-size: 11px;
+  color: #fbbf24;
+  min-width: 60px;
+}
+
+.jog-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.jog-list {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.jog-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.jog-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+/* Seletor de estrelas */
+.sp-star-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.sp-star {
+  font-size: 22px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.2);
+  transition: color 0.15s;
+  user-select: none;
+}
+
+.sp-star.on {
+  color: #fbbf24;
+}
+
+/* Labels e utilitários */
+.sp-form-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 5px;
+}
+
+.sp-empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+  padding: 28px 16px;
+}
+
+.sp-count {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+}

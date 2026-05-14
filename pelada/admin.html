@@ -310,13 +310,19 @@
                         Mostrando <span id="info-inicio">1</span> a <span id="info-fim">10</span> de <span id="info-total">45</span> peladas
                     </div>
                     <div class="paginacao-controles">
-                        <button class="btn-pagina" id="btn-anterior" onclick="paginaAnterior()">‹ Anterior</button>
+                        <button class="btn-pagina" id="btn-anterior" onclick="paginaAnterior()">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                          Anterior
+                        </button>
                         <button class="btn-pagina active" onclick="irParaPagina(1)">1</button>
                         <button class="btn-pagina" onclick="irParaPagina(2)">2</button>
                         <button class="btn-pagina" onclick="irParaPagina(3)">3</button>
                         <button class="btn-pagina" onclick="irParaPagina(4)">4</button>
                         <button class="btn-pagina" onclick="irParaPagina(5)">5</button>
-                        <button class="btn-pagina" id="btn-proximo" onclick="proximaPagina()">Próximo ›</button>
+                        <button class="btn-pagina" id="btn-proximo" onclick="proximaPagina()">
+                          Próximo
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -334,7 +340,6 @@
     
     <!-- 1. Firebase - para verificação de autenticação -->
     <script type="module" src="../js/firebase-config.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js"></script>
     
     <!-- 2. Supabase - deve ser carregado primeiro -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
@@ -351,64 +356,7 @@
       <!-- 6. Gerenciador de autenticação -->
     <script type="module" src="../js/auth-manager.js"></script>
 
-    <script>
-        // Adicionar mais partículas dinamicamente
-        function createParticles() {
-            const container = document.querySelector('.floating-particles');
-            for (let i = 0; i < 8; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.width = (Math.random() * 15 + 10) + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.animationDelay = Math.random() * 6 + 's';
-                container.appendChild(particle);
-            }
-        }
-
-        // Animação suave para os campos de input
-        document.querySelectorAll('.form-input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
-            });
-            
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
-            });
-        });
-
-        // Validação básica do formulário
-        document.getElementById('pelada-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const data = document.getElementById('data-pelada').value;
-            const jogadores = document.getElementById('lista-jogadores').value.trim();
-            
-            if (!data || !jogadores) {
-                showWarning('Atenção!', 'Por favor, preencha a data e a lista de jogadores!');
-                return;
-            }
-            
-            // Feedback de sucesso
-            showSuccess('Formulário válido!', 'Agora clique em "Visualizar Lista" para continuar.');
-        });
-
-        // Criar partículas ao carregar a página
-        createParticles();
-
-        // Funções do gerenciador estão implementadas no arquivo JavaScript
-
-        // Função aplicarFiltros está implementada no arquivo JavaScript
-
-        // Função editarPelada está implementada no arquivo JavaScript
-
-        // Função excluirPelada está implementada no arquivo JavaScript
-
-        // Funções de paginação estão implementadas no arquivo JavaScript
-
-        // Modal não fecha ao clicar fora (removido para melhor UX)
-    </script>
+    <script src="../js/admin-peladas-ui.js"></script>
     
     <!-- Script para modo noturno -->
     <script src="../js/dynamic-favicon.js"></script>

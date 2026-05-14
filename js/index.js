@@ -1,6 +1,6 @@
 // index.js
 import { app } from './firebase-config.js'; // Importa o app do arquivo de configuração
-import { getFirestore, collection, onSnapshot, doc, getDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const db = getFirestore(app);
 
@@ -204,64 +204,22 @@ async function carregarRodadasEmTempoReal() {
     })).sort((a, b) => a.numero - b.numero);
     console.log("Rodadas atualizadas (tempo real):", rodadas.length);
 
-    // Encontra a rodada com o próximo jogo mais próximo (prioriza jogos futuros)
-    let rodadaMaisProxima = 0;
-    let menorDiferencaFutura = Infinity;
-    let menorDiferencaPassada = Infinity;
-    let rodadaFutura = -1;
-    let rodadaPassada = -1;
-    
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0); // Zera as horas para comparar apenas datas
+    // Encontra a primeira rodada que ainda tem jogo sem placar (em ordem crescente).
+    // Se todas estiverem completas, mostra a última rodada.
+    let rodadaInicial = rodadas.length - 1; // fallback: última rodada
 
     for (let i = 0; i < rodadas.length; i++) {
-        const rodada = rodadas[i];
-        
-        // Para cada rodada, encontra a data mais próxima entre todos os jogos
-        let menorDiferencaRodadaFutura = Infinity;
-        let menorDiferencaRodadaPassada = Infinity;
-        
-        rodada.jogos.forEach(jogo => {
-            if (jogo.data) {
-                const dataJogo = new Date(jogo.data);
-                dataJogo.setHours(0, 0, 0, 0); // Zera as horas para comparar apenas datas
-                
-                const diferenca = dataJogo.getTime() - hoje.getTime();
-                
-                if (diferenca >= 0) { // Jogo futuro ou hoje
-                    if (diferenca < menorDiferencaRodadaFutura) {
-                        menorDiferencaRodadaFutura = diferenca;
-                    }
-                } else { // Jogo passado
-                    const diferencaAbsoluta = Math.abs(diferenca);
-                    if (diferencaAbsoluta < menorDiferencaRodadaPassada) {
-                        menorDiferencaRodadaPassada = diferencaAbsoluta;
-                    }
-                }
-            }
-        });
-        
-        // Verifica se esta rodada tem o melhor jogo futuro
-        if (menorDiferencaRodadaFutura < menorDiferencaFutura) {
-            menorDiferencaFutura = menorDiferencaRodadaFutura;
-            rodadaFutura = i;
-        }
-        
-        // Verifica se esta rodada tem o melhor jogo passado
-        if (menorDiferencaRodadaPassada < menorDiferencaPassada) {
-            menorDiferencaPassada = menorDiferencaRodadaPassada;
-            rodadaPassada = i;
-        }
+      const temJogoPendente = rodadas[i].jogos.some(
+        jogo => jogo.golsA === undefined || jogo.golsA === null ||
+                jogo.golsB === undefined || jogo.golsB === null
+      );
+      if (temJogoPendente) {
+        rodadaInicial = i;
+        break;
+      }
     }
-    
-    // Prioriza jogos futuros, se não houver, usa o mais recente do passado
-    if (rodadaFutura !== -1) {
-        rodadaAtual = rodadaFutura;
-    } else if (rodadaPassada !== -1) {
-        rodadaAtual = rodadaPassada;
-    } else {
-        rodadaAtual = 0; // Fallback para primeira rodada
-    }
+
+    rodadaAtual = rodadaInicial;
 
     atualizarTabela();
     
@@ -539,89 +497,50 @@ function mostrarFinal() {
   }
 }
 
-// --- DETERMINAR FASE INICIAL BASEADA EM DATAS ---
+// --- DETERMINAR FASE INICIAL ---
 async function determinarFaseInicial() {
-  console.log("Determinando fase inicial baseada em datas...");
-  
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-  
+  console.log("Determinando fase inicial...");
+
   const fases = ['fase1', 'fase2', 'final'];
-  let melhorFase = 'fase1'; // Fallback padrão
-  let menorDiferencaFutura = Infinity;
-  let menorDiferencaPassada = Infinity;
-  let faseFutura = null;
-  let fasePassada = null;
-  
+
   for (const fase of fases) {
-    const colecaoRodadas = fase === 'fase1' ? 'rodadas2026_fase1' : 
-                           fase === 'fase2' ? 'rodadas2026_fase2' : 
-                           'rodadas2026_final';
-    
+    const colecao = fase === 'fase1' ? 'rodadas2026_fase1' :
+                    fase === 'fase2' ? 'rodadas2026_fase2' :
+                    'rodadas2026_final';
+
     try {
-      const snap = await getDocs(collection(db, colecaoRodadas));
-      
+      const snap = await getDocs(collection(db, colecao));
+
       if (snap.empty) {
-        console.log(`Fase ${fase}: sem rodadas cadastradas`);
+        console.log(`Fase ${fase}: sem rodadas cadastradas, pulando.`);
         continue;
       }
-      
-      // Procura a data mais próxima nesta fase
-      let menorDiferencaFuturaFase = Infinity;
-      let menorDiferencaPassadaFase = Infinity;
-      
+
+      // Verifica se existe algum jogo sem placar nesta fase
+      let temJogoPendente = false;
       snap.forEach(doc => {
         const jogos = doc.data().jogos || [];
-        jogos.forEach(jogo => {
-          if (jogo.data) {
-            const dataJogo = new Date(jogo.data);
-            dataJogo.setHours(0, 0, 0, 0);
-            
-            const diferenca = dataJogo.getTime() - hoje.getTime();
-            
-            if (diferenca >= 0) { // Jogo futuro ou hoje
-              if (diferenca < menorDiferencaFuturaFase) {
-                menorDiferencaFuturaFase = diferenca;
-              }
-            } else { // Jogo passado
-              const diferencaAbsoluta = Math.abs(diferenca);
-              if (diferencaAbsoluta < menorDiferencaPassadaFase) {
-                menorDiferencaPassadaFase = diferencaAbsoluta;
-              }
-            }
-          }
-        });
+        if (jogos.some(j => j.golsA === undefined || j.golsA === null ||
+                            j.golsB === undefined || j.golsB === null)) {
+          temJogoPendente = true;
+        }
       });
-      
-      // Verifica se esta fase tem o melhor jogo futuro
-      if (menorDiferencaFuturaFase < menorDiferencaFutura) {
-        menorDiferencaFutura = menorDiferencaFuturaFase;
-        faseFutura = fase;
+
+      if (temJogoPendente) {
+        console.log(`Fase inicial determinada: ${fase} (tem jogos pendentes)`);
+        return fase;
       }
-      
-      // Verifica se esta fase tem o melhor jogo passado
-      if (menorDiferencaPassadaFase < menorDiferencaPassada) {
-        menorDiferencaPassada = menorDiferencaPassadaFase;
-        fasePassada = fase;
-      }
-      
+
+      console.log(`Fase ${fase}: todos os jogos completos, verificando próxima.`);
+
     } catch (error) {
       console.error(`Erro ao verificar fase ${fase}:`, error);
     }
   }
-  
-  // Prioriza jogos futuros, se não houver, usa o mais recente do passado
-  if (faseFutura) {
-    melhorFase = faseFutura;
-    console.log(`Fase inicial determinada: ${melhorFase} (próximo jogo em ${Math.ceil(menorDiferencaFutura / (1000 * 60 * 60 * 24))} dias)`);
-  } else if (fasePassada) {
-    melhorFase = fasePassada;
-    console.log(`Fase inicial determinada: ${melhorFase} (último jogo há ${Math.ceil(menorDiferencaPassada / (1000 * 60 * 60 * 24))} dias)`);
-  } else {
-    console.log(`Nenhuma fase com datas encontrada. Usando fase padrão: ${melhorFase}`);
-  }
-  
-  return melhorFase;
+
+  // Todas as fases completas (ou sem dados): abre a final
+  console.log("Todas as fases completas. Abrindo final.");
+  return 'final';
 }
 
 // --- FUNÇÃO DE INICIALIZAÇÃO QUE AGORA ATIVA OS LISTENERS ---

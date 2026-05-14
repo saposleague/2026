@@ -62,272 +62,7 @@
   <link rel="stylesheet" href="css/dark-mode-colors.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/index.css">
-  
-  <style>
-    /* Navegação de fases (abaixo do header) */
-    .fase-navigation {
-      width: 100%;
-      background: var(--container-bg);
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      box-sizing: border-box;
-      border-bottom: 1px solid var(--border-soft);
-      transition: background-color 0.3s ease, border-color 0.3s ease;
-    }
-    
-    .titulo-fase {
-      color: var(--text-dark);
-      font-size: 1.5em;
-      font-weight: bold;
-      margin: 0;
-      text-align: center;
-      flex-shrink: 0;
-      letter-spacing: 1px;
-      transition: color 0.3s ease;
-    }
-    
-    .seta-fase {
-      background: #2e7d32;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      font-size: 1.3rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    
-    .seta-fase:hover {
-      background: #1b5e20;
-      transform: scale(1.1);
-    }
-    
-    .seta-fase:active {
-      transform: scale(0.95);
-    }
-    
-    .seta-fase:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-    
-    /* Layout para a final - centralizado e destacado */
-    .container.final-layout {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 60vh;
-    }
-    
-    .final-wrapper {
-      max-width: 800px;
-      width: 100%;
-    }
-    
-    .jogo-final, .jogo-final-preview {
-      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-      border-radius: 16px;
-      padding: 2rem;
-      margin: 2rem auto;
-      box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
-      max-width: 700px;
-    }
-    
-    .jogo-final-preview {
-      background: var(--container-bg);
-      box-shadow: 0 8px 24px var(--shadow-medium);
-      transition: background-color 0.3s ease;
-    }
-    
-    .final-badge {
-      text-align: center;
-      font-size: 2rem;
-      font-weight: bold;
-      color: #b8860b;
-      margin-bottom: 1.5rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-      letter-spacing: 2px;
-    }
-    
-    .jogo-final-preview .final-badge {
-      color: var(--text-medium);
-      transition: color 0.3s ease;
-    }
-    
-    .final-aguardando {
-      text-align: center;
-      font-size: 1rem;
-      color: var(--text-medium);
-      margin-bottom: 1.5rem;
-      font-style: italic;
-      transition: color 0.3s ease;
-    }
-    
-    .campeao-badge {
-      font-size: 0.85rem;
-      color: #b8860b;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    
-    .jogo-final-preview .campeao-badge {
-      color: var(--text-medium);
-      transition: color 0.3s ease;
-    }
-    
-    .jogo-final .jogo-cabecalho {
-      background: rgba(184, 134, 11, 0.2);
-      color: #b8860b;
-      font-weight: bold;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 1.1rem;
-    }
-    
-    .jogo-final .placar {
-      font-size: 2.5rem;
-      color: #b8860b;
-      font-weight: bold;
-    }
-    
-    .placar-preview {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .vs-text {
-      font-size: 2rem;
-      font-weight: bold;
-      color: var(--text-medium);
-      transition: color 0.3s ease;
-    }
-    
-    .jogo-final .time, .jogo-final-preview .time {
-      gap: 8px;
-    }
-    
-    .jogo-final .icone-time {
-      width: 80px;
-      height: 80px;
-      border: 3px solid #b8860b;
-    }
-    
-    .jogo-final-preview .icone-time {
-      width: 80px;
-      height: 80px;
-      border: 3px solid var(--text-medium);
-      transition: border-color 0.3s ease;
-    }
-    
-    .jogo-final .nome-time {
-      font-size: 1.2rem;
-      color: #b8860b;
-      font-weight: bold;
-    }
-    
-    .jogo-final-preview .nome-time {
-      font-size: 1.2rem;
-      color: var(--text-dark);
-      font-weight: bold;
-      transition: color 0.3s ease;
-    }
-    
-    /* Placeholder para times não definidos */
-    .placeholder-time {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .placeholder-icon {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: var(--table-row-even);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 3rem;
-      color: var(--text-medium);
-      border: 3px solid var(--border-soft);
-      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-    }
-    
-    .nome-time-placeholder {
-      font-size: 1rem;
-      color: var(--text-medium);
-      font-weight: 500;
-      text-align: center;
-      transition: color 0.3s ease;
-    }
-    
-    /* Mobile adjustments */
-    @media (max-width: 768px) {
-      .fase-navigation {
-        padding: 15px;
-        gap: 10px;
-      }
-      
-      .titulo-fase {
-        font-size: 1.2em;
-      }
-      
-      .seta-fase {
-        width: 35px;
-        height: 35px;
-        font-size: 1.2rem;
-      }
-      
-      .jogo-final, .jogo-final-preview {
-        padding: 1.5rem;
-        margin: 1rem;
-      }
-      
-      .final-badge {
-        font-size: 1.5rem;
-      }
-      
-      .jogo-final .icone-time, .jogo-final-preview .icone-time {
-        width: 60px;
-        height: 60px;
-      }
-      
-      .placeholder-icon {
-        width: 60px;
-        height: 60px;
-        font-size: 2rem;
-      }
-      
-      .jogo-final .nome-time, .jogo-final-preview .nome-time {
-        font-size: 1rem;
-      }
-      
-      .nome-time-placeholder {
-        font-size: 0.9rem;
-      }
-      
-      .jogo-final .placar {
-        font-size: 2rem;
-      }
-      
-      .vs-text {
-        font-size: 1.5rem;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="css/index-splash.css">
 </head>
 <body>
   <!-- Splash Screen PWA Customizado (inicialmente oculto) -->
@@ -374,54 +109,6 @@
     ">Sapos League 2026</div>
   </div>
 
-  <style>
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    .pwa-splash-fade-out {
-      opacity: 0 !important;
-      transform: scale(1.1) !important;
-    }
-    
-    .main-content-hidden {
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-    
-    .main-content-visible {
-      opacity: 1;
-      transition: opacity 0.5s ease;
-    }
-    
-    /* Garantir que o splash seja responsivo */
-    #pwa-splash-screen {
-      font-size: clamp(14px, 4vw, 24px);
-    }
-    
-    /* Ajustes para telas muito pequenas */
-    @media (max-height: 500px) {
-      #pwa-splash-screen div[style*="bottom: 12vh"] {
-        bottom: 8vh !important;
-        font-size: clamp(16px, 3.5vw, 20px) !important;
-      }
-    }
-    
-    /* Ajustes para telas muito grandes */
-    @media (min-height: 900px) {
-      #pwa-splash-screen div[style*="bottom: 12vh"] {
-        bottom: 15vh !important;
-      }
-    }
-  </style>
-
   <!-- Conteúdo Principal (inicialmente oculto) -->
   <div id="main-app-content" class="main-content-hidden">
   
@@ -434,9 +121,13 @@
   
   <!-- Navegação de Fases (abaixo do header) -->
   <div class="fase-navigation">
-    <button id="btn-fase-anterior" class="seta-fase" onclick="window.faseAnterior()">←</button>
+    <button id="btn-fase-anterior" class="seta-fase" onclick="window.faseAnterior()" aria-label="Fase anterior">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
     <h2 id="titulo-fase" class="titulo-fase">PRIMEIRA FASE</h2>
-    <button id="btn-fase-proxima" class="seta-fase" onclick="window.proximaFase()">→</button>
+    <button id="btn-fase-proxima" class="seta-fase" onclick="window.proximaFase()" aria-label="Próxima fase">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
   </div>
 
   <div class="container">
@@ -454,9 +145,13 @@
 
     <div class="jogos">
       <div class="rodada-header">
-        <button class="seta" onclick="window.anteriorRodada()">←</button>
+        <button class="seta" onclick="window.anteriorRodada()" aria-label="Rodada anterior">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
         <h3 id="rodada-titulo">Rodada</h3>
-        <button class="seta" onclick="window.proximaRodada()">→</button>
+        <button class="seta" onclick="window.proximaRodada()" aria-label="Próxima rodada">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
       <div id="lista-jogos"></div>
     </div>
@@ -470,43 +165,7 @@
   
   </div> <!-- Fim do main-app-content -->
 
-  <script>
-    // Splash Screen PWA Customizado - Para iOS e Android
-    const isStandalone = window.navigator.standalone || 
-                        window.matchMedia('(display-mode: standalone)').matches;
-    
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isAndroid = /Android/.test(navigator.userAgent);
-    
-    const splash = document.getElementById('pwa-splash-screen');
-    const mainContent = document.getElementById('main-app-content');
-    
-    if (isStandalone && (isIOS || isAndroid)) {
-      // PWA instalado - Mostrar splash customizado por 2 segundos
-      splash.style.display = 'flex';
-      
-      function hidePWASplash() {
-        splash.classList.add('pwa-splash-fade-out');
-        
-        setTimeout(() => {
-          splash.style.display = 'none';
-          mainContent.classList.remove('main-content-hidden');
-          mainContent.classList.add('main-content-visible');
-        }, 500);
-      }
-      
-      setTimeout(() => {
-        hidePWASplash();
-      }, 2000);
-      
-    } else {
-      // Navegador normal - Mostrar conteúdo diretamente
-      splash.style.display = 'none';
-      mainContent.classList.remove('main-content-hidden');
-      mainContent.classList.add('main-content-visible');
-    }
-  </script>
-
+  <script src="js/pwa-splash.js"></script>
   <script src="js/dynamic-favicon.js"></script>
   <script src="js/dark-mode-logic.js"></script>
   <script type="module" src="js/index.js"></script>

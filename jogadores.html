@@ -12,31 +12,7 @@
   <link rel="apple-touch-icon" href="./images/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest">
   <link rel="stylesheet" href="css/gerador-times.css">
-  <style>
-    .jog-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 16px;
-      border-bottom: 0.5px solid rgba(255,255,255,0.05);
-      transition: background 0.15s;
-    }
-    .jog-item:last-child { border-bottom: none; }
-    .jog-item:hover { background: rgba(255,255,255,0.04); }
-    .jog-nome { flex: 1; font-size: 13px; color: rgba(255,255,255,0.85); }
-    .jog-estrelas { font-size: 11px; color: #fbbf24; min-width: 60px; }
-    .jog-actions { display: flex; gap: 6px; }
-    .jog-list { max-height: 420px; overflow-y: auto; }
-    .jog-list::-webkit-scrollbar { width: 4px; }
-    .jog-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-    .sp-star-row { display: flex; gap: 6px; margin-top: 4px; }
-    .sp-star {
-      font-size: 22px; cursor: pointer; color: rgba(255,255,255,0.2);
-      transition: color 0.15s; user-select: none;
-    }
-    .sp-star.on { color: #fbbf24; }
-    .sp-form-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
-    .sp-empty { text-align: center; color: rgba(255,255,255,0.3); font-size: 13px; padding: 28px 16px; }
-    .sp-count { font-size: 12px; color: rgba(255,255,255,0.35); }
-  </style>
+  <link rel="stylesheet" href="css/jogadores.css">
 </head>
 <body>
 
@@ -51,7 +27,10 @@
 
   <!-- Header -->
   <div class="sp-header">
-    <button id="voltar-button" class="sp-back">← Voltar ao Painel</button>
+    <button id="voltar-button" class="sp-back" aria-label="Voltar ao Painel">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar ao Painel
+    </button>
     <div class="sp-logo">
       <div class="sp-logo-icon">⚽</div>
       <div class="sp-logo-text">SAPOS <span>LEAGUE</span></div>

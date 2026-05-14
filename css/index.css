@@ -102,6 +102,9 @@ tr:nth-child(even) {
   font-size: 1.2em;
   cursor: pointer;
   transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .seta:hover {
