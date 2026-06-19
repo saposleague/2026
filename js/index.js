@@ -204,21 +204,35 @@ async function carregarRodadasEmTempoReal() {
     })).sort((a, b) => a.numero - b.numero);
     console.log("Rodadas atualizadas (tempo real):", rodadas.length);
 
-    // Encontra a primeira rodada que ainda tem jogo sem placar E com data definida (em ordem crescente).
-    // Jogos sem data são ignorados na busca (não bloqueiam o avanço para a próxima rodada).
-    // Se todas estiverem completas (ou só restarem jogos sem data), mostra a última rodada.
-    let rodadaInicial = rodadas.length - 1; // fallback: última rodada
+    // Escolha da rodada inicial em dois passos:
+    // 1º: primeira rodada com jogo pendente E data definida (rodada agendada mais próxima).
+    // 2º: se nenhuma tiver data, primeira rodada com qualquer jogo pendente (sem data ainda).
+    // Fallback final: última rodada (todas completas).
+    let rodadaInicial = rodadas.length - 1;
+
+    let rodadaComData = -1;
+    let rodadaSemData = -1;
 
     for (let i = 0; i < rodadas.length; i++) {
-      const temJogoPendente = rodadas[i].jogos.some(
+      const temPendenteComData = rodadas[i].jogos.some(
         jogo => jogo.data &&
                 (jogo.golsA === undefined || jogo.golsA === null ||
                  jogo.golsB === undefined || jogo.golsB === null)
       );
-      if (temJogoPendente) {
-        rodadaInicial = i;
-        break;
-      }
+      const temPendenteSemData = rodadas[i].jogos.some(
+        jogo => !jogo.data &&
+                (jogo.golsA === undefined || jogo.golsA === null ||
+                 jogo.golsB === undefined || jogo.golsB === null)
+      );
+
+      if (temPendenteComData && rodadaComData === -1) rodadaComData = i;
+      if ((temPendenteComData || temPendenteSemData) && rodadaSemData === -1) rodadaSemData = i;
+    }
+
+    if (rodadaComData !== -1) {
+      rodadaInicial = rodadaComData;
+    } else if (rodadaSemData !== -1) {
+      rodadaInicial = rodadaSemData;
     }
 
     rodadaAtual = rodadaInicial;
@@ -518,14 +532,13 @@ async function determinarFaseInicial() {
         continue;
       }
 
-      // Verifica se existe algum jogo sem placar E com data definida nesta fase.
-      // Jogos sem data são ignorados (não contam como pendentes).
+      // Verifica se existe algum jogo sem placar nesta fase (com ou sem data).
+      // Um jogo sem placar significa que a fase ainda está em andamento.
       let temJogoPendente = false;
       snap.forEach(doc => {
         const jogos = doc.data().jogos || [];
-        if (jogos.some(j => j.data &&
-                            (j.golsA === undefined || j.golsA === null ||
-                             j.golsB === undefined || j.golsB === null))) {
+        if (jogos.some(j => j.golsA === undefined || j.golsA === null ||
+                            j.golsB === undefined || j.golsB === null)) {
           temJogoPendente = true;
         }
       });
