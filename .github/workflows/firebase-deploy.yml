@@ -16,19 +16,27 @@ jobs:
     
     steps:
       - name: Checkout código
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
       
       - name: Instalar dependências
+        run: npm ci
+        working-directory: functions
+
+      # Cria o functions/.env a partir dos GitHub Secrets
+      # A chave privada VAPID nunca fica no repositório
+      - name: Criar functions/.env
         run: |
-          cd functions
-          npm ci
-          cd ..
-      
+          cat > functions/.env << 'EOF'
+          VAPID_PUBLIC_KEY=BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg
+          VAPID_PRIVATE_KEY=${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_MAILTO=mailto:contato@saposleague.com
+          EOF
+
       - name: Deploy para Firebase
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
