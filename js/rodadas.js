@@ -1,23 +1,15 @@
 // js/rodadas.js
-import { app } from './firebase-config.js'; // Importa o app do arquivo de configuração
+import { app } from './firebase-config.js';
 import { getFirestore, collection, getDocs, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import { requireAuth, setupLogout } from './auth-guard.js';
 
 const db = getFirestore(app);
-const auth = getAuth(app);
 
 // SISTEMA DE FASES
 let faseAtual = 'fase1'; // 'fase1', 'fase2', 'final'
 
 // --- VERIFICAÇÃO DE AUTENTICAÇÃO ---
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    // Salvar a URL atual para redirecionar de volta após o login
-    sessionStorage.setItem('redirectAfterLogin', window.location.href);
-    window.location.href = "admin.html";
-  }
-});
-// --- FIM DA VERIFICAÇÃO DE AUTENTICAÇÃO ---
+requireAuth();
 
 let nomesTimes = {};
 let rodadasCarregadas = [];
@@ -25,20 +17,9 @@ let paginaAtual = 1;
 const porPagina = 5;
 
 const salvarJogoBtn = document.getElementById("salvar-jogo-button");
-const logoutButton = document.getElementById("logout-button");
 
-// Função de logout existente
-if (logoutButton) {
-    logoutButton.addEventListener("click", async () => {
-        try {
-            await signOut(auth);
-            window.location.href = "admin.html";
-        } catch (error) {
-            console.error("Erro ao fazer logout:", error);
-            mostrarMensagem("Erro ao fazer logout. Tente novamente.");
-        }
-    });
-}
+// Logout centralizado via auth-guard
+setupLogout('logout-button');
 
 // ----------------------------------------------------
 async function carregarTimes() {

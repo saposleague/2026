@@ -186,174 +186,87 @@ function limparNome(nome) {
     return nomeLimpo;
 }
 
-// Função para corrigir acentuação automática
+// Função para corrigir acentuação e capitalizar nomes
+// Estratégia: capitalização inteligente + dicionário de nomes que precisam
+// de acento específico (não detectável por regra geral).
+// O usuário pode editar qualquer nome manualmente no preview.
 function corrigirAcentuacao(nome) {
     if (!nome || typeof nome !== 'string') return '';
-    
-    // Dicionário de correções de acentuação
-    const correcoes = {
-        // Vogais comuns
-        'a': 'á', 'e': 'é', 'i': 'í', 'o': 'ó', 'u': 'ú',
-        'A': 'Á', 'E': 'É', 'I': 'Í', 'O': 'Ó', 'U': 'Ú',
-        
-        // Nomes específicos comuns
-        'joao': 'João', 'joão': 'João', 'Joao': 'João',
-        'jose': 'José', 'josé': 'José', 'Jose': 'José',
-        'maria': 'Maria', 'Maria': 'Maria',
-        'ana': 'Ana', 'Ana': 'Ana',
-        'pedro': 'Pedro', 'Pedro': 'Pedro',
-        'carlos': 'Carlos', 'Carlos': 'Carlos',
-        'antonio': 'Antônio', 'Antonio': 'Antônio', 'antônio': 'Antônio',
-        'francisco': 'Francisco', 'Francisco': 'Francisco',
-        'luis': 'Luís', 'Luis': 'Luís', 'luís': 'Luís',
-        'luiz': 'Luiz', 'Luiz': 'Luiz',
-        'paulo': 'Paulo', 'Paulo': 'Paulo',
-        'marcos': 'Marcos', 'Marcos': 'Marcos',
-        'fernando': 'Fernando', 'Fernando': 'Fernando',
-        'roberto': 'Roberto', 'Roberto': 'Roberto',
-        'daniel': 'Daniel', 'Daniel': 'Daniel',
-        'rafael': 'Rafael', 'Rafael': 'Rafael',
-        'gabriel': 'Gabriel', 'Gabriel': 'Gabriel',
-        'lucas': 'Lucas', 'Lucas': 'Lucas',
-        'matheus': 'Matheus', 'Matheus': 'Matheus',
-        'bruno': 'Bruno', 'Bruno': 'Bruno',
-        'felipe': 'Felipe', 'Felipe': 'Felipe',
-        'rodrigo': 'Rodrigo', 'Rodrigo': 'Rodrigo',
-        'marcelo': 'Marcelo', 'Marcelo': 'Marcelo',
-        'leonardo': 'Leonardo', 'Leonardo': 'Leonardo',
-        'guilherme': 'Guilherme', 'Guilherme': 'Guilherme',
-        'gustavo': 'Gustavo', 'Gustavo': 'Gustavo',
-        'ricardo': 'Ricardo', 'Ricardo': 'Ricardo',
-        'andre': 'André', 'Andre': 'André', 'andré': 'André',
-        'eduardo': 'Eduardo', 'Eduardo': 'Eduardo',
-        'carlos': 'Carlos', 'Carlos': 'Carlos',
-        'miguel': 'Miguel', 'Miguel': 'Miguel',
-        'arthur': 'Arthur', 'Arthur': 'Arthur',
-        'heitor': 'Heitor', 'Heitor': 'Heitor',
-        'bernardo': 'Bernardo', 'Bernardo': 'Bernardo',
-        'davi': 'Davi', 'Davi': 'Davi',
-        'theo': 'Theo', 'Theo': 'Theo',
-        'enzo': 'Enzo', 'Enzo': 'Enzo',
-        'valentina': 'Valentina', 'Valentina': 'Valentina',
-        'sophia': 'Sophia', 'Sophia': 'Sophia',
-        'isabella': 'Isabella', 'Isabella': 'Isabella',
-        'manuela': 'Manuela', 'Manuela': 'Manuela',
-        'julia': 'Júlia', 'Julia': 'Júlia', 'júlia': 'Júlia',
-        'helena': 'Helena', 'Helena': 'Helena',
-        'luiza': 'Luiza', 'Luiza': 'Luiza',
-        'maria': 'Maria', 'Maria': 'Maria',
-        'laura': 'Laura', 'Laura': 'Laura',
-        'isabella': 'Isabella', 'Isabella': 'Isabella',
-        'alice': 'Alice', 'Alice': 'Alice',
-        'beatriz': 'Beatriz', 'Beatriz': 'Beatriz',
-        'mariana': 'Mariana', 'Mariana': 'Mariana',
-        'carolina': 'Carolina', 'Carolina': 'Carolina',
-        'cecilia': 'Cecília', 'Cecilia': 'Cecília', 'cecília': 'Cecília',
-        'fernanda': 'Fernanda', 'Fernanda': 'Fernanda',
-        'amanda': 'Amanda', 'Amanda': 'Amanda',
-        'leticia': 'Letícia', 'Leticia': 'Letícia', 'letícia': 'Letícia',
-        'vanessa': 'Vanessa', 'Vanessa': 'Vanessa',
-        'juliana': 'Juliana', 'Juliana': 'Juliana',
-        'patricia': 'Patrícia', 'Patricia': 'Patrícia', 'patrícia': 'Patrícia',
-        'alessandra': 'Alessandra', 'Alessandra': 'Alessandra',
-        'mariana': 'Mariana', 'Mariana': 'Mariana',
-        'camila': 'Camila', 'Camila': 'Camila',
-        'amanda': 'Amanda', 'Amanda': 'Amanda',
-        'daniela': 'Daniela', 'Daniela': 'Daniela',
-        'carolina': 'Carolina', 'Carolina': 'Carolina',
-        'beatriz': 'Beatriz', 'Beatriz': 'Beatriz',
-        'ana': 'Ana', 'Ana': 'Ana',
-        'maria': 'Maria', 'Maria': 'Maria',
-        'julia': 'Júlia', 'Julia': 'Júlia', 'júlia': 'Júlia',
-        'laura': 'Laura', 'Laura': 'Laura',
-        'isabella': 'Isabella', 'Isabella': 'Isabella',
-        'valentina': 'Valentina', 'Valentina': 'Valentina',
-        'sophia': 'Sophia', 'Sophia': 'Sophia',
-        'manuela': 'Manuela', 'Manuela': 'Manuela',
-        'helena': 'Helena', 'Helena': 'Helena',
-        'luiza': 'Luiza', 'Luiza': 'Luiza',
-        'alice': 'Alice', 'Alice': 'Alice',
-        'cecilia': 'Cecília', 'Cecilia': 'Cecília', 'cecília': 'Cecília',
-        'fernanda': 'Fernanda', 'Fernanda': 'Fernanda',
-        'leticia': 'Letícia', 'Leticia': 'Letícia', 'letícia': 'Letícia',
-        'vanessa': 'Vanessa', 'Vanessa': 'Vanessa',
-        'juliana': 'Juliana', 'Juliana': 'Juliana',
-        'patricia': 'Patrícia', 'Patricia': 'Patrícia', 'patrícia': 'Patrícia',
-        'alessandra': 'Alessandra', 'Alessandra': 'Alessandra',
-        'camila': 'Camila', 'Camila': 'Camila',
-        'daniela': 'Daniela', 'Daniela': 'Daniela',
-        
-        // Nomes específicos mencionados pelo usuário
-        'otavio': 'Otávio', 'Otavio': 'Otávio',
-        'caio': 'Caio', 'Caio': 'Caio',
-        'madson': 'Madson', 'Madson': 'Madson',
-        'alcemir': 'Alcemir', 'Alcemir': 'Alcemir',
-        'david': 'David', 'David': 'David',
-        'lucas': 'Lucas', 'Lucas': 'Lucas',
-        'jair': 'Jair', 'Jair': 'Jair',
-        'gabriel': 'Gabriel', 'Gabriel': 'Gabriel',
-        'romeu': 'Romeu', 'Romeu': 'Romeu',
-        'dionia': 'Dionia', 'Dionia': 'Dionia',
-        'casagrande': 'Casagrande', 'Casagrande': 'Casagrande',
-        'ayslan': 'Ayslan', 'Ayslan': 'Ayslan',
-        'claudio': 'Cláudio', 'Claudio': 'Cláudio', 'cláudio': 'Cláudio',
-        'guerra': 'Guerra', 'Guerra': 'Guerra',
-        'gustavo': 'Gustavo', 'Gustavo': 'Gustavo',
-        'gilson': 'Gilson', 'Gilson': 'Gilson',
-        'higor': 'Higor', 'Higor': 'Higor',
-        'julieferson': 'Julieferson', 'Julieferson': 'Julieferson',
-        'mota': 'Mota', 'Mota': 'Mota',
-        'guilherme': 'Guilherme', 'Guilherme': 'Guilherme',
-        'puluceno': 'Puluceno', 'Puluceno': 'Puluceno'
+
+    // Preposições e artigos que ficam em minúsculo dentro de nomes compostos
+    const MINUSCULAS = new Set([
+        'de', 'da', 'do', 'das', 'dos', 'e', 'em',
+        'na', 'no', 'nas', 'nos', 'para', 'por', 'com'
+    ]);
+
+    // Dicionário de nomes que precisam de acento especial.
+    // Chave: versão sem acento em minúsculo. Valor: forma correta.
+    const ACENTOS = {
+        'joao':       'João',
+        'jose':       'José',
+        'antonio':    'Antônio',
+        'otavio':     'Otávio',
+        'claudio':    'Cláudio',
+        'vinicius':   'Vinícius',
+        'fabio':      'Fábio',
+        'julio':      'Júlio',
+        'marcio':     'Márcio',
+        'mauricio':   'Maurício',
+        'sergio':     'Sérgio',
+        'joao paulo': 'João Paulo',
+        'joao pedro': 'João Pedro',
+        'joao victor':'João Victor',
+        'joao vitor': 'João Vitor',
+        'joao luis':  'João Luís',
+        'joao lucas': 'João Lucas',
+        'andre':      'André',
+        'cesar':      'César',
+        'renato':     'Renato',
+        'renan':      'Renan',
+        'rogerio':    'Rogério',
+        'luis':       'Luís',
+        'julia':      'Júlia',
+        'leticia':    'Letícia',
+        'patricia':   'Patrícia',
+        'cecilia':    'Cecília',
+        'natalia':    'Natália',
+        'debora':     'Débora',
+        'monica':     'Mônica',
+        'beatriz':    'Beatriz',
     };
-    
-    // Capitalização inteligente para nomes compostos
-    let nomeCorrigido = nome.split(' ').map(palavra => {
-        if (palavra.length === 0) return palavra;
-        
-        // Palavras que devem permanecer minúsculas (preposições, artigos)
-        const palavrasMinusculas = ['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'na', 'no', 'nas', 'nos', 'para', 'por', 'com', 'sem', 'sob', 'sobre', 'entre', 'contra', 'desde', 'até', 'após', 'antes', 'durante', 'segundo', 'conforme', 'mediante', 'salvo', 'exceto', 'menos', 'fora', 'dentro', 'fora', 'acima', 'abaixo', 'antes', 'depois', 'além', 'aquém', 'através', 'perante', 'quanto', 'consoante', 'conforme', 'segundo', 'conforme', 'mediante', 'salvo', 'exceto', 'menos', 'fora', 'dentro', 'fora', 'acima', 'abaixo', 'antes', 'depois', 'além', 'aquém', 'através', 'perante', 'quanto', 'consoante'];
-        
-        const palavraLower = palavra.toLowerCase();
-        if (palavrasMinusculas.includes(palavraLower)) {
-            return palavraLower;
-        }
-        
-        // Primeira letra maiúscula para outras palavras
-        return palavra.charAt(0).toUpperCase() + palavra.slice(1).toLowerCase();
-    }).join(' ');
-    
-    // Aplicar correções específicas
-    const nomeLower = nomeCorrigido.toLowerCase();
-    if (correcoes[nomeLower]) {
-        nomeCorrigido = correcoes[nomeLower];
+
+    // 1. Capitaliza cada palavra respeitando preposições
+    const capitalizado = nome
+        .split(' ')
+        .filter(p => p.length > 0)
+        .map((palavra, idx) => {
+            const lower = palavra.toLowerCase();
+            // Preposições só ficam minúsculas se não forem a primeira palavra
+            if (idx > 0 && MINUSCULAS.has(lower)) return lower;
+            return lower.charAt(0).toUpperCase() + lower.slice(1);
+        })
+        .join(' ');
+
+    // 2. Verifica se o nome completo (sem acento, minúsculo) tem entrada no dicionário
+    const semAcento = capitalizado
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+
+    if (ACENTOS[semAcento]) {
+        return ACENTOS[semAcento];
     }
-    
-    // Se não encontrou correção específica, aplicar regras gerais
-    if (nomeCorrigido === nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase()) {
-        // Regras para nomes que terminam com 'ao' (João, Antônio)
-        if (nomeLower.endsWith('ao')) {
-            nomeCorrigido = nomeCorrigido.replace(/ao$/i, 'ão');
-        }
-        // Regras para nomes que terminam com 'es' (José, Luís)
-        else if (nomeLower.endsWith('es')) {
-            nomeCorrigido = nomeCorrigido.replace(/es$/i, 'és');
-        }
-        // Regras para nomes que terminam com 'ia' (Júlia, Cecília)
-        else if (nomeLower.endsWith('ia')) {
-            nomeCorrigido = nomeCorrigido.replace(/ia$/i, 'ia');
-        }
-        // Regras para nomes que terminam com 'cia' (Cecília, Patrícia)
-        else if (nomeLower.endsWith('cia')) {
-            nomeCorrigido = nomeCorrigido.replace(/cia$/i, 'cia');
-        }
-        // Regras para nomes que terminam com 'tia' (Letícia, Patrícia)
-        else if (nomeLower.endsWith('tia')) {
-            nomeCorrigido = nomeCorrigido.replace(/tia$/i, 'tia');
-        }
-    }
-    
-    return nomeCorrigido;
+
+    // 3. Verifica cada palavra individualmente no dicionário
+    const palavrasCorrigidas = capitalizado.split(' ').map(palavra => {
+        const chave = palavra
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+        return ACENTOS[chave] || palavra;
+    });
+
+    return palavrasCorrigidas.join(' ');
 }
 
 // 6. EXIBIÇÃO DO PREVIEW

@@ -180,6 +180,7 @@ async function carregarTimesEmTempoReal() {
     }
   }, (error) => {
     console.error("Erro ao carregar times em tempo real:", error);
+    _mostrarErroConexao();
   });
 }
 
@@ -247,6 +248,7 @@ async function carregarRodadasEmTempoReal() {
     }
   }, (error) => {
     console.error("Erro ao carregar rodadas em tempo real:", error);
+    _mostrarErroConexao();
   });
 }
 
@@ -562,21 +564,64 @@ async function determinarFaseInicial() {
 
 // --- FUNÇÃO DE INICIALIZAÇÃO QUE AGORA ATIVA OS LISTENERS ---
 (async () => {
-  // Carrega os campeões primeiro
-  await carregarCampeoes();
-  
-  // Primeiramente, configura o listener para times
-  await carregarTimesEmTempoReal();
-  
-  // Determina qual fase deve ser exibida inicialmente
-  faseAtual = await determinarFaseInicial();
-  
-  // Carrega a fase determinada
-  await carregarFase();
-  
-  console.log("Inicialização de listeners completa.");
-  console.log("Funções de navegação acessíveis:", typeof window.anteriorRodada === 'function', typeof window.proximaRodada === 'function');
+  try {
+    // Carrega os campeões primeiro
+    await carregarCampeoes();
+
+    // Configura o listener para times
+    await carregarTimesEmTempoReal();
+
+    // Determina qual fase deve ser exibida inicialmente
+    faseAtual = await determinarFaseInicial();
+
+    // Carrega a fase determinada
+    await carregarFase();
+
+    console.log("Inicialização de listeners completa.");
+  } catch (error) {
+    console.error("Erro na inicialização:", error);
+    _mostrarErroConexao();
+  }
 })();
+
+/**
+ * Exibe mensagem de erro amigável quando o Firebase não responde.
+ * Mostra um botão para o usuário tentar novamente sem recarregar a página.
+ */
+function _mostrarErroConexao() {
+  const container = document.querySelector('.container');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-secondary, #666);
+    ">
+      <div style="font-size: 48px; margin-bottom: 16px;">📡</div>
+      <h2 style="margin-bottom: 8px; color: var(--text-primary, #333);">
+        Não foi possível carregar os dados
+      </h2>
+      <p style="margin-bottom: 24px; max-width: 400px; margin-left: auto; margin-right: auto;">
+        Verifique sua conexão com a internet e tente novamente.
+      </p>
+      <button
+        onclick="window.location.reload()"
+        style="
+          background: var(--primary, #2e7d32);
+          color: white;
+          border: none;
+          padding: 12px 28px;
+          border-radius: 24px;
+          font-size: 15px;
+          cursor: pointer;
+        "
+      >
+        🔄 Tentar Novamente
+      </button>
+    </div>
+  `;
+}
 
 // Opcional: Para limpar os listeners quando o usuário sai da página (boa prática)
 window.addEventListener('beforeunload', () => {

@@ -1,7 +1,10 @@
 // js/config.js
-// VERSÃO: 1.2 - Inicialização corrigida do Supabase
-// Configuração do Supabase
+// VERSÃO: 1.3 - Fonte única de credenciais Supabase
+// ⚠️  ESTE É O ÚNICO LUGAR onde as credenciais Supabase devem ser declaradas.
+//     Todos os outros scripts (jogadores.js, gerador-times.js, painel.js, etc.)
+//     dependem destas variáveis globais — não as redeclare neles.
 
+// Credenciais Supabase (anon key — segura para uso no browser)
 const SUPABASE_URL = 'https://yaapgjkvkhsfsskkbmso.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhYXBnamt2a2hzZnNza2tibXNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwOTQ3MjUsImV4cCI6MjA3MDY3MDcyNX0.RiPWRX__AjuioaLVU5gkJFuOpVdBYwCN0HuD2gd0laM';
 

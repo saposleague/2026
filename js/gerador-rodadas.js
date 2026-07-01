@@ -1,21 +1,15 @@
 // js/gerador-rodadas.js
 import { app } from './firebase-config.js';
 import { getFirestore, collection, getDocs, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import { requireAuth, setupLogout } from './auth-guard.js';
 
 const db = getFirestore(app);
-const auth = getAuth(app);
 
 // SISTEMA DE FASES
 let faseAtual = 'fase1'; // 'fase1', 'fase2', 'final'
 
 // --- VERIFICAÇÃO DE AUTENTICAÇÃO ---
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    sessionStorage.setItem('redirectAfterLogin', window.location.href);
-    window.location.href = "admin.html";
-  }
-});
+requireAuth();
 
 // Variáveis globais
 let times = [];
@@ -32,7 +26,6 @@ const rodadasPreview = document.getElementById('rodadas-preview');
 const salvarButton = document.getElementById('salvar-rodadas-button');
 const cancelarButton = document.getElementById('cancelar-button');
 const voltarButton = document.getElementById('voltar-button');
-const logoutButton = document.getElementById('logout-button');
 
 // --- EVENT LISTENERS ---
 gerarButton.addEventListener('click', gerarRodadas);
@@ -40,16 +33,8 @@ salvarButton.addEventListener('click', confirmarSalvarRodadas);
 cancelarButton.addEventListener('click', cancelarGeracao);
 voltarButton.addEventListener('click', () => window.location.href = 'painel.html');
 
-// Logout
-logoutButton.addEventListener('click', async () => {
-    try {
-        await signOut(auth);
-        window.location.href = "admin.html";
-    } catch (error) {
-        console.error("Erro ao fazer logout:", error);
-        mostrarMensagem("Erro ao fazer logout. Tente novamente.");
-    }
-});
+// Logout centralizado via auth-guard
+setupLogout('logout-button');
 
 // --- FUNÇÕES PRINCIPAIS ---
 

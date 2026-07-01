@@ -37,7 +37,7 @@ form.addEventListener("submit", async (e) => {
       sessionStorage.removeItem('redirectAfterLogin');
       window.location.href = redirectUrl;
     } else {
-      window.location.href = "admin.html";
+      window.location.href = "painel.html";
     }
   } catch (err) {
     let errorMessage = "Ocorreu um erro desconhecido.";

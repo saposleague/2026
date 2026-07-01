@@ -1,17 +1,41 @@
 const functions = require('firebase-functions');
+const { defineString, defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const webpush = require('web-push');
 
 admin.initializeApp();
 
-// Versão: 1.3 - Suporte completo para iOS Web Push
+// Versão: 1.5 - Chave VAPID via variáveis de ambiente (.env) — sistema params do Firebase Functions v2+
+// Consulte functions/.env.example para instruções de configuração.
+
+// Definição dos parâmetros de ambiente
+const VAPID_PUBLIC_KEY = defineString('VAPID_PUBLIC_KEY', {
+  default: 'BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg',
+  description: 'Chave pública VAPID para Web Push',
+});
+
+const VAPID_PRIVATE_KEY = defineString('VAPID_PRIVATE_KEY', {
+  description: 'Chave privada VAPID para Web Push (definida no arquivo functions/.env)',
+});
+
+const VAPID_MAILTO = defineString('VAPID_MAILTO', {
+  default: 'mailto:contato@saposleague.com',
+  description: 'Email de contato para Web Push',
+});
 
 // Configurar Web Push VAPID
-webpush.setVapidDetails(
-  'mailto:contato@saposleague.com',
-  'BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg',
-  'NFZcjl9zuoiUVOSaUtBI9oF1C4cRgyANQ3mYeHAMnCI'
-);
+// Os valores são resolvidos em runtime quando a função é invocada
+function initWebPush() {
+  const privateKey = VAPID_PRIVATE_KEY.value();
+  if (!privateKey) {
+    throw new Error('VAPID_PRIVATE_KEY não configurada. Adicione ao arquivo functions/.env');
+  }
+  webpush.setVapidDetails(
+    VAPID_MAILTO.value(),
+    VAPID_PUBLIC_KEY.value(),
+    privateKey
+  );
+}
 
 /**
  * Notificações de Segunda a Quarta às 08:00
@@ -302,6 +326,8 @@ async function sendToFCM(title, body) {
  * Envia notificações via Web Push (iOS)
  */
 async function sendToWebPush(title, body) {
+  // Inicializa o webpush com as credenciais do ambiente
+  initWebPush();
   // Buscar todas as subscriptions
   const subscriptionsSnapshot = await admin.firestore().collection('webPushSubscriptions').get();
   

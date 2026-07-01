@@ -1,10 +1,6 @@
 // js/jogadores.js
-import { app } from './firebase-config.js';
-import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
-
-const auth = getAuth(app);
-const SUPABASE_URL = 'https://yaapgjkvkhsfsskkbmso.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhYXBnamt2a2hzZnNza2tibXNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwOTQ3MjUsImV4cCI6MjA3MDY3MDcyNX0.RiPWRX__AjuioaLVU5gkJFuOpVdBYwCN0HuD2gd0laM';
+// Credenciais Supabase vêm de js/config.js (carregado antes via <script> no HTML)
+import { requireAuth, setupLogout } from './auth-guard.js';
 
 let db = null;
 let jogadores = [];
@@ -14,21 +10,16 @@ let excluirId = null;
 
 // ─── AUTH ──────────────────────────────────────────────────────────────────
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    sessionStorage.setItem('redirectAfterLogin', window.location.href);
-    window.location.href = 'admin.html';
-    return;
-  }
+requireAuth().then(() => {
   db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   carregarJogadores();
 });
 
-document.getElementById('logout-button').addEventListener('click', async () => {
-  await signOut(auth);
-  window.location.href = 'admin.html';
-});
+setupLogout('logout-button');
 
+document.getElementById('voltar-button').addEventListener('click', () => {
+  window.location.href = 'painel.html';
+});
 document.getElementById('voltar-button').addEventListener('click', () => {
   window.location.href = 'painel.html';
 });

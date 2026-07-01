@@ -1,34 +1,23 @@
 // js/painel.js
+// Credenciais Supabase vêm de js/config.js — não redeclare aqui.
+// painel.js usa fetch direto (não usa o cliente Supabase), então só precisa
+// das variáveis SUPABASE_URL e SUPABASE_ANON_KEY do escopo global (config.js).
 import { app } from './firebase-config.js';
-import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
 import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+import { requireAuth, setupLogout } from './auth-guard.js';
 
-const auth = getAuth(app);
 const db = getFirestore(app);
 
-const SUPABASE_URL = 'https://yaapgjkvkhsfsskkbmso.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhYXBnamt2a2hzZnNza2tibXNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwOTQ3MjUsImV4cCI6MjA3MDY3MDcyNX0.RiPWRX__AjuioaLVU5gkJFuOpVdBYwCN0HuD2gd0laM';
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    sessionStorage.setItem('redirectAfterLogin', window.location.href);
-    window.location.href = 'admin.html';
-    return;
-  }
-
-  // Preenche nome e avatar com as iniciais do email
+// Garante autenticação e exibe dados do usuário
+requireAuth().then((user) => {
   const email = user.email || '';
   const iniciais = email.substring(0, 2).toUpperCase();
   document.getElementById('user-avatar').textContent = iniciais;
   document.getElementById('user-name').textContent = email.split('@')[0];
-
   carregarStats();
 });
 
-document.getElementById('logout-button').addEventListener('click', async () => {
-  await signOut(auth);
-  window.location.href = 'admin.html';
-});
+setupLogout('logout-button');
 
 async function carregarStats() {
   try {
@@ -54,9 +43,12 @@ async function carregarStats() {
     });
     document.getElementById('stat-pendentes').textContent = pendentes;
 
-    // Jogadores do Supabase
+    // Jogadores do Supabase — usa variáveis globais de config.js
     const res = await fetch(`${SUPABASE_URL}/rest/v1/jogadores?select=id`, {
-      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      }
     });
     if (res.ok) {
       const data = await res.json();
