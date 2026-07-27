@@ -35,6 +35,8 @@ jobs:
           VAPID_PUBLIC_KEY=BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg
           VAPID_PRIVATE_KEY=${{ secrets.VAPID_PRIVATE_KEY }}
           VAPID_MAILTO=mailto:contato@saposleague.com
+          SUPABASE_PROJECT_URL=https://yaapgjkvkhsfsskkbmso.supabase.co
+          ADMIN_FIREBASE_UIDS=HClXNJyivTWibYcrirCYxhM96Ze2
           EOF
 
       - name: Deploy para Firebase
