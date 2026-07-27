@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
 const { defineString, defineSecret } = require('firebase-functions/params');
+const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 const webpush = require('web-push');
 
@@ -23,6 +24,18 @@ const VAPID_MAILTO = defineString('VAPID_MAILTO', {
   description: 'Email de contato para Web Push',
 });
 
+const SUPABASE_PROJECT_URL = defineString('SUPABASE_PROJECT_URL', {
+  default: 'https://yaapgjkvkhsfsskkbmso.supabase.co',
+  description: 'URL pública do projeto Supabase',
+});
+
+const SUPABASE_ADMIN_KEY = defineSecret('SUPABASE_ADMIN_KEY');
+
+const ADMIN_FIREBASE_UIDS = defineString('ADMIN_FIREBASE_UIDS', {
+  default: 'HClXNJyivTWibYcrirCYxhM96Ze2',
+  description: 'UIDs Firebase autorizados, separados por vírgula',
+});
+
 // Configurar Web Push VAPID
 // Os valores são resolvidos em runtime quando a função é invocada
 function initWebPush() {
@@ -36,6 +49,449 @@ function initWebPush() {
     privateKey
   );
 }
+
+/**
+ * Autoriza endpoints administrativos manuais.
+ * Requer POST, Firebase ID token e a custom claim `admin: true`.
+ */
+async function requireAdminRequest(req, res) {
+  res.set('Cache-Control', 'no-store');
+
+  if (req.method !== 'POST') {
+    res.set('Allow', 'POST');
+    res.status(405).json({
+      success: false,
+      error: 'Método não permitido. Use POST.'
+    });
+    return null;
+  }
+
+  const authorization = req.get('Authorization') || '';
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+
+  if (!match) {
+    res.status(401).json({
+      success: false,
+      error: 'Token de autenticação ausente.'
+    });
+    return null;
+  }
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(match[1], true);
+    const allowedUids = new Set(
+      ADMIN_FIREBASE_UIDS.value()
+        .split(',')
+        .map(uid => uid.trim())
+        .filter(Boolean)
+    );
+    const isBootstrapAdmin = allowedUids.has(decodedToken.uid);
+
+    if (decodedToken.admin !== true && !isBootstrapAdmin) {
+      res.status(403).json({
+        success: false,
+        error: 'Permissão administrativa necessária.'
+      });
+      return null;
+    }
+
+    // O UID inicial funciona como bootstrap. Na primeira chamada válida,
+    // a claim é persistida sem apagar outras claims existentes.
+    if (decodedToken.admin !== true && isBootstrapAdmin) {
+      const user = await admin.auth().getUser(decodedToken.uid);
+      await admin.auth().setCustomUserClaims(decodedToken.uid, {
+        ...(user.customClaims || {}),
+        admin: true
+      });
+      console.log(`✅ Claim administrativa configurada para ${decodedToken.uid}`);
+    }
+
+    return decodedToken;
+  } catch (error) {
+    console.warn('⚠️ Requisição administrativa rejeitada:', error.code || error.message);
+    res.status(401).json({
+      success: false,
+      error: 'Token de autenticação inválido ou expirado.'
+    });
+    return null;
+  }
+}
+
+const ADMIN_ALLOWED_ORIGINS = new Set([
+  'https://saposleague.github.io',
+  'https://sapos-league.web.app',
+  'https://sapos-league.firebaseapp.com'
+]);
+
+const ADMIN_TABLE_FIELDS = {
+  jogadores: new Set(['id', 'nome', 'time_id', 'data_cadastro', 'nivel']),
+  presencas: new Set(['id', 'jogador_id', 'data_pelada', 'created_at', 'observacoes']),
+  jogadores_aptos: new Set(['id', 'jogador_id', 'data_marcacao'])
+};
+
+function configureAdminCors(req, res) {
+  const origin = req.get('Origin');
+  const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin || '');
+
+  if (origin && (ADMIN_ALLOWED_ORIGINS.has(origin) || isLocalOrigin)) {
+    res.set('Access-Control-Allow-Origin', origin);
+    res.set('Vary', 'Origin');
+  }
+
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.set('Access-Control-Max-Age', '3600');
+
+  if (req.method === 'OPTIONS') {
+    if (origin && !ADMIN_ALLOWED_ORIGINS.has(origin) && !isLocalOrigin) {
+      res.status(403).end();
+    } else {
+      res.status(204).end();
+    }
+    return false;
+  }
+
+  if (origin && !ADMIN_ALLOWED_ORIGINS.has(origin) && !isLocalOrigin) {
+    res.status(403).json({
+      success: false,
+      error: 'Origem não autorizada.'
+    });
+    return false;
+  }
+
+  return true;
+}
+
+function assertPlainObject(value, message) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(message);
+  }
+}
+
+function normalizePositiveInteger(value, field, nullable = false) {
+  if (nullable && (value === null || value === '')) return null;
+  const normalized = Number(value);
+  if (!Number.isInteger(normalized) || normalized <= 0) {
+    throw new Error(`${field} deve ser um número inteiro positivo.`);
+  }
+  return normalized;
+}
+
+function normalizeOptionalText(value, field, maxLength) {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value !== 'string') {
+    throw new Error(`${field} deve ser um texto.`);
+  }
+  const normalized = value.trim();
+  if (normalized.length > maxLength) {
+    throw new Error(`${field} excede o limite de ${maxLength} caracteres.`);
+  }
+  return normalized || null;
+}
+
+function normalizeIsoDate(value, field) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error(`${field} deve estar no formato AAAA-MM-DD.`);
+  }
+
+  const [year, month, day] = value.split('-').map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    throw new Error(`${field} contém uma data inválida.`);
+  }
+  return value;
+}
+
+function rejectUnknownFields(row, allowedFields) {
+  const unknownFields = Object.keys(row).filter(field => !allowedFields.has(field));
+  if (unknownFields.length > 0) {
+    throw new Error(`Campos não permitidos: ${unknownFields.join(', ')}.`);
+  }
+}
+
+function normalizeMutationRow(table, row, operation) {
+  assertPlainObject(row, 'Cada registro deve ser um objeto.');
+
+  if (table === 'jogadores') {
+    rejectUnknownFields(row, new Set(['nome', 'time_id', 'data_cadastro', 'nivel']));
+    const normalized = {};
+
+    if (row.nome !== undefined) {
+      if (typeof row.nome !== 'string' || row.nome.trim().length < 2 || row.nome.trim().length > 60) {
+        throw new Error('nome deve ter entre 2 e 60 caracteres.');
+      }
+      normalized.nome = row.nome.trim();
+    }
+    if (row.time_id !== undefined) {
+      normalized.time_id = normalizePositiveInteger(row.time_id, 'time_id', true);
+    }
+    if (row.data_cadastro !== undefined) {
+      normalized.data_cadastro = normalizeIsoDate(row.data_cadastro, 'data_cadastro');
+    }
+    if (row.nivel !== undefined) {
+      const nivel = Number(row.nivel);
+      if (!Number.isInteger(nivel) || nivel < 1 || nivel > 5) {
+        throw new Error('nivel deve ser um número inteiro entre 1 e 5.');
+      }
+      normalized.nivel = nivel;
+    }
+    if (operation === 'insert' && normalized.nome === undefined) {
+      throw new Error('nome é obrigatório para cadastrar um jogador.');
+    }
+    return normalized;
+  }
+
+  if (table === 'presencas') {
+    rejectUnknownFields(row, new Set(['jogador_id', 'data_pelada', 'observacoes']));
+    const normalized = {};
+
+    if (row.jogador_id !== undefined) {
+      normalized.jogador_id = normalizePositiveInteger(row.jogador_id, 'jogador_id', true);
+    }
+    if (row.data_pelada !== undefined) {
+      normalized.data_pelada = normalizeIsoDate(row.data_pelada, 'data_pelada');
+    }
+    if (row.observacoes !== undefined) {
+      normalized.observacoes = normalizeOptionalText(row.observacoes, 'observacoes', 1000);
+    }
+    if (operation === 'insert' && normalized.data_pelada === undefined) {
+      throw new Error('data_pelada é obrigatória para cadastrar uma presença.');
+    }
+    return normalized;
+  }
+
+  if (table === 'jogadores_aptos') {
+    rejectUnknownFields(row, new Set(['jogador_id']));
+    if (row.jogador_id === undefined) {
+      throw new Error('jogador_id é obrigatório.');
+    }
+    return {
+      jogador_id: normalizePositiveInteger(row.jogador_id, 'jogador_id')
+    };
+  }
+
+  throw new Error('Tabela não permitida.');
+}
+
+function normalizeMutationValues(table, operation, values) {
+  if (operation === 'delete') {
+    if (values !== null && values !== undefined) {
+      throw new Error('DELETE não aceita valores.');
+    }
+    return null;
+  }
+
+  const rows = Array.isArray(values) ? values : [values];
+  if (rows.length === 0 || rows.length > 100) {
+    throw new Error('A operação deve conter entre 1 e 100 registros.');
+  }
+  if (operation === 'update' && rows.length !== 1) {
+    throw new Error('UPDATE aceita somente um registro por chamada.');
+  }
+
+  const normalizedRows = rows.map(row => normalizeMutationRow(table, row, operation));
+  if (operation === 'update' && Object.keys(normalizedRows[0]).length === 0) {
+    throw new Error('Nenhum campo válido foi informado para atualização.');
+  }
+
+  return Array.isArray(values) ? normalizedRows : normalizedRows[0];
+}
+
+function normalizeMutationFilters(table, operation, filters) {
+  const normalizedFilters = Array.isArray(filters) ? filters : [];
+
+  if (operation === 'insert') {
+    if (normalizedFilters.length !== 0) {
+      throw new Error('INSERT não aceita filtros.');
+    }
+    return [];
+  }
+
+  if (normalizedFilters.length !== 1) {
+    throw new Error(`${operation.toUpperCase()} exige exatamente um filtro permitido.`);
+  }
+
+  const filter = normalizedFilters[0];
+  assertPlainObject(filter, 'Filtro inválido.');
+
+  if (table === 'jogadores' && filter.operator === 'eq' && filter.column === 'id') {
+    return [{
+      operator: 'eq',
+      column: 'id',
+      value: normalizePositiveInteger(filter.value, 'id')
+    }];
+  }
+
+  if (table === 'presencas' && filter.operator === 'eq' && filter.column === 'id') {
+    return [{
+      operator: 'eq',
+      column: 'id',
+      value: normalizePositiveInteger(filter.value, 'id')
+    }];
+  }
+
+  if (
+    table === 'presencas' &&
+    operation === 'delete' &&
+    filter.operator === 'eq' &&
+    filter.column === 'data_pelada'
+  ) {
+    return [{
+      operator: 'eq',
+      column: 'data_pelada',
+      value: normalizeIsoDate(filter.value, 'data_pelada')
+    }];
+  }
+
+  if (
+    table === 'jogadores_aptos' &&
+    operation === 'delete' &&
+    filter.operator === 'in' &&
+    filter.column === 'jogador_id' &&
+    Array.isArray(filter.value) &&
+    filter.value.length <= 500
+  ) {
+    return [{
+      operator: 'in',
+      column: 'jogador_id',
+      value: filter.value.map(value => normalizePositiveInteger(value, 'jogador_id'))
+    }];
+  }
+
+  throw new Error('Combinação de tabela, operação e filtro não permitida.');
+}
+
+function normalizeSelect(table, select) {
+  if (select === null || select === undefined || select === '') return null;
+  if (typeof select !== 'string') throw new Error('Seleção de retorno inválida.');
+
+  const fields = select.split(',').map(field => field.trim()).filter(Boolean);
+  const allowedFields = ADMIN_TABLE_FIELDS[table];
+  if (
+    fields.length === 0 ||
+    fields.length > allowedFields.size ||
+    fields.some(field => !allowedFields.has(field))
+  ) {
+    throw new Error('A seleção contém colunas não permitidas.');
+  }
+  return fields.join(',');
+}
+
+async function executeSupabaseMutation(request) {
+  assertPlainObject(request, 'Corpo da requisição inválido.');
+
+  const table = request.table;
+  const operation = request.operation;
+  if (!ADMIN_TABLE_FIELDS[table]) throw new Error('Tabela não permitida.');
+  if (!['insert', 'update', 'delete'].includes(operation)) {
+    throw new Error('Operação não permitida.');
+  }
+  if (table === 'jogadores_aptos' && operation === 'update') {
+    throw new Error('Atualização direta de jogadores aptos não é permitida.');
+  }
+
+  const values = normalizeMutationValues(table, operation, request.values);
+  const filters = normalizeMutationFilters(table, operation, request.filters);
+  const select = normalizeSelect(table, request.select);
+  const single = request.single === true;
+  if (single && !select) throw new Error('single exige uma seleção de retorno.');
+
+  // Um IN vazio representa uma exclusão sem alvos e deve ser um no-op.
+  if (filters.some(filter => filter.operator === 'in' && filter.value.length === 0)) {
+    return single ? null : [];
+  }
+
+  const baseUrl = SUPABASE_PROJECT_URL.value().replace(/\/+$/, '');
+  const url = new URL(`${baseUrl}/rest/v1/${table}`);
+
+  for (const filter of filters) {
+    if (filter.operator === 'eq') {
+      url.searchParams.set(filter.column, `eq.${filter.value}`);
+    } else {
+      url.searchParams.set(filter.column, `in.(${filter.value.join(',')})`);
+    }
+  }
+  if (select) url.searchParams.set('select', select);
+
+  const method = {
+    insert: 'POST',
+    update: 'PATCH',
+    delete: 'DELETE'
+  }[operation];
+
+  const adminKey = SUPABASE_ADMIN_KEY.value();
+  if (!adminKey) {
+    throw new Error('SUPABASE_ADMIN_KEY não está configurada.');
+  }
+
+  const headers = {
+    apikey: adminKey,
+    'Content-Type': 'application/json',
+    Prefer: select ? 'return=representation' : 'return=minimal'
+  };
+
+  // Chaves novas sb_secret_ não são JWTs e usam somente apikey. A chave
+  // service_role legada continua exigindo o Bearer JWT.
+  if (!adminKey.startsWith('sb_secret_')) {
+    headers.Authorization = `Bearer ${adminKey}`;
+  }
+
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: operation === 'delete' ? undefined : JSON.stringify(values)
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const error = new Error(errorBody.message || errorBody.hint || 'Erro ao gravar no Supabase.');
+    error.code = errorBody.code || `supabase_${response.status}`;
+    throw error;
+  }
+
+  if (!select) return null;
+  const data = await response.json();
+  return single ? (data[0] || null) : data;
+}
+
+/**
+ * Escritas administrativas no Supabase.
+ * Leituras públicas permanecem no navegador sob RLS; qualquer mutação passa
+ * por token Firebase, claim/UID administrativo e validação de payload.
+ */
+exports.adminSupabaseWrite = onRequest(
+  {
+    region: 'us-central1',
+    secrets: [SUPABASE_ADMIN_KEY],
+    timeoutSeconds: 30,
+    memory: '256MiB',
+    invoker: 'public'
+  },
+  async (req, res) => {
+    if (!configureAdminCors(req, res)) return;
+
+    const caller = await requireAdminRequest(req, res);
+    if (!caller) return;
+
+    try {
+      const data = await executeSupabaseMutation(req.body);
+      console.log(`✅ ${caller.uid}: ${req.body.operation} em ${req.body.table}`);
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      console.error(`❌ Escrita administrativa rejeitada para ${caller.uid}:`, error);
+      res.status(400).json({
+        success: false,
+        code: error.code || 'invalid_admin_mutation',
+        error: error.message
+      });
+    }
+  }
+);
 
 /**
  * Notificações de Segunda a Quarta às 08:00
@@ -405,8 +861,11 @@ async function sendToWebPush(title, body) {
  * Função para testar notificações manualmente
  */
 exports.testNotification = functions.https.onRequest(async (req, res) => {
+  const caller = await requireAdminRequest(req, res);
+  if (!caller) return;
+
   try {
-    console.log('🧪 Teste manual de notificação iniciado...');
+    console.log(`🧪 Teste manual de notificação iniciado por ${caller.uid}...`);
     
     // Buscar jogos de hoje
     const today = new Date();
@@ -463,6 +922,8 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
     const iosErrors = [];
     
     try {
+      initWebPush();
+
       const subscriptions = [];
       iosSubsSnapshot.forEach(doc => {
         const data = doc.data();
@@ -542,8 +1003,11 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
  * Função para testar notificações de segunda a quarta manualmente
  */
 exports.testWeekNotification = functions.https.onRequest(async (req, res) => {
+  const caller = await requireAdminRequest(req, res);
+  if (!caller) return;
+
   try {
-    console.log('🧪 Teste manual de notificação da semana iniciado...');
+    console.log(`🧪 Teste manual de notificação da semana iniciado por ${caller.uid}...`);
     
     // Calcular data da próxima quinta-feira
     const today = new Date();
@@ -644,8 +1108,11 @@ exports.testWeekNotification = functions.https.onRequest(async (req, res) => {
  * Função para forçar teste de notificação (sempre envia)
  */
 exports.forceTestNotification = functions.https.onRequest(async (req, res) => {
+  const caller = await requireAdminRequest(req, res);
+  if (!caller) return;
+
   try {
-    console.log('🧪 Teste forçado de notificação iniciado...');
+    console.log(`🧪 Teste forçado de notificação iniciado por ${caller.uid}...`);
     
     const title = '🧪 Teste de Notificação';
     const body = 'Se você recebeu isso, as notificações estão funcionando perfeitamente!';

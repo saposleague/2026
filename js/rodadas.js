@@ -2,6 +2,7 @@
 import { app } from './firebase-config.js';
 import { getFirestore, collection, getDocs, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 import { requireAuth, setupLogout } from './auth-guard.js';
+import { escapeHtml } from './security-utils.js';
 
 const db = getFirestore(app);
 
@@ -378,19 +379,19 @@ function atualizarPopup() {
       jogoDiv.className = "jogo";
       jogoDiv.innerHTML = `
         <div class="jogo-info">
-          <strong>${nomeA}</strong> ${golsAExibir} x ${golsBExibir} <strong>${nomeB}</strong>
+          <strong>${escapeHtml(nomeA)}</strong> ${escapeHtml(golsAExibir)} x ${escapeHtml(golsBExibir)} <strong>${escapeHtml(nomeB)}</strong>
           <br>
-          <small style="color: #6c757d;">📅 ${dataFormatada} • ⏰ ${j.hora}</small>
+          <small style="color: #6c757d;">📅 ${dataFormatada} • ⏰ ${escapeHtml(j.hora)}</small>
         </div>
         <button class="botao-editar-jogo"
-                            data-rodada-num="${r.numero}"
+                            data-rodada-num="${escapeHtml(r.numero)}"
                             data-jogo-index="${jogoIndex}"
-                            data-data="${j.data}"
-                            data-hora="${j.hora}"
-                            data-time-a-id="${j.timeA}"
-                            data-gols-a="${j.golsA === undefined || j.golsA === null ? '' : j.golsA}"
-                            data-time-b-id="${j.timeB}"
-                            data-gols-b="${j.golsB === undefined || j.golsB === null ? '' : j.golsB}">
+                            data-data="${escapeHtml(j.data)}"
+                            data-hora="${escapeHtml(j.hora)}"
+                            data-time-a-id="${escapeHtml(j.timeA)}"
+                            data-gols-a="${escapeHtml(j.golsA === undefined || j.golsA === null ? '' : j.golsA)}"
+                            data-time-b-id="${escapeHtml(j.timeB)}"
+                            data-gols-b="${escapeHtml(j.golsB === undefined || j.golsB === null ? '' : j.golsB)}">
                           ✏️ Editar
                         </button>
       `;

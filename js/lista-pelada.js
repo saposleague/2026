@@ -52,7 +52,7 @@ function showError(message) {
     teamsContainer.innerHTML = `
         <div class="error-message">
             <h3>❌ Erro ao carregar dados</h3>
-            <p>${message}</p>
+            <p>${escapeHtml(message)}</p>
             <div class="error-details">
                 <p><strong>Possíveis soluções:</strong></p>
                 <ul>
@@ -317,11 +317,15 @@ function renderTeamsAndPlayers() {
             playersCount: teamPlayers.length 
         });
         
+        const teamIdSeguro = escapeHtml(team.id);
+        const teamNomeSeguro = escapeHtml(team.nome);
+        const logoSeguro = safeHttpUrl(team.logo_url);
+
         html += `
-            <div class="team-card" data-team-id="${team.id}" data-team-name="${team.nome}">
+            <div class="team-card" data-team-id="${teamIdSeguro}" data-team-name="${teamNomeSeguro}">
                 <div class="team-header">
-                    ${team.logo_url ? `<img src="${team.logo_url}" alt="${team.nome}" class="team-logo">` : ''}
-                    <h3 class="team-name">${team.nome}</h3>
+                    ${logoSeguro ? `<img src="${logoSeguro}" alt="${teamNomeSeguro}" class="team-logo">` : ''}
+                    <h3 class="team-name">${teamNomeSeguro}</h3>
                 </div>
                 <div class="players-list">
         `;
@@ -338,8 +342,8 @@ function renderTeamsAndPlayers() {
                 // Se as presenças ainda não carregaram, mostra status temporário
                 if (presencasData.length === 0) {
                     html += `
-                        <div class="player-item loading-status" data-player-id="${player.id}" data-player-name="${player.nome}">
-                            <span class="player-name">${player.nome}</span>
+                        <div class="player-item loading-status" data-player-id="${escapeHtml(player.id)}" data-player-name="${escapeHtml(player.nome)}">
+                            <span class="player-name">${escapeHtml(player.nome)}</span>
                             <span class="player-status loading-presenca">
                                 <span class="loading-dots">Carregando status...</span>
                             </span>
@@ -359,8 +363,8 @@ function renderTeamsAndPlayers() {
                     }
 
                     html += `
-                        <div class="player-item ${statusClass}" data-player-id="${player.id}" data-player-name="${player.nome}">
-                            <span class="player-name">${player.nome}</span>
+                        <div class="player-item ${statusClass}" data-player-id="${escapeHtml(player.id)}" data-player-name="${escapeHtml(player.nome)}">
+                            <span class="player-name">${escapeHtml(player.nome)}</span>
                             <span class="player-status">${statusText}</span>
                         </div>
                     `;
@@ -772,7 +776,7 @@ async function filterPeladas() {
                 html += `
                     <div class="jogador-item">
                         <span class="jogador-numero">${index + 1}</span>
-                        <span class="jogador-nome">${presenca.jogadores.nome}</span>
+                        <span class="jogador-nome">${escapeHtml(presenca.jogadores.nome)}</span>
                     </div>
                 `;
             }
@@ -807,7 +811,7 @@ function showError(message) {
     teamsContainer.innerHTML = `
         <div class="error-message">
             <h3>Erro de Conexão</h3>
-            <p>${message}</p>
+            <p>${escapeHtml(message)}</p>
             <div class="error-details">
                 <p><strong>Possíveis causas:</strong></p>
                 <ul>
@@ -904,8 +908,8 @@ function showTeamPlayersInline(selectedTeamCard) {
             // Se as presenças ainda não carregaram, mostra status temporário
             if (presencasData.length === 0) {
                 html += `
-                    <div class="player-item loading-status" data-player-id="${player.id}" data-player-name="${player.nome}">
-                        <span class="player-name">${player.nome}</span>
+                    <div class="player-item loading-status" data-player-id="${escapeHtml(player.id)}" data-player-name="${escapeHtml(player.nome)}">
+                        <span class="player-name">${escapeHtml(player.nome)}</span>
                         <span class="player-status loading-presenca">
                             <span class="loading-dots">Carregando status...</span>
                         </span>
@@ -924,8 +928,8 @@ function showTeamPlayersInline(selectedTeamCard) {
                 }
 
                 html += `
-                    <div class="player-item ${statusClass}" data-player-id="${player.id}" data-player-name="${player.nome}">
-                        <span class="player-name">${player.nome}</span>
+                    <div class="player-item ${statusClass}" data-player-id="${escapeHtml(player.id)}" data-player-name="${escapeHtml(player.nome)}">
+                        <span class="player-name">${escapeHtml(player.nome)}</span>
                         <span class="player-status">${statusText}</span>
                     </div>
                 `;

@@ -2,6 +2,7 @@
 import { app } from './firebase-config.js';
 import { getFirestore, collection, getDocs, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 import { requireAuth, setupLogout } from './auth-guard.js';
+import { escapeHtml, safeHttpUrl } from './security-utils.js';
 
 const db = getFirestore(app);
 
@@ -274,16 +275,16 @@ function mostrarPrevia() {
             <div class="jogos-list">
                 ${rodada.jogos.map((jogo, jogoIndex) => `
                     <div class="jogo-preview" data-jogo-index="${jogoIndex}">
-                        <div class="jogo-hora">${jogo.hora}</div>
+                        <div class="jogo-hora">${escapeHtml(jogo.hora)}</div>
                         <div class="jogo-times">
                             <div class="time-info">
-                                <img src="${jogo.timeAIcone || 'images/favicon.png'}" alt="${jogo.timeANome}" class="icone-time">
-                                <span class="nome-time">${jogo.timeANome}</span>
+                                <img src="${safeHttpUrl(jogo.timeAIcone, './images/favicon.png')}" alt="${escapeHtml(jogo.timeANome)}" class="icone-time">
+                                <span class="nome-time">${escapeHtml(jogo.timeANome)}</span>
                             </div>
                             <span class="vs-separator">×</span>
                             <div class="time-info">
-                                <img src="${jogo.timeBIcone || 'images/favicon.png'}" alt="${jogo.timeBNome}" class="icone-time">
-                                <span class="nome-time">${jogo.timeBNome}</span>
+                                <img src="${safeHttpUrl(jogo.timeBIcone, './images/favicon.png')}" alt="${escapeHtml(jogo.timeBNome)}" class="icone-time">
+                                <span class="nome-time">${escapeHtml(jogo.timeBNome)}</span>
                             </div>
                         </div>
                     </div>
@@ -380,16 +381,16 @@ function atualizarVisualizacaoRodada(rodadaIndex) {
     
     jogosListDiv.innerHTML = rodada.jogos.map((jogo, jogoIndex) => `
         <div class="jogo-preview" data-jogo-index="${jogoIndex}">
-            <div class="jogo-hora">${jogo.hora}</div>
+            <div class="jogo-hora">${escapeHtml(jogo.hora)}</div>
             <div class="jogo-times">
                 <div class="time-info">
-                    <img src="${jogo.timeAIcone || 'images/favicon.png'}" alt="${jogo.timeANome}" class="icone-time">
-                    <span class="nome-time">${jogo.timeANome}</span>
+                    <img src="${safeHttpUrl(jogo.timeAIcone, './images/favicon.png')}" alt="${escapeHtml(jogo.timeANome)}" class="icone-time">
+                    <span class="nome-time">${escapeHtml(jogo.timeANome)}</span>
                 </div>
                 <span class="vs-separator">×</span>
                 <div class="time-info">
-                    <img src="${jogo.timeBIcone || 'images/favicon.png'}" alt="${jogo.timeBNome}" class="icone-time">
-                    <span class="nome-time">${jogo.timeBNome}</span>
+                    <img src="${safeHttpUrl(jogo.timeBIcone, './images/favicon.png')}" alt="${escapeHtml(jogo.timeBNome)}" class="icone-time">
+                    <span class="nome-time">${escapeHtml(jogo.timeBNome)}</span>
                 </div>
             </div>
         </div>

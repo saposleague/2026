@@ -276,16 +276,18 @@ function mostrarPreview() {
         <div class="preview-info">
             <p><strong>Data:</strong> ${formatDate(currentPeladaData.data)}</p>
             <p><strong>Total de jogadores:</strong> ${currentPeladaData.jogadores.length}</p>
-            ${currentPeladaData.observacoes ? `<p><strong>Observações:</strong> ${currentPeladaData.observacoes}</p>` : ''}
+            ${currentPeladaData.observacoes ? `<p><strong>Observações:</strong> ${escapeHtml(currentPeladaData.observacoes)}</p>` : ''}
         </div>
         <div class="jogadores-lista">
     `;
     
     currentPeladaData.jogadores.forEach((player, index) => {
         const statusClass = player.status === 'duplicado' ? 'duplicado' : 'ok';
+        const nomeOriginalSeguro = escapeHtml(player.nomeOriginal);
+        const nomeCorrigidoSeguro = escapeHtml(player.nomeCorrigido);
         const nomeDisplay = player.nomeOriginal !== player.nomeCorrigido ? 
-            `${player.nomeOriginal} → <strong>${player.nomeCorrigido}</strong>` : 
-            player.nomeCorrigido;
+            `${nomeOriginalSeguro} → <strong>${nomeCorrigidoSeguro}</strong>` :
+            nomeCorrigidoSeguro;
         
         html += `
             <div class="jogador-item ${statusClass}">
@@ -329,8 +331,8 @@ function editarNomeInline(index) {
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label class="form-label" for="novo-nome-input">Nome atual: <strong>${player.nomeCorrigido}</strong></label>
-                        <input type="text" id="novo-nome-input" class="form-input" value="${player.nomeCorrigido}" placeholder="Digite o novo nome">
+                        <label class="form-label" for="novo-nome-input">Nome atual: <strong>${escapeHtml(player.nomeCorrigido)}</strong></label>
+                        <input type="text" id="novo-nome-input" class="form-input" value="${escapeHtml(player.nomeCorrigido)}" placeholder="Digite o novo nome">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -430,7 +432,7 @@ function confirmarCadastro() {
         <div class="confirm-details">
             <p><strong>Data:</strong> ${formatDate(currentPeladaData.data)}</p>
             <p><strong>Jogadores:</strong> ${currentPeladaData.jogadores.length}</p>
-            ${currentPeladaData.observacoes ? `<p><strong>Observações:</strong> ${currentPeladaData.observacoes}</p>` : ''}
+            ${currentPeladaData.observacoes ? `<p><strong>Observações:</strong> ${escapeHtml(currentPeladaData.observacoes)}</p>` : ''}
         </div>
     `;
     
@@ -1021,7 +1023,7 @@ async function abrirGerenciadorPeladas() {
                     <div class="empty-state">
                         <div class="empty-icon">❌</div>
                         <div class="empty-title">Erro ao carregar dados</div>
-                        <div class="empty-text">${error.message}</div>
+                        <div class="empty-text">${escapeHtml(error.message)}</div>
                     </div>
                 `;
             }
@@ -1306,22 +1308,26 @@ function renderizarPeladas() {
                 
                 <div class="pelada-players">
                     <div class="players-label">Jogadores:</div>
-                    <div class="players-list">${jogadoresUnicos.slice(0, 8).join(', ')}
+                    <div class="players-list">${jogadoresUnicos.slice(0, 8).map(escapeHtml).join(', ')}
                     ${jogadoresUnicos.length > 8 ? `... e mais ${jogadoresUnicos.length - 8}` : ''}</div>
                 </div>
                 
                 ${pelada.observacoes ? `
                     <div class="pelada-observations">
                         <div class="obs-label">Observações:</div>
-                        <div class="obs-text">${pelada.observacoes}</div>
+                        <div class="obs-text">${escapeHtml(pelada.observacoes)}</div>
                     </div>
                 ` : ''}
                 
                 <div class="pelada-actions">
-                    <button class="action-btn btn-edit" onclick="editarPeladaExistente('${pelada.data}')">
+                    <button class="action-btn btn-edit"
+                            data-pelada-data="${escapeHtml(pelada.data)}"
+                            onclick="editarPeladaExistente(this.dataset.peladaData)">
                         ✏️ Editar
                     </button>
-                    <button class="action-btn btn-delete" onclick="excluirPelada('${pelada.data}')">
+                    <button class="action-btn btn-delete"
+                            data-pelada-data="${escapeHtml(pelada.data)}"
+                            onclick="excluirPelada(this.dataset.peladaData)">
                         🗑️ Excluir
                     </button>
                 </div>
@@ -1552,12 +1558,12 @@ function mostrarEditorPelada(dataPelada, jogadores) {
                     <div class="info-grid">
                         <div class="info-campo">
                             <label for="edit-data-pelada">Data da Pelada:</label>
-                            <input type="date" id="edit-data-pelada" value="${dataPelada}">
+                            <input type="date" id="edit-data-pelada" value="${escapeHtml(dataPelada)}">
                         </div>
                         <div class="info-campo">
                             <label for="edit-observacoes">Observações:</label>
                             <textarea id="edit-observacoes" 
-                                      placeholder="Observações sobre a pelada, local, horário, etc.">${jogadores[0]?.observacoes?.replace(/Jogador não cadastrado: .+? \(/, '')?.replace(/\)$/, '') || ''}</textarea>
+                                      placeholder="Observações sobre a pelada, local, horário, etc.">${escapeHtml(jogadores[0]?.observacoes?.replace(/Jogador não cadastrado: .+? \(/, '')?.replace(/\)$/, '') || '')}</textarea>
                         </div>
                     </div>
                 </div>
@@ -1577,7 +1583,7 @@ function mostrarEditorPelada(dataPelada, jogadores) {
                                 .replace(/\)$/, '')
                                 .trim();
                             if (observacoesLimpa && observacoesLimpa !== jogador.nome) {
-                                infoAdicional = `<div style="font-size: 11px; color: #6c757d; margin-top: 2px;">📝 ${observacoesLimpa}</div>`;
+                                infoAdicional = `<div style="font-size: 11px; color: #6c757d; margin-top: 2px;">📝 ${escapeHtml(observacoesLimpa)}</div>`;
                             }
                         }
                         
@@ -1588,14 +1594,16 @@ function mostrarEditorPelada(dataPelada, jogadores) {
                                     
                                     <div class="jogador-campo">
                                         <input type="text" 
-                                               value="${jogador.nome}" 
-                                               data-id="${jogador.id}"
-                                               data-jogador-id="${jogador.jogador_id || ''}"
-                                               data-original-nome="${jogador.nomeOriginal}"
+                                               value="${escapeHtml(jogador.nome)}"
+                                               data-id="${escapeHtml(jogador.id)}"
+                                               data-jogador-id="${escapeHtml(jogador.jogador_id || '')}"
+                                               data-original-nome="${escapeHtml(jogador.nomeOriginal)}"
+                                               data-info-index="${index}"
+                                               data-observacoes="${escapeHtml(jogador.observacoes || '')}"
                                                class="nome-jogador-input"
                                                placeholder="Nome do jogador"
                                                oninput="buscarJogadoresSugestao(this)"
-                                               onclick="mostrarInfoJogador(${index}, '${jogador.nome}', '${jogador.jogador_id}', '${jogador.observacoes || ''}')">
+                                               onclick="mostrarInfoJogador(this)">
                                         ${infoAdicional}
                                         <div class="sugestoes-container"></div>
                                     </div>
@@ -1604,7 +1612,9 @@ function mostrarEditorPelada(dataPelada, jogadores) {
                                         <div class="status-indicador ${statusClass}">
                                             ${statusIcon} ${statusText}
                                         </div>
-                                        <button class="btn-remover" onclick="removerJogadorPelada(${jogador.id})">
+                                        <button class="btn-remover"
+                                                data-presenca-id="${escapeHtml(jogador.id)}"
+                                                onclick="removerJogadorPelada(this.dataset.presencaId)">
                                             🗑️ Remover
                                         </button>
                                     </div>
@@ -1619,7 +1629,10 @@ function mostrarEditorPelada(dataPelada, jogadores) {
                 </div>
                 
                 <div class="editor-acoes">
-                    <button class="btn-salvar" onclick="salvarEdicaoPelada('${dataPelada}')">
+                    <button id="btn-salvar-edicao-pelada"
+                            class="btn-salvar"
+                            data-pelada-data="${escapeHtml(dataPelada)}"
+                            onclick="salvarEdicaoPelada(this.dataset.peladaData)">
                         💾 Salvar Alterações
                     </button>
                     <button class="btn-cancelar" onclick="fecharEditorPelada()">
@@ -1695,9 +1708,10 @@ function mostrarSugestoes(input, jogadores, container) {
         const timeNome = jogador.times ? jogador.times.nome : 'Sem time';
         html += `
             <div class="sugestao-item" 
-                 onclick="selecionarJogadorSugestao(this, '${jogador.nome}')">
-                <div class="jogador-nome">${jogador.nome}</div>
-                <div class="jogador-time">${timeNome}</div>
+                 data-jogador-nome="${escapeHtml(jogador.nome)}"
+                 onclick="selecionarJogadorSugestao(this, this.dataset.jogadorNome)">
+                <div class="jogador-nome">${escapeHtml(jogador.nome)}</div>
+                <div class="jogador-time">${escapeHtml(timeNome)}</div>
             </div>
         `;
     });
@@ -1759,6 +1773,16 @@ function mostrarFeedbackJogador(input, mensagem, tipo) {
             feedback.remove();
         }
     }, 3000);
+}
+
+function encontrarInputPorId(id) {
+    return Array.from(document.querySelectorAll('.nome-jogador-input'))
+        .find(input => input.dataset.id === String(id)) || null;
+}
+
+function encontrarNovoInputPorNome(nome) {
+    return Array.from(document.querySelectorAll('.nome-jogador-input[data-id="novo"]'))
+        .find(input => input.value === nome) || null;
 }
 
 // Adicionar animação CSS
@@ -1850,8 +1874,9 @@ async function removerJogadorPelada(presencaId) {
             if (error) throw error;
             
             // Remove o elemento da tela
-            const jogadorElement = document.querySelector(`[data-id="${presencaId}"]`).closest('.jogador-editavel');
-            jogadorElement.remove();
+            const inputJogador = encontrarInputPorId(presencaId);
+            const jogadorElement = inputJogador?.closest('.jogador-editavel');
+            jogadorElement?.remove();
             
                                     showSuccess('Sucesso!', 'Jogador removido com sucesso!', 5000);
             
@@ -1910,7 +1935,7 @@ async function salvarEdicaoPelada(dataAntiga) {
         }
         
         // Mostra loading
-        const btnSalvar = document.querySelector('[onclick="salvarEdicaoPelada(\'' + dataAntiga + '\')"]');
+        const btnSalvar = document.getElementById('btn-salvar-edicao-pelada');
         const textoOriginal = btnSalvar.textContent;
         btnSalvar.disabled = true;
         btnSalvar.textContent = '💾 Salvando...';
@@ -2082,7 +2107,7 @@ async function salvarEdicaoPelada(dataAntiga) {
                     console.log('✅ Presença inserida com sucesso!');
                     
                     // Feedback visual
-                    const input = document.querySelector(`[data-id="novo"][value="${jogador.nome}"]`);
+                    const input = encontrarNovoInputPorNome(jogador.nome);
                     if (input) {
                         mostrarFeedbackJogador(input, mensagemFeedback, dadosPresenca.jogador_id ? 'success' : 'warning');
                     }
@@ -2103,7 +2128,7 @@ async function salvarEdicaoPelada(dataAntiga) {
                                 .eq('id', jogador.id);
                             if (error) throw error;
                             console.log('✅ Presença atualizada (sem mudança de nome)');
-                            const input = document.querySelector(`[data-id="${jogador.id}"]`);
+                            const input = encontrarInputPorId(jogador.id);
                             if (input) mostrarFeedbackJogador(input, '✅ Atualizado', 'success');
                         } else {
                             // Nome mudou: tentar re-vincular a um outro jogador (ou criar)
@@ -2161,7 +2186,7 @@ async function salvarEdicaoPelada(dataAntiga) {
                                 .eq('id', jogador.id);
                             if (error) throw error;
                             console.log('✅ Presença re-vinculada a outro jogador');
-                            const input = document.querySelector(`[data-id="${jogador.id}"]`);
+                            const input = encontrarInputPorId(jogador.id);
                             if (input) mostrarFeedbackJogador(input, '🔗 Vinculado ao jogador atualizado', 'success');
                         }
                     } else {
@@ -2213,7 +2238,7 @@ async function salvarEdicaoPelada(dataAntiga) {
                             .eq('id', jogador.id);
                         if (error) throw error;
                         console.log('✅ Presença vinculada a jogador (antes sem vínculo)');
-                        const input = document.querySelector(`[data-id="${jogador.id}"]`);
+                        const input = encontrarInputPorId(jogador.id);
                         if (input) mostrarFeedbackJogador(input, '🔗 Vinculado ao jogador', 'success');
                     }
                 }
@@ -2226,7 +2251,7 @@ async function salvarEdicaoPelada(dataAntiga) {
                 console.error(`❌ Erro ao processar jogador "${jogador.nome}":`, error);
                 
                 // Feedback visual de erro
-                const input = document.querySelector(`[data-id="${jogador.id}"], [data-id="novo"][value="${jogador.nome}"]`);
+                const input = encontrarInputPorId(jogador.id) || encontrarNovoInputPorNome(jogador.nome);
                 if (input) {
                     mostrarFeedbackJogador(input, `❌ Erro: ${error.message}`, 'error');
                 }
@@ -2251,7 +2276,7 @@ async function salvarEdicaoPelada(dataAntiga) {
         showError('Erro!', `Erro ao salvar edição: ${error.message}`);
         
         // Restaura botão
-        const btnSalvar = document.querySelector('[onclick="salvarEdicaoPelada(\'' + dataAntiga + '\')"]');
+        const btnSalvar = document.getElementById('btn-salvar-edicao-pelada');
         btnSalvar.disabled = false;
         btnSalvar.textContent = '💾 Salvar Alterações';
         btnSalvar.style.background = '#28a745';
@@ -2285,7 +2310,11 @@ async function excluirPelada(dataPelada) {
 }
 
 // Função para mostrar informações detalhadas do jogador
-function mostrarInfoJogador(index, nome, jogadorId, observacoes) {
+function mostrarInfoJogador(input) {
+    const index = Number(input.dataset.infoIndex);
+    const nome = input.value;
+    const jogadorId = input.dataset.jogadorId || '';
+    const observacoes = input.dataset.observacoes || '';
     console.log('🔍 Informações do jogador:', {
         index: index,
         nome: nome,
@@ -2386,9 +2415,17 @@ async function carregarTimes() {
         // Preenche o select de times
         const selectTime = document.getElementById('filtro-time-aptos');
         if (selectTime) {
-            selectTime.innerHTML = '<option value="">Selecione um time...</option>';
+            selectTime.replaceChildren();
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Selecione um time...';
+            selectTime.appendChild(placeholder);
+
             timesData.forEach(time => {
-                selectTime.innerHTML += `<option value="${time.id}">${time.nome}</option>`;
+                const option = document.createElement('option');
+                option.value = String(time.id);
+                option.textContent = time.nome;
+                selectTime.appendChild(option);
             });
         }
         
@@ -2481,10 +2518,10 @@ function renderizarJogadoresAptos(jogadores) {
                 <label class="checkbox-container">
                     <input type="checkbox" 
                            class="checkbox-apto" 
-                           data-jogador-id="${jogador.id}"
+                           data-jogador-id="${escapeHtml(jogador.id)}"
                            ${isApto ? 'checked' : ''}>
                     <span class="checkmark"></span>
-                    <span class="jogador-nome-apto">${jogador.nome}</span>
+                    <span class="jogador-nome-apto">${escapeHtml(jogador.nome)}</span>
                 </label>
             </div>
         `;

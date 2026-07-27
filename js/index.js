@@ -1,6 +1,7 @@
 // index.js
 import { app } from './firebase-config.js'; // Importa o app do arquivo de configuração
 import { getFirestore, collection, onSnapshot, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { escapeHtml, safeHttpUrl } from './security-utils.js';
 
 const db = getFirestore(app);
 
@@ -325,10 +326,12 @@ function renderizarTabela(tabelaData) {
 
   lista.forEach((time, index) => {
     const posClass = `pos-${index + 1}`;
+    const nomeSeguro = escapeHtml(time.nome);
+    const iconeSeguro = safeHttpUrl(time.iconeURL, './images/favicon.png');
     tabelaContainer.innerHTML += `
       <tr>
         <td class='posicao ${posClass}'>${index + 1}</td>
-        <td><div class="tabela-time"><img src="${time.iconeURL || `img/icones/${time.nome}.png`}" class="icone-time">${time.nome}</div></td>
+        <td><div class="tabela-time"><img src="${iconeSeguro}" alt="${nomeSeguro}" class="icone-time">${nomeSeguro}</div></td>
         <td>${time.PTS}</td><td>${time.J}</td><td>${time.V}</td><td>${time.E}</td><td>${time.D}</td><td>${time.GP}</td><td>${time.GC}</td><td>${time.SG}</td><td>${time['%']}%</td>
       </tr>`;
   });
@@ -362,24 +365,26 @@ function mostrarRodada() {
 
     const timeA = times.find(t => t.id === jogo.timeA) || { nome: jogo.timeA, iconeURL: `img/icones/default.png` };
     const timeB = times.find(t => t.id === jogo.timeB) || { nome: jogo.timeB, iconeURL: `img/icones/default.png` };
-    const iconeA = timeA.iconeURL || `img/icones/${timeA.nome}.png`;
-    const iconeB = timeB.iconeURL || `img/icones/${timeB.nome}.png`;
+    const iconeA = safeHttpUrl(timeA.iconeURL, './images/favicon.png');
+    const iconeB = safeHttpUrl(timeB.iconeURL, './images/favicon.png');
+    const nomeA = escapeHtml(timeA.nome);
+    const nomeB = escapeHtml(timeB.nome);
 
     div.innerHTML = `
-      <div class="jogo-cabecalho">${dataFormatada} • ${jogo.hora}</div>
+      <div class="jogo-cabecalho">${dataFormatada} • ${escapeHtml(jogo.hora)}</div>
       <div class="jogo-conteudo alinhado">
         <div class="time">
-          <img src="${iconeA}" alt="${timeA.nome}" class="icone-time">
-          <span class="nome-time">${timeA.nome}</span>
+          <img src="${iconeA}" alt="${nomeA}" class="icone-time">
+          <span class="nome-time">${nomeA}</span>
         </div>
         <div class="placar">
-          <span class="gols">${jogo.golsA ?? "-"}</span>
+          <span class="gols">${escapeHtml(jogo.golsA ?? "-")}</span>
           <span>x</span>
-          <span class="gols">${jogo.golsB ?? "-"}</span>
+          <span class="gols">${escapeHtml(jogo.golsB ?? "-")}</span>
         </div>
         <div class="time">
-          <img src="${iconeB}" alt="${timeB.nome}" class="icone-time">
-          <span class="nome-time">${timeB.nome}</span>
+          <img src="${iconeB}" alt="${nomeB}" class="icone-time">
+          <span class="nome-time">${nomeB}</span>
         </div>
       </div>
     `;
@@ -419,27 +424,29 @@ function mostrarFinal() {
     
     const timeA = times.find(t => t.id === jogo.timeA) || { nome: jogo.timeA, iconeURL: `img/icones/default.png` };
     const timeB = times.find(t => t.id === jogo.timeB) || { nome: jogo.timeB, iconeURL: `img/icones/default.png` };
-    const iconeA = timeA.iconeURL || `img/icones/${timeA.nome}.png`;
-    const iconeB = timeB.iconeURL || `img/icones/${timeB.nome}.png`;
+    const iconeA = safeHttpUrl(timeA.iconeURL, './images/favicon.png');
+    const iconeB = safeHttpUrl(timeB.iconeURL, './images/favicon.png');
+    const nomeA = escapeHtml(timeA.nome);
+    const nomeB = escapeHtml(timeB.nome);
     
     container.innerHTML = `
       <div class="final-wrapper">
         <div class="jogo-final">
           <div class="final-badge">GRANDE FINAL</div>
-          <div class="jogo-cabecalho">${dataFormatada} • ${jogo.hora}</div>
+          <div class="jogo-cabecalho">${dataFormatada} • ${escapeHtml(jogo.hora)}</div>
           <div class="jogo-conteudo alinhado">
             <div class="time">
-              <img src="${iconeA}" alt="${timeA.nome}" class="icone-time">
-              <span class="nome-time">${timeA.nome}</span>
+              <img src="${iconeA}" alt="${nomeA}" class="icone-time">
+              <span class="nome-time">${nomeA}</span>
             </div>
             <div class="placar">
-              <span class="gols">${jogo.golsA ?? "-"}</span>
+              <span class="gols">${escapeHtml(jogo.golsA ?? "-")}</span>
               <span>x</span>
-              <span class="gols">${jogo.golsB ?? "-"}</span>
+              <span class="gols">${escapeHtml(jogo.golsB ?? "-")}</span>
             </div>
             <div class="time">
-              <img src="${iconeB}" alt="${timeB.nome}" class="icone-time">
-              <span class="nome-time">${timeB.nome}</span>
+              <img src="${iconeB}" alt="${nomeB}" class="icone-time">
+              <span class="nome-time">${nomeB}</span>
             </div>
           </div>
         </div>
@@ -467,8 +474,8 @@ function mostrarFinal() {
     // Monta HTML para Time A (Fase 1)
     const htmlTimeA = timeFase1 ? `
       <div class="time">
-        <img src="${timeFase1.iconeURL || 'img/icones/default.png'}" alt="${timeFase1.nome}" class="icone-time">
-        <span class="nome-time">${timeFase1.nome}</span>
+        <img src="${safeHttpUrl(timeFase1.iconeURL, './images/favicon.png')}" alt="${escapeHtml(timeFase1.nome)}" class="icone-time">
+        <span class="nome-time">${escapeHtml(timeFase1.nome)}</span>
       </div>
     ` : `
       <div class="time">
@@ -482,8 +489,8 @@ function mostrarFinal() {
     // Monta HTML para Time B (Fase 2)
     const htmlTimeB = timeFase2 ? `
       <div class="time">
-        <img src="${timeFase2.iconeURL || 'img/icones/default.png'}" alt="${timeFase2.nome}" class="icone-time">
-        <span class="nome-time">${timeFase2.nome}</span>
+        <img src="${safeHttpUrl(timeFase2.iconeURL, './images/favicon.png')}" alt="${escapeHtml(timeFase2.nome)}" class="icone-time">
+        <span class="nome-time">${escapeHtml(timeFase2.nome)}</span>
       </div>
     ` : `
       <div class="time">

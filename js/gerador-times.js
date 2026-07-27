@@ -33,8 +33,8 @@ document.getElementById('voltar-button').addEventListener('click', () => {
 // ─── SUPABASE ──────────────────────────────────────────────────────────────
 
 function inicializarSupabase() {
-  if (typeof supabase !== 'undefined' && !db) {
-    db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!db) {
+    db = getSupabaseClient();
     console.log('✅ Supabase inicializado');
   }
 }

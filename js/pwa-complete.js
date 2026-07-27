@@ -168,11 +168,21 @@ class PWAComplete {
             logElement.style.borderLeft = '3px solid ' + this.getTypeColor(log.type);
             logElement.style.paddingLeft = '8px';
 
-            logElement.innerHTML = `
-                <span style="color: #888; font-size: 10px;">[${log.timestamp}]</span>
-                <span style="color: ${this.getTypeColor(log.type)}; font-weight: bold;">[${log.type}]</span>
-                <span style="color: #fff;">${log.message}</span>
-            `;
+            const timestampElement = document.createElement('span');
+            timestampElement.style.cssText = 'color: #888; font-size: 10px;';
+            timestampElement.textContent = `[${log.timestamp}] `;
+
+            const typeElement = document.createElement('span');
+            typeElement.style.cssText = `color: ${this.getTypeColor(log.type)}; font-weight: bold;`;
+            typeElement.textContent = `[${log.type}] `;
+
+            const messageElement = document.createElement('span');
+            messageElement.style.color = '#fff';
+            messageElement.textContent = String(log.message);
+
+            logElement.appendChild(timestampElement);
+            logElement.appendChild(typeElement);
+            logElement.appendChild(messageElement);
 
             logContent.appendChild(logElement);
         });

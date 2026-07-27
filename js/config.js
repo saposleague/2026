@@ -7,6 +7,10 @@
 // Credenciais Supabase (anon key — segura para uso no browser)
 const SUPABASE_URL = 'https://yaapgjkvkhsfsskkbmso.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhYXBnamt2a2hzZnNza2tibXNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwOTQ3MjUsImV4cCI6MjA3MDY3MDcyNX0.RiPWRX__AjuioaLVU5gkJFuOpVdBYwCN0HuD2gd0laM';
+const ADMIN_SUPABASE_FUNCTION_URL = 'https://us-central1-sapos-league.cloudfunctions.net/adminSupabaseWrite';
+const CONFIG_SCRIPT_URL = document.currentScript?.src || new URL('js/config.js', window.location.href).href;
+const AUTH_GUARD_MODULE_URL = new URL('auth-guard.js', CONFIG_SCRIPT_URL).href;
+const PROTECTED_WRITE_TABLES = new Set(['jogadores', 'presencas', 'jogadores_aptos']);
 
 // Inicialização do cliente Supabase
 let supabaseClient = null;
@@ -15,7 +19,8 @@ let supabaseClient = null;
 function initializeSupabase() {
     try {
         if (typeof supabase !== 'undefined') {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            const publicClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabaseClient = createProtectedSupabaseClient(publicClient);
             console.log('✅ Supabase inicializado com sucesso');
             return true;
         } else {
@@ -142,6 +147,160 @@ const DateUtils = {
         return diffDays;
     }
 };
+
+// Utilitários de segurança para conteúdo dinâmico renderizado no navegador.
+// Use escapeHtml para qualquer valor externo inserido em templates HTML.
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
+ * Mantém SELECT no cliente público, mas encaminha INSERT/UPDATE/DELETE das
+ * tabelas administrativas para uma Cloud Function autenticada pelo Firebase.
+ * O formato do builder preserva as chamadas existentes do Supabase.
+ */
+function createProtectedSupabaseClient(publicClient) {
+    return new Proxy(publicClient, {
+        get(target, property) {
+            if (property !== 'from') {
+                const value = Reflect.get(target, property, target);
+                return typeof value === 'function' ? value.bind(target) : value;
+            }
+
+            return (table) => {
+                const publicTableClient = target.from(table);
+
+                if (!PROTECTED_WRITE_TABLES.has(table)) {
+                    return publicTableClient;
+                }
+
+                return new Proxy(publicTableClient, {
+                    get(tableTarget, tableProperty) {
+                        if (tableProperty === 'insert') {
+                            return (values) => new AdminMutationBuilder(table, 'insert', values);
+                        }
+                        if (tableProperty === 'update') {
+                            return (values) => new AdminMutationBuilder(table, 'update', values);
+                        }
+                        if (tableProperty === 'delete') {
+                            return () => new AdminMutationBuilder(table, 'delete', null);
+                        }
+
+                        const value = Reflect.get(tableTarget, tableProperty, tableTarget);
+                        return typeof value === 'function' ? value.bind(tableTarget) : value;
+                    }
+                });
+            };
+        }
+    });
+}
+
+class AdminMutationBuilder {
+    constructor(table, operation, values) {
+        this.request = {
+            table,
+            operation,
+            values,
+            filters: [],
+            select: null,
+            single: false
+        };
+        this.executionPromise = null;
+    }
+
+    eq(column, value) {
+        this.request.filters.push({ operator: 'eq', column, value });
+        return this;
+    }
+
+    in(column, values) {
+        this.request.filters.push({ operator: 'in', column, value: values });
+        return this;
+    }
+
+    select(columns = '*') {
+        this.request.select = columns;
+        return this;
+    }
+
+    single() {
+        this.request.single = true;
+        return this;
+    }
+
+    execute() {
+        if (!this.executionPromise) {
+            this.executionPromise = callProtectedSupabaseMutation(this.request)
+                .then(data => ({ data, error: null }))
+                .catch(error => ({
+                    data: null,
+                    error: {
+                        message: error.message,
+                        code: error.code || 'admin_api_error'
+                    }
+                }));
+        }
+        return this.executionPromise;
+    }
+
+    then(onFulfilled, onRejected) {
+        return this.execute().then(onFulfilled, onRejected);
+    }
+
+    catch(onRejected) {
+        return this.execute().catch(onRejected);
+    }
+
+    finally(onFinally) {
+        return this.execute().finally(onFinally);
+    }
+}
+
+async function callProtectedSupabaseMutation(payload, forceTokenRefresh = false) {
+    const { requireAuth } = await import(AUTH_GUARD_MODULE_URL);
+    const user = await requireAuth();
+    const idToken = await user.getIdToken(forceTokenRefresh);
+
+    const response = await fetch(ADMIN_SUPABASE_FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${idToken}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload),
+        cache: 'no-store'
+    });
+
+    if (response.status === 401 && !forceTokenRefresh) {
+        return callProtectedSupabaseMutation(payload, true);
+    }
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.success !== true) {
+        const error = new Error(result.error || 'Não foi possível salvar a alteração.');
+        error.code = result.code || `http_${response.status}`;
+        throw error;
+    }
+
+    return result.data ?? null;
+}
+
+// Permite apenas URLs HTTP(S) em atributos como src e href.
+function safeHttpUrl(value) {
+    if (!value) return '';
+
+    try {
+        const url = new URL(String(value), window.location.origin);
+        return ['http:', 'https:'].includes(url.protocol) ? escapeHtml(url.href) : '';
+    } catch {
+        return '';
+    }
+}
 
 // Exportar configurações (se usando modules)
 // export { supabase, CONFIG, DateUtils };

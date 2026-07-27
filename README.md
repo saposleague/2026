@@ -58,6 +58,9 @@ Status: ✅ Totalmente funcional
 
 ### Teste (Manuais)
 
+As funções manuais aceitam apenas requisições `POST` com um Firebase ID token
+de um usuário que possua a custom claim `admin: true`.
+
 #### `forceTestNotification`
 - **URL:** https://us-central1-sapos-league.cloudfunctions.net/forceTestNotification
 - **Função:** Envia notificação de teste imediatamente
@@ -105,7 +108,24 @@ Status: ✅ Totalmente funcional
 
 ### Functions
 - Executam automaticamente via Cloud Scheduler
-- Funções de teste são públicas mas inofensivas
+- Funções de teste exigem autenticação Firebase e permissão administrativa
+
+### Escritas administrativas no Supabase
+- Leituras públicas usam a chave `anon` e continuam protegidas por RLS
+- `INSERT`, `UPDATE` e `DELETE` passam pela função `adminSupabaseWrite`
+- A função verifica o Firebase ID token e a permissão `admin: true`
+- O UID inicial autorizado é configurado em `ADMIN_FIREBASE_UIDS`
+- A chave elevada fica somente no Firebase Secret Manager como `SUPABASE_ADMIN_KEY`
+- O backend aceita a chave Secret atual (`sb_secret_...`) ou a `service_role` legada
+- Nunca coloque a chave elevada em HTML, JavaScript do navegador ou arquivos versionados
+
+Ordem segura de publicação:
+
+1. Cadastre o segredo: `firebase functions:secrets:set SUPABASE_ADMIN_KEY`
+2. Publique `adminSupabaseWrite`
+3. Publique o frontend e teste uma inclusão, edição e exclusão
+4. Execute `supabase/20260727_secure_admin_rls.sql`
+5. Confirme que as páginas públicas leem e que apenas o painel autenticado grava
 
 ---
 
@@ -131,14 +151,23 @@ Status: ✅ Totalmente funcional
 
 ### Teste Rápido
 ```bash
+# Defina um Firebase ID token de um administrador autenticado
+FIREBASE_ID_TOKEN="<token>"
+
 # Testar notificação imediata
-curl https://us-central1-sapos-league.cloudfunctions.net/forceTestNotification
+curl -X POST \
+  -H "Authorization: Bearer $FIREBASE_ID_TOKEN" \
+  https://us-central1-sapos-league.cloudfunctions.net/forceTestNotification
 
 # Testar notificação de quinta-feira
-curl https://us-central1-sapos-league.cloudfunctions.net/testNotification
+curl -X POST \
+  -H "Authorization: Bearer $FIREBASE_ID_TOKEN" \
+  https://us-central1-sapos-league.cloudfunctions.net/testNotification
 
 # Testar notificação de segunda a quarta
-curl https://us-central1-sapos-league.cloudfunctions.net/testWeekNotification
+curl -X POST \
+  -H "Authorization: Bearer $FIREBASE_ID_TOKEN" \
+  https://us-central1-sapos-league.cloudfunctions.net/testWeekNotification
 ```
 
 ### Verificar Subscriptions

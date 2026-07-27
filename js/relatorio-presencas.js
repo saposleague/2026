@@ -275,7 +275,7 @@ function render() {
             ${state.erro ? `
               <div style="background:rgba(127,29,29,0.5);border:1px solid #b91c1c;border-radius:0.5rem;padding:1rem;margin-bottom:1.5rem;">
                 <p style="color:#fca5a5;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;">Erro na conexão:</p>
-                <p style="color:#fca5a5;font-size:0.75rem;">${state.erro}</p>
+                <p style="color:#fca5a5;font-size:0.75rem;">${escapeHtml(state.erro)}</p>
               </div>
             ` : ''}
 
@@ -379,9 +379,9 @@ function render() {
                     <td style="padding:1rem 1.5rem;">
                       <div style="display:flex;align-items:center;gap:0.75rem;">
                         <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;flex-shrink:0;">
-                          ${jogador.nome.charAt(0).toUpperCase()}
+                          ${escapeHtml(jogador.nome.charAt(0).toUpperCase())}
                         </div>
-                        <span style="color:white;font-weight:500;">${jogador.nome}</span>
+                        <span style="color:white;font-weight:500;">${escapeHtml(jogador.nome)}</span>
                       </div>
                     </td>
                     <td style="padding:1rem 1.5rem;text-align:center;">
@@ -389,8 +389,8 @@ function render() {
                         ${jogador.total_presencas}
                       </span>
                     </td>
-                    <td style="padding:1rem 1.5rem;text-align:center;color:#cbd5e1;">${jogador.primeira_presenca}</td>
-                    <td style="padding:1rem 1.5rem;text-align:center;color:#cbd5e1;">${jogador.ultima_presenca}</td>
+                    <td style="padding:1rem 1.5rem;text-align:center;color:#cbd5e1;">${escapeHtml(jogador.primeira_presenca)}</td>
+                    <td style="padding:1rem 1.5rem;text-align:center;color:#cbd5e1;">${escapeHtml(jogador.ultima_presenca)}</td>
                   </tr>
                 `).join('')}
               </tbody>

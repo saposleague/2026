@@ -14,7 +14,13 @@ function log(message, type = 'info') {
     const timestamp = new Date().toLocaleTimeString();
     const entry = document.createElement('div');
     entry.className = `log-entry log-${type}`;
-    entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+
+    const timestampElement = document.createElement('span');
+    timestampElement.className = 'timestamp';
+    timestampElement.textContent = `[${timestamp}]`;
+    entry.appendChild(timestampElement);
+    entry.appendChild(document.createTextNode(` ${String(message)}`));
+
     logsDiv.appendChild(entry);
     logsDiv.scrollTop = logsDiv.scrollHeight;
 

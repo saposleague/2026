@@ -11,7 +11,7 @@ let excluirId = null;
 // ─── AUTH ──────────────────────────────────────────────────────────────────
 
 requireAuth().then(() => {
-  db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  db = getSupabaseClient();
   carregarJogadores();
 });
 

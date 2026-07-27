@@ -59,15 +59,34 @@ class AlertManager {
             info: 'ℹ️'
         };
 
-        // HTML do alert (sem botão de fechar X)
-        alertElement.innerHTML = `
-            <div class="alert-icon">${icons[type]}</div>
-            <div class="alert-content">
-                <div class="alert-title">${title}</div>
-                ${message ? `<div class="alert-message">${message}</div>` : ''}
-            </div>
-            ${withProgress ? '<div class="alert-progress"></div>' : ''}
-        `;
+        // Monta o alerta com textContent para impedir execução de HTML externo.
+        const iconElement = document.createElement('div');
+        iconElement.className = 'alert-icon';
+        iconElement.textContent = icons[type];
+
+        const contentElement = document.createElement('div');
+        contentElement.className = 'alert-content';
+
+        const titleElement = document.createElement('div');
+        titleElement.className = 'alert-title';
+        titleElement.textContent = String(title ?? '');
+        contentElement.appendChild(titleElement);
+
+        if (message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'alert-message';
+            messageElement.textContent = String(message);
+            contentElement.appendChild(messageElement);
+        }
+
+        alertElement.appendChild(iconElement);
+        alertElement.appendChild(contentElement);
+
+        if (withProgress) {
+            const progressElement = document.createElement('div');
+            progressElement.className = 'alert-progress';
+            alertElement.appendChild(progressElement);
+        }
 
         // Adicionar ao container
         this.container.appendChild(alertElement);
@@ -130,16 +149,18 @@ class AlertManager {
                     buttonsDiv.style.display = 'flex';
                     buttonsDiv.style.gap = '8px';
                     
-                    buttonsDiv.innerHTML = `
-                        <button onclick="alertManager.confirmResponse('${alertId}', true)" 
-                                style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
-                            Sim
-                        </button>
-                        <button onclick="alertManager.confirmResponse('${alertId}', false)" 
-                                style="background: #6b7280; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
-                            Não
-                        </button>
-                    `;
+                    const yesButton = document.createElement('button');
+                    yesButton.textContent = 'Sim';
+                    yesButton.style.cssText = 'background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;';
+                    yesButton.addEventListener('click', () => this.confirmResponse(alertId, true));
+
+                    const noButton = document.createElement('button');
+                    noButton.textContent = 'Não';
+                    noButton.style.cssText = 'background: #6b7280; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;';
+                    noButton.addEventListener('click', () => this.confirmResponse(alertId, false));
+
+                    buttonsDiv.appendChild(yesButton);
+                    buttonsDiv.appendChild(noButton);
                     
                     content.appendChild(buttonsDiv);
                 }
