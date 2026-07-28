@@ -1,5 +1,5 @@
 // Service Worker para Sapos League PWA - Versão Robusta
-const CACHE_VERSION = '2.2.11';
+const CACHE_VERSION = '2.2.12';
 const CACHE_NAME = `sapos-league-v${CACHE_VERSION}`;
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
@@ -21,6 +21,7 @@ const STATIC_ASSETS = [
   './js/rodadas.js',
   './js/admin.js',
   './js/firebase-config.js',
+  './js/competition-config.js',
   './js/security-utils.js',
   './js/dark-mode-logic.js',
   './js/auth-manager.js',

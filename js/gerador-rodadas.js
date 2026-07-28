@@ -3,6 +3,7 @@ import { app } from './firebase-config.js';
 import { getFirestore, collection, getDocs, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 import { requireAuth, setupLogout } from './auth-guard.js';
 import { escapeHtml, safeHttpUrl } from './security-utils.js';
+import { filtrarTimesPorFase } from './competition-config.js';
 
 const db = getFirestore(app);
 
@@ -14,6 +15,7 @@ requireAuth();
 
 // Variáveis globais
 let times = [];
+let todosTimes = [];
 let ultimaRodada = 0;
 let rodadasGeradas = [];
 
@@ -43,28 +45,34 @@ async function carregarTimes() {
     try {
         console.log("Carregando times...");
         const snap = await getDocs(collection(db, "times"));
-        times = [];
+        todosTimes = [];
         
         snap.forEach(doc => {
-            times.push({
+            const data = doc.data();
+            todosTimes.push({
                 id: doc.id,
-                nome: doc.data().nome,
-                iconeURL: doc.data().iconeURL
+                nome: data.nome,
+                iconeURL: data.iconeURL,
+                fases: data.fases
             });
         });
-        
-        console.log("Times carregados:", times);
-        timesCountEl.textContent = `${times.length} times`;
-        
-        if (times.length !== 4) {
-            mostrarMensagem(`Atenção: O sistema está configurado para 4 times, mas foram encontrados ${times.length} times no banco de dados.`);
-        }
-        
+
+        atualizarTimesDaFase();
+        console.log("Times carregados:", todosTimes);
         return times.length > 0;
     } catch (error) {
         console.error("Erro ao carregar times:", error);
         mostrarMensagem("Erro ao carregar times do banco de dados.");
         return false;
+    }
+}
+
+function atualizarTimesDaFase() {
+    times = filtrarTimesPorFase(todosTimes, faseAtual);
+    timesCountEl.textContent = `${times.length} times`;
+
+    if (times.length !== 4) {
+        mostrarMensagem(`Atenção: A ${faseAtual === 'fase1' ? 'primeira' : faseAtual === 'fase2' ? 'segunda' : 'fase final'} está configurada para 4 times, mas possui ${times.length} times participantes.`);
     }
 }
 
@@ -484,6 +492,7 @@ async function inicializar() {
 document.getElementById("fase-select-gerador").addEventListener("change", async (e) => {
     faseAtual = e.target.value;
     console.log("Fase alterada para:", faseAtual);
+    atualizarTimesDaFase();
     await verificarUltimaRodada();
 });
 

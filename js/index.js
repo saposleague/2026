@@ -2,6 +2,7 @@
 import { app } from './firebase-config.js'; // Importa o app do arquivo de configuração
 import { getFirestore, collection, onSnapshot, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 import { escapeHtml, safeHttpUrl } from './security-utils.js';
+import { filtrarTimesPorFase } from './competition-config.js';
 
 const db = getFirestore(app);
 
@@ -167,11 +168,15 @@ async function carregarTimesEmTempoReal() {
 
   // Configura o novo listener
   unsubscribeTimes = onSnapshot(collection(db, "times"), (snapshot) => {
-    times = snapshot.docs.map(doc => ({
-      id: doc.id,
-      nome: doc.data().nome,
-      iconeURL: doc.data().iconeURL
-    }));
+    times = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        nome: data.nome,
+        iconeURL: data.iconeURL,
+        fases: data.fases
+      };
+    });
     console.log("Times atualizados (tempo real):", times.length);
     // Após atualizar os times, recarrega as rodadas para garantir a consistência
     // e recalcula a tabela (se já houver rodadas carregadas)
@@ -255,7 +260,7 @@ async function carregarRodadasEmTempoReal() {
 
 function inicializarTabela() {
   let tabela = {};
-  times.forEach(time => {
+  filtrarTimesPorFase(times, faseAtual).forEach(time => {
     tabela[time.id] = {
       nome: time.nome,
       iconeURL: time.iconeURL,

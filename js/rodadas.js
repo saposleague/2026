@@ -3,6 +3,7 @@ import { app } from './firebase-config.js';
 import { getFirestore, collection, getDocs, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 import { requireAuth, setupLogout } from './auth-guard.js';
 import { escapeHtml } from './security-utils.js';
+import { filtrarTimesPorFase } from './competition-config.js';
 
 const db = getFirestore(app);
 
@@ -13,6 +14,7 @@ let faseAtual = 'fase1'; // 'fase1', 'fase2', 'final'
 requireAuth();
 
 let nomesTimes = {};
+let timesDisponiveis = [];
 let rodadasCarregadas = [];
 let paginaAtual = 1;
 const porPagina = 5;
@@ -25,42 +27,46 @@ setupLogout('logout-button');
 // ----------------------------------------------------
 async function carregarTimes() {
   const snap = await getDocs(collection(db, "times"));
-  const selectA = document.getElementById("timeA");
-  const selectB = document.getElementById("timeB");
-  const selectCampeao1 = document.getElementById("campeao-fase1");
-  const selectCampeao2 = document.getElementById("campeao-fase2");
-  
-  selectA.innerHTML = '<option value="">Selecione um time</option>';
-  selectB.innerHTML = '<option value="">Selecione um time</option>';
-  selectCampeao1.innerHTML = '<option value="">Selecione o campeão</option>';
-  selectCampeao2.innerHTML = '<option value="">Selecione o campeão</option>';
-
-  snap.forEach(doc => {
-    nomesTimes[doc.id] = doc.data().nome;
-    
-    const optA = document.createElement("option");
-    optA.value = doc.id;
-    optA.textContent = doc.data().nome;
-    selectA.appendChild(optA);
-
-    const optB = document.createElement("option");
-    optB.value = doc.id;
-    optB.textContent = doc.data().nome;
-    selectB.appendChild(optB);
-    
-    const optC1 = document.createElement("option");
-    optC1.value = doc.id;
-    optC1.textContent = doc.data().nome;
-    selectCampeao1.appendChild(optC1);
-    
-    const optC2 = document.createElement("option");
-    optC2.value = doc.id;
-    optC2.textContent = doc.data().nome;
-    selectCampeao2.appendChild(optC2);
+  timesDisponiveis = snap.docs.map(doc => {
+    const data = doc.data();
+    nomesTimes[doc.id] = data.nome;
+    return {
+      id: doc.id,
+      nome: data.nome,
+      fases: data.fases
+    };
   });
-  
+
+  atualizarSelectsPartida();
+  preencherSelect(
+    document.getElementById("campeao-fase1"),
+    filtrarTimesPorFase(timesDisponiveis, 'fase1'),
+    'Selecione o campeão'
+  );
+  preencherSelect(
+    document.getElementById("campeao-fase2"),
+    filtrarTimesPorFase(timesDisponiveis, 'fase2'),
+    'Selecione o campeão'
+  );
+
   // Carrega os campeões já definidos
   await carregarCampeoesDefinidos();
+}
+
+function preencherSelect(select, opcoes, placeholder) {
+  select.innerHTML = `<option value="">${placeholder}</option>`;
+  opcoes.forEach(time => {
+    const option = document.createElement("option");
+    option.value = time.id;
+    option.textContent = time.nome;
+    select.appendChild(option);
+  });
+}
+
+function atualizarSelectsPartida() {
+  const timesDaFase = filtrarTimesPorFase(timesDisponiveis, faseAtual);
+  preencherSelect(document.getElementById("timeA"), timesDaFase, 'Selecione um time');
+  preencherSelect(document.getElementById("timeB"), timesDaFase, 'Selecione um time');
 }
 
 async function carregarCampeoesDefinidos() {
@@ -473,6 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
         faseSelect.addEventListener("change", (e) => {
             faseAtual = e.target.value;
             console.log("Fase alterada para:", faseAtual);
+            atualizarSelectsPartida();
             
             // Alterna entre formulário de partida e formulário de campeões
             const formPartida = document.getElementById("form-partida");
