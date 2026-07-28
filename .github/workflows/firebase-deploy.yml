@@ -13,18 +13,27 @@ jobs:
   deploy:
     name: Deploy to Firebase
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      GOOGLE_CREDENTIALS_AVAILABLE: ${{ secrets.GOOGLE_CREDENTIALS != '' }}
     
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
+          package-manager-cache: false
       
       - name: Instalar dependências
         run: npm ci
+        working-directory: functions
+
+      - name: Validar Functions
+        run: npm run check
         working-directory: functions
 
       # Cria o functions/.env a partir dos GitHub Secrets
@@ -39,12 +48,24 @@ jobs:
           ADMIN_FIREBASE_UIDS=HClXNJyivTWibYcrirCYxhM96Ze2
           EOF
 
-      - name: Deploy para Firebase
+      - name: Instalar Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Autenticar no Google Cloud
+        if: env.GOOGLE_CREDENTIALS_AVAILABLE == 'true'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+
+      - name: Deploy para Firebase com credenciais de serviço
+        if: env.GOOGLE_CREDENTIALS_AVAILABLE == 'true'
+        run: firebase deploy --only functions,firestore:rules --non-interactive --force
+
+      - name: Deploy para Firebase com token legado
+        if: env.GOOGLE_CREDENTIALS_AVAILABLE != 'true'
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        run: |
-          npm install -g firebase-tools
-          firebase deploy --only functions,firestore:rules --token "$FIREBASE_TOKEN" --non-interactive --force
+        run: firebase deploy --only functions,firestore:rules --token "$FIREBASE_TOKEN" --non-interactive --force
       
       - name: Notificar sucesso
         if: success()
