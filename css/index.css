@@ -240,6 +240,10 @@ tr:nth-child(even) {
   gap: 6px;
 }
 
+.nome-tabela-abreviado {
+  display: none;
+}
+
 /* ------------------------------------------------------------- */
 /* CSS ESPECÍFICO PARA MOBILE (SOBRESCRITA) */
 /* ------------------------------------------------------------- */
@@ -371,6 +375,14 @@ tr:nth-child(even) {
     color: var(--text-dark);
     font-weight: 500;
     max-width: 100%;
+  }
+
+  .nome-tabela-completo {
+    display: none;
+  }
+
+  .nome-tabela-abreviado {
+    display: inline;
   }
 
   /* --- OTIMIZAÇÃO DOS JOGOS --- */

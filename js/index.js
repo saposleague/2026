@@ -332,11 +332,20 @@ function renderizarTabela(tabelaData) {
   lista.forEach((time, index) => {
     const posClass = `pos-${index + 1}`;
     const nomeSeguro = escapeHtml(time.nome);
+    const nomeNormalizado = String(time.nome || '')
+      .trim()
+      .toLocaleLowerCase('pt-BR');
+    const nomeNaTabela = nomeNormalizado === 'ponta do leste'
+      ? `<span class="nome-tabela-responsivo" title="${nomeSeguro}" aria-label="${nomeSeguro}">
+          <span class="nome-tabela-completo">${nomeSeguro}</span>
+          <span class="nome-tabela-abreviado" aria-hidden="true">PONTA L.</span>
+        </span>`
+      : nomeSeguro;
     const iconeSeguro = safeHttpUrl(time.iconeURL, './images/favicon.png');
     tabelaContainer.innerHTML += `
       <tr>
         <td class='posicao ${posClass}'>${index + 1}</td>
-        <td><div class="tabela-time"><img src="${iconeSeguro}" alt="${nomeSeguro}" class="icone-time">${nomeSeguro}</div></td>
+        <td><div class="tabela-time"><img src="${iconeSeguro}" alt="${nomeSeguro}" class="icone-time">${nomeNaTabela}</div></td>
         <td>${time.PTS}</td><td>${time.J}</td><td>${time.V}</td><td>${time.E}</td><td>${time.D}</td><td>${time.GP}</td><td>${time.GC}</td><td>${time.SG}</td><td>${time['%']}%</td>
       </tr>`;
   });
