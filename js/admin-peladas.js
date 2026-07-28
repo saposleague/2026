@@ -2364,6 +2364,13 @@ function mostrarInfoJogador(input) {
 
 let timesData = [];
 let jogadoresAptosData = [];
+const TIME_FORA_DAS_PELADAS = 'meteoros';
+
+function filtrarTimesDasPeladas(times) {
+    return times.filter(time =>
+        String(time?.nome || '').trim().toLocaleLowerCase('pt-BR') !== TIME_FORA_DAS_PELADAS
+    );
+}
 
 // Abrir gerenciador de jogadores aptos
 async function abrirGerenciadorAptos() {
@@ -2410,7 +2417,7 @@ async function carregarTimes() {
         
         if (error) throw error;
         
-        timesData = times || [];
+        timesData = filtrarTimesDasPeladas(times || []);
         
         // Preenche o select de times
         const selectTime = document.getElementById('filtro-time-aptos');

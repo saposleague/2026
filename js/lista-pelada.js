@@ -8,6 +8,13 @@ let presencasData = [];
 let jogadoresAptosData = [];
 let lastCacheUpdate = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+const TIME_FORA_DAS_PELADAS = 'meteoros';
+
+function filtrarTimesDasPeladas(times) {
+    return times.filter(time =>
+        String(time?.nome || '').trim().toLocaleLowerCase('pt-BR') !== TIME_FORA_DAS_PELADAS
+    );
+}
 
 // 2. ELEMENTOS DO DOM
 const teamsContainer = document.getElementById('teams-container');
@@ -297,12 +304,14 @@ function showOptimizedLoading() {
 
 // 5. RENDERIZAÇÃO DA INTERFACE
 function renderTeamsAndPlayers() {
+    const timesDasPeladas = filtrarTimesDasPeladas(teamsData);
+
     console.log('🎨 renderTeamsAndPlayers chamada com:', { 
-        teamsData: teamsData.length, 
+        teamsData: timesDasPeladas.length,
         playersData: playersData.length 
     });
     
-    if (teamsData.length === 0) {
+    if (timesDasPeladas.length === 0) {
         console.log('⚠️ Nenhum time encontrado');
         teamsContainer.innerHTML = '<div class="no-data">Nenhum time encontrado</div>';
         return;
@@ -310,7 +319,7 @@ function renderTeamsAndPlayers() {
 
     let html = '';
 
-    teamsData.forEach((team, teamIndex) => {
+    timesDasPeladas.forEach((team, teamIndex) => {
         const teamPlayers = playersData.filter(player => player.time_id === team.id);
         console.log(`🏟️ Renderizando time ${teamIndex + 1}:`, { 
             teamName: team.nome, 
