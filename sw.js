@@ -1,5 +1,5 @@
 // Service Worker para Sapos League PWA - Versão Robusta
-const CACHE_VERSION = '2.2.10';
+const CACHE_VERSION = '2.2.11';
 const CACHE_NAME = `sapos-league-v${CACHE_VERSION}`;
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
@@ -17,7 +17,6 @@ const STATIC_ASSETS = [
   './css/admin.css',
   './css/components.css',
   './css/dark-mode-colors.css',
-  './css/favicon-display.css',
   './js/index.js',
   './js/rodadas.js',
   './js/admin.js',
@@ -27,7 +26,6 @@ const STATIC_ASSETS = [
   './js/auth-manager.js',
   './js/pwa-complete.js',
   './js/pwa-install.js',
-  './js/dynamic-favicon.js',
   './js/back-to-home.js',
   './images/favicon.png',
   './images/favicon-48x48.png',

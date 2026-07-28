@@ -1,8 +1,8 @@
 /**
  * pwa-splash.js
  * Controla o splash screen customizado para PWA instalado (iOS e Android).
- * Deve ser carregado antes do dynamic-favicon.js, logo após o elemento
- * #pwa-splash-screen e #main-app-content existirem no DOM.
+ * Deve ser carregado logo após os elementos #pwa-splash-screen e
+ * #main-app-content existirem no DOM.
  */
 (function () {
   const isStandalone =
