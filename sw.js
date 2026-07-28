@@ -1,5 +1,5 @@
 // Service Worker para Sapos League PWA - Versão Robusta
-const CACHE_VERSION = '2.2.12';
+const CACHE_VERSION = '2.2.13';
 const CACHE_NAME = `sapos-league-v${CACHE_VERSION}`;
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
@@ -63,7 +63,10 @@ self.addEventListener('install', (event) => {
       // Cache estático
       caches.open(STATIC_CACHE).then(cache => {
         console.log('[SW] Cacheando recursos estáticos...');
-        return cache.addAll(STATIC_ASSETS);
+        const freshRequests = STATIC_ASSETS.map(
+          asset => new Request(asset, { cache: 'reload' })
+        );
+        return cache.addAll(freshRequests);
       }),
       
       // Criar página offline
