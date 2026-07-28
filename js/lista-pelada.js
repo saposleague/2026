@@ -8,12 +8,31 @@ let presencasData = [];
 let jogadoresAptosData = [];
 let lastCacheUpdate = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
-const TIME_FORA_DAS_PELADAS = 'meteoros';
+const TIME_SUBSTITUIDO_NAS_PELADAS = 'meteoros';
+const NOVO_TIME_DAS_PELADAS = 'PONTA DO LESTE';
 
-function filtrarTimesDasPeladas(times) {
-    return times.filter(time =>
-        String(time?.nome || '').trim().toLocaleLowerCase('pt-BR') !== TIME_FORA_DAS_PELADAS
+function prepararTimesDasPeladas(times) {
+    const normalizarNome = nome =>
+        String(nome || '').trim().toLocaleLowerCase('pt-BR');
+    const pontaDoLesteJaExiste = times.some(time =>
+        normalizarNome(time?.nome) === normalizarNome(NOVO_TIME_DAS_PELADAS)
     );
+
+    return times.reduce((resultado, time) => {
+        if (normalizarNome(time?.nome) === TIME_SUBSTITUIDO_NAS_PELADAS) {
+            if (!pontaDoLesteJaExiste) {
+                resultado.push({
+                    ...time,
+                    nome: NOVO_TIME_DAS_PELADAS,
+                    logo_url: null
+                });
+            }
+        } else {
+            resultado.push(time);
+        }
+
+        return resultado;
+    }, []);
 }
 
 // 2. ELEMENTOS DO DOM
@@ -304,7 +323,7 @@ function showOptimizedLoading() {
 
 // 5. RENDERIZAÇÃO DA INTERFACE
 function renderTeamsAndPlayers() {
-    const timesDasPeladas = filtrarTimesDasPeladas(teamsData);
+    const timesDasPeladas = prepararTimesDasPeladas(teamsData);
 
     console.log('🎨 renderTeamsAndPlayers chamada com:', { 
         teamsData: timesDasPeladas.length,

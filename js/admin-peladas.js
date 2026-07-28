@@ -2364,12 +2364,27 @@ function mostrarInfoJogador(input) {
 
 let timesData = [];
 let jogadoresAptosData = [];
-const TIME_FORA_DAS_PELADAS = 'meteoros';
+const TIME_SUBSTITUIDO_NAS_PELADAS = 'meteoros';
+const NOVO_TIME_DAS_PELADAS = 'PONTA DO LESTE';
 
-function filtrarTimesDasPeladas(times) {
-    return times.filter(time =>
-        String(time?.nome || '').trim().toLocaleLowerCase('pt-BR') !== TIME_FORA_DAS_PELADAS
+function prepararTimesDasPeladas(times) {
+    const normalizarNome = nome =>
+        String(nome || '').trim().toLocaleLowerCase('pt-BR');
+    const pontaDoLesteJaExiste = times.some(time =>
+        normalizarNome(time?.nome) === normalizarNome(NOVO_TIME_DAS_PELADAS)
     );
+
+    return times.reduce((resultado, time) => {
+        if (normalizarNome(time?.nome) === TIME_SUBSTITUIDO_NAS_PELADAS) {
+            if (!pontaDoLesteJaExiste) {
+                resultado.push({ ...time, nome: NOVO_TIME_DAS_PELADAS });
+            }
+        } else {
+            resultado.push(time);
+        }
+
+        return resultado;
+    }, []);
 }
 
 // Abrir gerenciador de jogadores aptos
@@ -2417,7 +2432,7 @@ async function carregarTimes() {
         
         if (error) throw error;
         
-        timesData = filtrarTimesDasPeladas(times || []);
+        timesData = prepararTimesDasPeladas(times || []);
         
         // Preenche o select de times
         const selectTime = document.getElementById('filtro-time-aptos');
