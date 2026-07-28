@@ -8,33 +8,12 @@ let presencasData = [];
 let jogadoresAptosData = [];
 let lastCacheUpdate = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
-const TIME_SUBSTITUIDO_NAS_PELADAS = 'meteoros';
-const NOVO_TIME_DAS_PELADAS = 'PONTA DO LESTE';
-const LOGO_NOVO_TIME_DAS_PELADAS =
-    'https://firebasestorage.googleapis.com/v0/b/sapos-league.firebasestorage.app/o/icones%2Fponta.png?alt=media&token=5c91c012-93b7-477b-8e14-c2467f105f1f';
+const TIME_OCULTO_NAS_PELADAS = 'meteoros';
 
-function prepararTimesDasPeladas(times) {
-    const normalizarNome = nome =>
-        String(nome || '').trim().toLocaleLowerCase('pt-BR');
-    const pontaDoLesteJaExiste = times.some(time =>
-        normalizarNome(time?.nome) === normalizarNome(NOVO_TIME_DAS_PELADAS)
+function filtrarTimesDasPeladas(times) {
+    return times.filter(time =>
+        String(time?.nome || '').trim().toLocaleLowerCase('pt-BR') !== TIME_OCULTO_NAS_PELADAS
     );
-
-    return times.reduce((resultado, time) => {
-        if (normalizarNome(time?.nome) === TIME_SUBSTITUIDO_NAS_PELADAS) {
-            if (!pontaDoLesteJaExiste) {
-                resultado.push({
-                    ...time,
-                    nome: NOVO_TIME_DAS_PELADAS,
-                    logo_url: LOGO_NOVO_TIME_DAS_PELADAS
-                });
-            }
-        } else {
-            resultado.push(time);
-        }
-
-        return resultado;
-    }, []);
 }
 
 // 2. ELEMENTOS DO DOM
@@ -325,7 +304,7 @@ function showOptimizedLoading() {
 
 // 5. RENDERIZAÇÃO DA INTERFACE
 function renderTeamsAndPlayers() {
-    const timesDasPeladas = prepararTimesDasPeladas(teamsData);
+    const timesDasPeladas = filtrarTimesDasPeladas(teamsData);
 
     console.log('🎨 renderTeamsAndPlayers chamada com:', { 
         teamsData: timesDasPeladas.length,
