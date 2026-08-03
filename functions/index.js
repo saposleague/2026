@@ -1,10 +1,17 @@
 const functions = require('firebase-functions/v1');
 const { defineString, defineSecret } = require('firebase-functions/params');
 const { onRequest } = require('firebase-functions/v2/https');
-const admin = require('firebase-admin');
+const { initializeApp } = require('firebase-admin/app');
+const { getAuth } = require('firebase-admin/auth');
+const { getFirestore } = require('firebase-admin/firestore');
+const { getMessaging } = require('firebase-admin/messaging');
 const webpush = require('web-push');
 
-admin.initializeApp();
+initializeApp();
+
+const auth = getAuth();
+const db = getFirestore();
+const messaging = getMessaging();
 
 // Versão: 1.5 - Chave VAPID via variáveis de ambiente (.env) — sistema params do Firebase Functions v2+
 // Consulte functions/.env.example para instruções de configuração.
@@ -78,7 +85,7 @@ async function requireAdminRequest(req, res) {
   }
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(match[1], true);
+    const decodedToken = await auth.verifyIdToken(match[1], true);
     const allowedUids = new Set(
       ADMIN_FIREBASE_UIDS.value()
         .split(',')
@@ -98,8 +105,8 @@ async function requireAdminRequest(req, res) {
     // O UID inicial funciona como bootstrap. Na primeira chamada válida,
     // a claim é persistida sem apagar outras claims existentes.
     if (decodedToken.admin !== true && isBootstrapAdmin) {
-      const user = await admin.auth().getUser(decodedToken.uid);
-      await admin.auth().setCustomUserClaims(decodedToken.uid, {
+      const user = await auth.getUser(decodedToken.uid);
+      await auth.setCustomUserClaims(decodedToken.uid, {
         ...(user.customClaims || {}),
         admin: true
       });
@@ -616,14 +623,14 @@ async function getGamesForDate(dateString) {
   let times = {};
   
   // Carregar times
-  const timesSnapshot = await admin.firestore().collection('times').get();
+  const timesSnapshot = await db.collection('times').get();
   timesSnapshot.forEach(doc => {
     times[doc.id] = doc.data().nome;
   });
   
   // Buscar jogos em todas as fases
   for (const fase of fases) {
-    const rodadasSnapshot = await admin.firestore().collection(fase).get();
+    const rodadasSnapshot = await db.collection(fase).get();
     
     rodadasSnapshot.forEach(doc => {
       const rodada = doc.data();
@@ -682,7 +689,7 @@ async function sendNotificationToAll(title, body) {
  */
 async function sendToFCM(title, body) {
   // Buscar todos os tokens FCM
-  const tokensSnapshot = await admin.firestore().collection('fcmTokens').get();
+  const tokensSnapshot = await db.collection('fcmTokens').get();
   
   if (tokensSnapshot.empty) {
     console.log('⚠️ Nenhum token FCM registrado');
@@ -710,7 +717,7 @@ async function sendToFCM(title, body) {
   
   for (const token of tokens) {
     try {
-      await admin.messaging().send({
+      await messaging.send({
         notification: {
           title: title,
           body: body
@@ -764,7 +771,7 @@ async function sendToFCM(title, body) {
   
   // Remover tokens inválidos do Firestore
   for (const token of tokensToRemove) {
-    const tokenDoc = await admin.firestore()
+    const tokenDoc = await db
       .collection('fcmTokens')
       .where('token', '==', token)
       .get();
@@ -785,7 +792,7 @@ async function sendToWebPush(title, body) {
   // Inicializa o webpush com as credenciais do ambiente
   initWebPush();
   // Buscar todas as subscriptions
-  const subscriptionsSnapshot = await admin.firestore().collection('webPushSubscriptions').get();
+  const subscriptionsSnapshot = await db.collection('webPushSubscriptions').get();
   
   if (subscriptionsSnapshot.empty) {
     console.log('⚠️ Nenhuma subscription iOS registrada');
@@ -850,7 +857,7 @@ async function sendToWebPush(title, body) {
   
   // Remover subscriptions inválidas
   for (const subId of subscriptionsToRemove) {
-    await admin.firestore().collection('webPushSubscriptions').doc(subId).delete();
+    await db.collection('webPushSubscriptions').doc(subId).delete();
     console.log(`🗑️ Subscription iOS inválida removida`);
   }
 
@@ -896,8 +903,8 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
     console.log(`📝 Mensagem: ${body}`);
     
     // Contar dispositivos registrados
-    const fcmTokensSnapshot = await admin.firestore().collection('fcmTokens').get();
-    const iosSubsSnapshot = await admin.firestore().collection('webPushSubscriptions').get();
+    const fcmTokensSnapshot = await db.collection('fcmTokens').get();
+    const iosSubsSnapshot = await db.collection('webPushSubscriptions').get();
     
     const fcmCount = fcmTokensSnapshot.size;
     const iosCount = iosSubsSnapshot.size;
@@ -1053,8 +1060,8 @@ exports.testWeekNotification = functions.https.onRequest(async (req, res) => {
     console.log(`📝 Mensagem: ${body}`);
     
     // Contar dispositivos registrados
-    const fcmTokensSnapshot = await admin.firestore().collection('fcmTokens').get();
-    const iosSubsSnapshot = await admin.firestore().collection('webPushSubscriptions').get();
+    const fcmTokensSnapshot = await db.collection('fcmTokens').get();
+    const iosSubsSnapshot = await db.collection('webPushSubscriptions').get();
     
     const fcmCount = fcmTokensSnapshot.size;
     const iosCount = iosSubsSnapshot.size;
@@ -1118,8 +1125,8 @@ exports.forceTestNotification = functions.https.onRequest(async (req, res) => {
     const body = 'Se você recebeu isso, as notificações estão funcionando perfeitamente!';
     
     // Contar dispositivos registrados
-    const fcmTokensSnapshot = await admin.firestore().collection('fcmTokens').get();
-    const iosSubsSnapshot = await admin.firestore().collection('webPushSubscriptions').get();
+    const fcmTokensSnapshot = await db.collection('fcmTokens').get();
+    const iosSubsSnapshot = await db.collection('webPushSubscriptions').get();
     
     const fcmCount = fcmTokensSnapshot.size;
     const iosCount = iosSubsSnapshot.size;
