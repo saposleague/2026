@@ -13,7 +13,7 @@ const auth = getAuth();
 const db = getFirestore();
 const messaging = getMessaging();
 
-// Versão: 1.5 - Chave VAPID via variáveis de ambiente (.env) — sistema params do Firebase Functions v2+
+// Versão: 1.6 - Chave privada VAPID protegida pelo Secret Manager
 // Consulte functions/.env.example para instruções de configuração.
 
 // Definição dos parâmetros de ambiente
@@ -22,9 +22,7 @@ const VAPID_PUBLIC_KEY = defineString('VAPID_PUBLIC_KEY', {
   description: 'Chave pública VAPID para Web Push',
 });
 
-const VAPID_PRIVATE_KEY = defineString('VAPID_PRIVATE_KEY', {
-  description: 'Chave privada VAPID para Web Push (definida no arquivo functions/.env)',
-});
+const VAPID_PRIVATE_KEY = defineSecret('VAPID_PRIVATE_KEY');
 
 const VAPID_MAILTO = defineString('VAPID_MAILTO', {
   default: 'mailto:contato@saposleague.com',
@@ -48,7 +46,7 @@ const ADMIN_FIREBASE_UIDS = defineString('ADMIN_FIREBASE_UIDS', {
 function initWebPush() {
   const privateKey = VAPID_PRIVATE_KEY.value();
   if (!privateKey) {
-    throw new Error('VAPID_PRIVATE_KEY não configurada. Adicione ao arquivo functions/.env');
+    throw new Error('VAPID_PRIVATE_KEY não configurada no Secret Manager');
   }
   webpush.setVapidDetails(
     VAPID_MAILTO.value(),
@@ -504,7 +502,7 @@ exports.adminSupabaseWrite = onRequest(
  * Notificações de Segunda a Quarta às 08:00
  * Avisa sobre jogos de quinta-feira
  */
-exports.notifyWeekGames = functions.pubsub
+exports.notifyWeekGames = functions.runWith({ secrets: [VAPID_PRIVATE_KEY] }).pubsub
   .schedule('0 8 * * 1,2,3') // Segunda, Terça, Quarta às 08:00
   .timeZone('America/Sao_Paulo')
   .onRun(async (context) => {
@@ -569,7 +567,7 @@ exports.notifyWeekGames = functions.pubsub
  * Notificações de Quinta às 00:00, 12:00 e 19:00
  * Avisa sobre jogos de hoje
  */
-exports.notifyTodayGames = functions.pubsub
+exports.notifyTodayGames = functions.runWith({ secrets: [VAPID_PRIVATE_KEY] }).pubsub
   .schedule('0 0,12,19 * * 4') // Quinta às 00:00, 12:00 e 19:00
   .timeZone('America/Sao_Paulo')
   .onRun(async (context) => {
@@ -867,7 +865,7 @@ async function sendToWebPush(title, body) {
 /**
  * Função para testar notificações manualmente
  */
-exports.testNotification = functions.https.onRequest(async (req, res) => {
+exports.testNotification = functions.runWith({ secrets: [VAPID_PRIVATE_KEY] }).https.onRequest(async (req, res) => {
   const caller = await requireAdminRequest(req, res);
   if (!caller) return;
 
@@ -1009,7 +1007,7 @@ exports.testNotification = functions.https.onRequest(async (req, res) => {
 /**
  * Função para testar notificações de segunda a quarta manualmente
  */
-exports.testWeekNotification = functions.https.onRequest(async (req, res) => {
+exports.testWeekNotification = functions.runWith({ secrets: [VAPID_PRIVATE_KEY] }).https.onRequest(async (req, res) => {
   const caller = await requireAdminRequest(req, res);
   if (!caller) return;
 
@@ -1114,7 +1112,7 @@ exports.testWeekNotification = functions.https.onRequest(async (req, res) => {
 /**
  * Função para forçar teste de notificação (sempre envia)
  */
-exports.forceTestNotification = functions.https.onRequest(async (req, res) => {
+exports.forceTestNotification = functions.runWith({ secrets: [VAPID_PRIVATE_KEY] }).https.onRequest(async (req, res) => {
   const caller = await requireAdminRequest(req, res);
   if (!caller) return;
 

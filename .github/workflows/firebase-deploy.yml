@@ -35,13 +35,12 @@ jobs:
         run: npm run check
         working-directory: functions
 
-      # Cria o functions/.env a partir dos GitHub Secrets
-      # A chave privada VAPID nunca fica no repositório
+      # Cria o functions/.env apenas com parâmetros não secretos.
+      # Chaves privadas ficam no Google Cloud Secret Manager.
       - name: Criar functions/.env
         run: |
           cat > functions/.env << 'EOF'
           VAPID_PUBLIC_KEY=BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg
-          VAPID_PRIVATE_KEY=${{ secrets.VAPID_PRIVATE_KEY }}
           VAPID_MAILTO=mailto:contato@saposleague.com
           SUPABASE_PROJECT_URL=https://yaapgjkvkhsfsskkbmso.supabase.co
           ADMIN_FIREBASE_UIDS=HClXNJyivTWibYcrirCYxhM96Ze2
