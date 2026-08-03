@@ -44,13 +44,13 @@ const ADMIN_FIREBASE_UIDS = defineString('ADMIN_FIREBASE_UIDS', {
 // Configurar Web Push VAPID
 // Os valores são resolvidos em runtime quando a função é invocada
 function initWebPush() {
-  const privateKey = VAPID_PRIVATE_KEY.value();
+  const privateKey = VAPID_PRIVATE_KEY.value().trim();
   if (!privateKey) {
     throw new Error('VAPID_PRIVATE_KEY não configurada no Secret Manager');
   }
   webpush.setVapidDetails(
-    VAPID_MAILTO.value(),
-    VAPID_PUBLIC_KEY.value(),
+    VAPID_MAILTO.value().trim(),
+    VAPID_PUBLIC_KEY.value().trim(),
     privateKey
   );
 }
