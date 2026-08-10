@@ -1,5 +1,5 @@
 // Service Worker para Sapos League PWA - Versão Robusta
-const CACHE_VERSION = '2.2.20';
+const CACHE_VERSION = '2.2.21';
 const CACHE_NAME = `sapos-league-v${CACHE_VERSION}`;
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
@@ -210,11 +210,12 @@ self.addEventListener('fetch', (event) => {
   // Verificar se deve ser ignorado
   if (shouldNeverCache(url)) return;
   
-  // Estratégias baseadas no tipo de recurso
-  if (isStaticAsset(url)) {
-    event.respondWith(cacheFirst(event.request));
-  } else if (isHTMLPage(url)) {
+  // HTML, JavaScript e CSS devem buscar a versão publicada primeiro.
+  // O cache continua disponível como fallback quando o aparelho estiver offline.
+  if (isHTMLPage(url) || isAppCodeAsset(url)) {
     event.respondWith(networkFirst(event.request));
+  } else if (isStaticAsset(url)) {
+    event.respondWith(cacheFirst(event.request));
   } else if (isDynamicAsset(url)) {
     event.respondWith(staleWhileRevalidate(event.request));
   } else {
@@ -238,6 +239,11 @@ function isHTMLPage(url) {
   return url.pathname.endsWith('.html') || 
          url.pathname === '/' || 
          !url.pathname.includes('.');
+}
+
+// Código do próprio site precisa refletir correções novas assim que houver internet
+function isAppCodeAsset(url) {
+  return url.origin === self.location.origin && /\.(?:css|js)$/.test(url.pathname);
 }
 
 // Verificar se é recurso dinâmico

@@ -2,6 +2,7 @@
 let deferredPrompt;
 let installButton;
 let updateAvailable = false;
+let reloadingForUpdate = false;
 
 // ==================== SERVICE WORKER REGISTRATION ====================
 let swRegistrationPromise = null;
@@ -11,8 +12,13 @@ if ('serviceWorker' in navigator) {
   swRegistrationPromise = (async () => {
     try {
       console.log('🔄 Registrando Service Worker...');
-      const registration = await navigator.serviceWorker.register('./sw.js');
+      const registration = await navigator.serviceWorker.register('./sw.js', {
+        updateViaCache: 'none'
+      });
       console.log('✅ Service Worker registrado:', registration.scope);
+
+      // Os listeners precisam existir antes que uma nova versão termine de instalar.
+      setupUpdateHandlers(registration);
       
       // Aguardar ativação se necessário
       if (registration.installing) {
@@ -29,13 +35,23 @@ if ('serviceWorker' in navigator) {
         console.log('✅ Service Worker já ativo');
       }
       
-      // Configurar listeners de atualização
-      setupUpdateHandlers(registration);
-      
       // Verificar atualizações periodicamente
       setInterval(() => {
         registration.update();
       }, 60000); // Verificar a cada minuto
+
+      // No iOS, o PWA pode permanecer suspenso por bastante tempo. Ao voltar
+      // para o primeiro plano, força uma nova verificação do Service Worker.
+      const verificarAtualizacao = () => {
+        registration.update().catch(error => {
+          console.warn('⚠️ Não foi possível verificar atualização:', error);
+        });
+      };
+
+      window.addEventListener('pageshow', verificarAtualizacao);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') verificarAtualizacao();
+      });
       
       return registration;
     } catch (error) {
@@ -57,6 +73,15 @@ if ('serviceWorker' in navigator) {
 
 // ==================== GERENCIAMENTO DE ATUALIZAÇÕES ====================
 function setupUpdateHandlers(registration) {
+  // Quando a nova versão assume o controle, recarrega uma única vez para que
+  // o código e os estilos atualizados sejam usados imediatamente.
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!updateAvailable || reloadingForUpdate) return;
+
+    reloadingForUpdate = true;
+    window.location.reload();
+  });
+
   // Nova versão encontrada
   registration.addEventListener('updatefound', () => {
     const newWorker = registration.installing;
