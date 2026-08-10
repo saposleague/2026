@@ -190,6 +190,77 @@ async function carregarTimesEmTempoReal() {
   });
 }
 
+function jogoEstaPendente(jogo) {
+  return jogo.golsA === undefined || jogo.golsA === null ||
+         jogo.golsB === undefined || jogo.golsB === null;
+}
+
+function obterTimestampDoJogo(jogo) {
+  if (typeof jogo.data !== 'string') return null;
+
+  const partesData = /^(\d{4})-(\d{2})-(\d{2})$/.exec(jogo.data.trim());
+  if (!partesData) return null;
+
+  const ano = Number(partesData[1]);
+  const mes = Number(partesData[2]);
+  const dia = Number(partesData[3]);
+  const partesHora = /^(\d{2}):(\d{2})$/.exec(jogo.hora || '');
+  const hora = partesHora ? Number(partesHora[1]) : 0;
+  const minuto = partesHora ? Number(partesHora[2]) : 0;
+  const timestamp = Date.UTC(ano, mes - 1, dia, hora, minuto);
+  const dataValidada = new Date(timestamp);
+
+  if (dataValidada.getUTCFullYear() !== ano ||
+      dataValidada.getUTCMonth() !== mes - 1 ||
+      dataValidada.getUTCDate() !== dia ||
+      hora > 23 || minuto > 59) {
+    return null;
+  }
+
+  return timestamp;
+}
+
+function determinarRodadaInicial(listaRodadas) {
+  if (listaRodadas.length === 0) return -1;
+
+  const agora = new Date();
+  const inicioHoje = Date.UTC(
+    agora.getFullYear(),
+    agora.getMonth(),
+    agora.getDate()
+  );
+
+  let proximaAgendada = null;
+  let pendenteAtrasadaMaisRecente = null;
+  let primeiraPendente = -1;
+
+  listaRodadas.forEach((rodada, indiceRodada) => {
+    (rodada.jogos || []).forEach(jogo => {
+      if (!jogoEstaPendente(jogo)) return;
+
+      if (primeiraPendente === -1) primeiraPendente = indiceRodada;
+
+      const timestamp = obterTimestampDoJogo(jogo);
+      if (timestamp === null) return;
+
+      if (timestamp >= inicioHoje) {
+        if (!proximaAgendada || timestamp < proximaAgendada.timestamp) {
+          proximaAgendada = { indiceRodada, timestamp };
+        }
+      } else if (!pendenteAtrasadaMaisRecente ||
+                 timestamp > pendenteAtrasadaMaisRecente.timestamp) {
+        pendenteAtrasadaMaisRecente = { indiceRodada, timestamp };
+      }
+    });
+  });
+
+  if (proximaAgendada) return proximaAgendada.indiceRodada;
+  if (pendenteAtrasadaMaisRecente) return pendenteAtrasadaMaisRecente.indiceRodada;
+  if (primeiraPendente !== -1) return primeiraPendente;
+
+  return listaRodadas.length - 1;
+}
+
 // --- FUNÇÃO DE CARREGAMENTO DE RODADAS EM TEMPO REAL ---
 async function carregarRodadasEmTempoReal() {
   console.log("Configurando listener para rodadas da", faseAtual);
@@ -211,38 +282,9 @@ async function carregarRodadasEmTempoReal() {
     })).sort((a, b) => a.numero - b.numero);
     console.log("Rodadas atualizadas (tempo real):", rodadas.length);
 
-    // Escolha da rodada inicial em dois passos:
-    // 1º: primeira rodada com jogo pendente E data definida (rodada agendada mais próxima).
-    // 2º: se nenhuma tiver data, primeira rodada com qualquer jogo pendente (sem data ainda).
-    // Fallback final: última rodada (todas completas).
-    let rodadaInicial = rodadas.length - 1;
-
-    let rodadaComData = -1;
-    let rodadaSemData = -1;
-
-    for (let i = 0; i < rodadas.length; i++) {
-      const temPendenteComData = rodadas[i].jogos.some(
-        jogo => jogo.data &&
-                (jogo.golsA === undefined || jogo.golsA === null ||
-                 jogo.golsB === undefined || jogo.golsB === null)
-      );
-      const temPendenteSemData = rodadas[i].jogos.some(
-        jogo => !jogo.data &&
-                (jogo.golsA === undefined || jogo.golsA === null ||
-                 jogo.golsB === undefined || jogo.golsB === null)
-      );
-
-      if (temPendenteComData && rodadaComData === -1) rodadaComData = i;
-      if ((temPendenteComData || temPendenteSemData) && rodadaSemData === -1) rodadaSemData = i;
-    }
-
-    if (rodadaComData !== -1) {
-      rodadaInicial = rodadaComData;
-    } else if (rodadaSemData !== -1) {
-      rodadaInicial = rodadaSemData;
-    }
-
-    rodadaAtual = rodadaInicial;
+    // A rodada inicial segue o calendário real, não a numeração.
+    // Assim, uma rodada antecipada aparece primeiro quando contém o próximo jogo pendente.
+    rodadaAtual = determinarRodadaInicial(rodadas);
 
     atualizarTabela();
     
