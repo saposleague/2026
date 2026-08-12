@@ -1,315 +1,338 @@
-# 🏆 Sapos League 2026 - Sistema de Notificações
+# Sapos League 2026
 
-Sistema completo de gerenciamento de campeonato com notificações push para iOS e Android.
+Aplicação web para gestão do campeonato e das peladas da Sapos League. O projeto reúne classificação e rodadas em tempo real, administração de jogadores, controle de presenças, relatórios, PWA e notificações push.
 
-## ✅ Status: PRODUÇÃO
+## Status
 
-Versão: 1.1.0  
-Data: 24/02/2026  
-Status: ✅ Totalmente funcional
+- **Ambiente:** produção
+- **Versão do frontend/PWA:** 2.2.26
+- **Última atualização:** 12/08/2026
+- **Site:** https://saposleague.github.io/2026/
 
----
+## Acessos
 
-## 🌐 Acesso
+| Área | URL |
+| --- | --- |
+| Site público | https://saposleague.github.io/2026/ |
+| Login administrativo | https://saposleague.github.io/2026/admin.html |
+| Painel administrativo | https://saposleague.github.io/2026/painel.html |
+| Gestão de rodadas | https://saposleague.github.io/2026/rodadas.html |
+| Gestão de peladas | https://saposleague.github.io/2026/pelada/admin.html |
+| Relatório de presenças | https://saposleague.github.io/2026/relatorio-presencas.html |
+| Diagnóstico de notificações | https://saposleague.github.io/2026/debug.html |
 
-**URL Principal:** https://saposleague.github.io/2026/  
-**Painel Admin:** https://saposleague.github.io/2026/rodadas.html  
-**Debug (desenvolvimento):** https://saposleague.github.io/2026/debug.html
+## Funcionalidades
 
----
+### Campeonato
 
-## 📱 Funcionalidades
+- Classificação atualizada em tempo real pelo Firestore.
+- Navegação entre primeira fase, segunda fase e final.
+- Seleção automática da rodada que contém o próximo jogo pendente pela data, mesmo quando uma rodada é antecipada.
+- Cadastro e edição de partidas, horários, resultados e campeões.
+- Geração automática de rodadas.
+- Exibição responsiva para computador e celular.
 
-### Notificações Automáticas
-- ✅ Segunda a Quarta às 08:00 - Aviso de jogos da quinta-feira
-- ✅ Quinta-feira às 00:00, 12:00 e 19:00 - Lembretes do dia
-- ✅ Suporte completo para iOS (16.4+) e Android
-- ✅ Funciona com app fechado
-- ✅ Ícones personalizados nas notificações
+### Times por fase
 
-### PWA (Progressive Web App)
-- ✅ Instalável no iPhone e Android
-- ✅ Funciona offline
-- ✅ Modo escuro automático
-- ✅ Ícones otimizados
-- ✅ Notificações com ícone do app
+- **Meteoros:** participa somente da primeira fase.
+- **Ponta do Leste:** participa somente da segunda fase.
+- Os demais times participam das duas fases.
+- A regra principal usa o campo `fases` do time; `js/competition-config.js` mantém uma compatibilidade por nome quando esse campo não existe.
 
-### Gerenciamento
-- ✅ Tabela de classificação em tempo real
-- ✅ Navegação entre fases
-- ✅ Painel administrativo
-- ✅ Sistema de peladas
+### Peladas e jogadores
 
----
+- Cadastro e edição de jogadores.
+- Organização dos jogadores por time.
+- Registro e consulta de presenças nas peladas.
+- Indicação de jogadores aptos com base nas participações recentes.
+- Histórico das peladas anteriores.
+- Gestão administrativa protegida por login Firebase.
 
-## 🔧 Funções Firebase
+### Relatório de presenças
 
-### Produção (Automáticas)
+O relatório possui duas visualizações:
 
-#### `notifyWeekGames`
-- **Horário:** Segunda, Terça e Quarta às 08:00
-- **Função:** Avisa sobre jogos de quinta-feira
-- **Formato:** "Jogo Quinta-Feira - Xª Rodada"
+- **Por jogador:** ranking, time atual, total de presenças, primeira e última presença.
+- **Por time:** jogadores cadastrados, total de idas, média por jogador, média de presentes por pelada e participação percentual.
 
-#### `notifyTodayGames`
-- **Horário:** Quinta-feira às 00:00, 12:00 e 19:00
-- **Função:** Lembra dos jogos de hoje
-- **Formato:** "Jogo Hoje - Xª Rodada"
+Na visão por jogador é possível filtrar por:
 
-### Teste (Manuais)
+- Todos os times;
+- Galáxia;
+- Gordo F.C;
+- Ponta do Leste;
+- Reclamões;
+- Jogadores sem time.
 
-As funções manuais aceitam apenas requisições `POST` com um Firebase ID token
-de um usuário que possua a custom claim `admin: true`.
+O filtro atualiza tabela, indicadores e gráficos. As exportações estão disponíveis em PDF e Excel; o arquivo Excel contém abas de resumo, jogadores e times.
 
-#### `forceTestNotification`
-- **URL:** https://us-central1-sapos-league.cloudfunctions.net/forceTestNotification
-- **Função:** Envia notificação de teste imediatamente
-- **Uso:** Validação rápida do sistema
+Regras do relatório:
 
-#### `testNotification`
-- **URL:** https://us-central1-sapos-league.cloudfunctions.net/testNotification
-- **Função:** Testa notificação de quinta-feira (jogos de hoje)
-- **Uso:** Diagnóstico e validação
+- Meteoros fica oculto dos comparativos por time.
+- As presenças são atribuídas ao **time atual** de cada jogador.
+- Presenças de jogadores sem time não entram no comparativo entre times.
+- **Média por jogador:** total de idas do time dividido pela quantidade de jogadores do time.
+- **Média por pelada:** total de idas do time dividido pela quantidade de datas de pelada registradas.
 
-#### `testWeekNotification`
-- **URL:** https://us-central1-sapos-league.cloudfunctions.net/testWeekNotification
-- **Função:** Testa notificação de segunda a quarta (jogos da próxima quinta)
-- **Uso:** Diagnóstico e validação
+### PWA e aparência
 
----
+- Instalável no iPhone e Android.
+- Funcionamento offline para recursos já armazenados.
+- Service Worker com atualização automática de HTML, JavaScript e CSS quando há internet.
+- Verificação de nova versão ao abrir ou retornar ao PWA.
+- Limpeza automática dos caches de versões anteriores.
+- Tema claro/escuro com preferência salva no aparelho pela chave `modo`.
+- Ícones próprios para navegador, tela inicial e notificações.
 
-## 📊 Monitoramento
+### Notificações push
 
-### Firebase Console
-- **Functions:** https://console.firebase.google.com/project/sapos-league/functions
-- **Firestore:** https://console.firebase.google.com/project/sapos-league/firestore
-- **Logs:** https://console.firebase.google.com/project/sapos-league/functions/logs
+- Web Push para PWA no iOS e Android.
+- FCM para navegadores/dispositivos compatíveis.
+- Envio automático baseado nos jogos cadastrados no Firestore.
+- Funções manuais de diagnóstico protegidas por Firebase ID token e permissão administrativa.
 
-### Cloud Scheduler
-- **Agendamentos:** https://console.cloud.google.com/cloudscheduler?project=sapos-league
+Agendamentos no fuso `America/Sao_Paulo`:
 
-### Verificações Diárias
-1. Verificar se notificações foram enviadas (logs)
-2. Verificar quantidade de subscriptions ativas
-3. Verificar erros nos logs
+| Função | Agenda | Finalidade |
+| --- | --- | --- |
+| `notifyWeekGames` | Segunda, terça e quarta às 08:00 | Avisar sobre os jogos da quinta-feira |
+| `notifyTodayGames` | Quinta-feira às 00:00, 12:00 e 19:00 | Lembrar os jogos do dia |
 
----
+Funções manuais:
 
-## 🔐 Segurança
+- `forceTestNotification`: disparo imediato de teste.
+- `testNotification`: simulação da notificação dos jogos do dia.
+- `testWeekNotification`: simulação do aviso semanal.
 
-### Chaves VAPID
-- **Pública:** `BOD3066MNR-gYBI6qquZcm2RxlN_ia_dQtADtGZGhan7SeuxcN6T8WwWB0sEnMpWpQ0aS0OkwoItlgYza1MkiRg`
-- **Privada:** Armazenada apenas no backend (Firebase Functions)
+## Arquitetura
 
-### Firestore Rules
-- Leitura pública para tabelas e jogos
-- Escrita restrita ao admin
-- Qualquer usuário pode registrar seu token/subscription de notificação
-
-### Functions
-- Executam automaticamente via Cloud Scheduler
-- Funções de teste exigem autenticação Firebase e permissão administrativa
-
-### Escritas administrativas no Supabase
-- Leituras públicas usam a chave `anon` e continuam protegidas por RLS
-- `INSERT`, `UPDATE` e `DELETE` passam pela função `adminSupabaseWrite`
-- A função verifica o Firebase ID token e a permissão `admin: true`
-- O UID inicial autorizado é configurado em `ADMIN_FIREBASE_UIDS`
-- A chave elevada fica somente no Firebase Secret Manager como `SUPABASE_ADMIN_KEY`
-- O backend aceita a chave Secret atual (`sb_secret_...`) ou a `service_role` legada
-- Nunca coloque a chave elevada em HTML, JavaScript do navegador ou arquivos versionados
-
-Ordem segura de publicação:
-
-1. Cadastre o segredo: `firebase functions:secrets:set SUPABASE_ADMIN_KEY`
-2. Publique `adminSupabaseWrite`
-3. Publique o frontend e teste uma inclusão, edição e exclusão
-4. Execute `supabase/20260727_secure_admin_rls.sql`
-5. Confirme que as páginas públicas leem e que apenas o painel autenticado grava
-
----
-
-## 📱 Instalação para Usuários
-
-### iPhone (iOS 16.4+)
-1. Abra o Safari e acesse https://saposleague.github.io/2026/
-2. Toque no botão de compartilhar
-3. "Adicionar à Tela de Início"
-4. Abra o app instalado
-5. Aceite as notificações quando solicitado
-
-### Android
-1. Abra o Chrome e acesse https://saposleague.github.io/2026/
-2. Toque em "Instalar" quando aparecer
-3. Ou Menu → "Adicionar à tela inicial"
-4. Abra o app instalado
-5. Aceite as notificações quando solicitado
-
----
-
-## 🧪 Testes
-
-### Teste Rápido
-```bash
-# Defina um Firebase ID token de um administrador autenticado
-FIREBASE_ID_TOKEN="<token>"
-
-# Testar notificação imediata
-curl -X POST \
-  -H "Authorization: Bearer $FIREBASE_ID_TOKEN" \
-  https://us-central1-sapos-league.cloudfunctions.net/forceTestNotification
-
-# Testar notificação de quinta-feira
-curl -X POST \
-  -H "Authorization: Bearer $FIREBASE_ID_TOKEN" \
-  https://us-central1-sapos-league.cloudfunctions.net/testNotification
-
-# Testar notificação de segunda a quarta
-curl -X POST \
-  -H "Authorization: Bearer $FIREBASE_ID_TOKEN" \
-  https://us-central1-sapos-league.cloudfunctions.net/testWeekNotification
+```text
+Navegador / PWA
+├── Firebase Authentication — login administrativo
+├── Firestore — times, fases, rodadas e subscriptions push
+├── Supabase — jogadores, presenças, times da pelada e jogadores aptos
+└── Firebase Functions
+    ├── notificações programadas e manuais
+    └── escritas administrativas protegidas no Supabase
 ```
 
-### Verificar Subscriptions
-1. Acesse Firestore Console
-2. Coleção `fcmTokens` - Dispositivos Android/Chrome (se houver)
-3. Coleção `webPushSubscriptions` - Dispositivos iOS e Android
+### Tecnologias
 
-### Verificar Logs
-1. Acesse Functions Logs
-2. Filtre por função específica
-3. Procure por erros ou falhas
+- HTML, CSS e JavaScript sem framework.
+- Firebase Authentication, Firestore, Cloud Functions e Cloud Scheduler.
+- Supabase/PostgreSQL com Row Level Security.
+- Chart.js para gráficos.
+- jsPDF e SheetJS para exportações.
+- GitHub Pages para o frontend.
+- GitHub Actions para publicar Functions e regras do Firestore.
 
-### Página de Debug
-- Acesse https://saposleague.github.io/2026/debug.html
-- Ferramenta completa para testar notificações
-- Mostra informações do dispositivo e APIs suportadas
-- Permite testar subscription e notificações locais
+## Segurança
 
----
+### Firebase
 
-## ⚠️ Troubleshooting
+- Páginas administrativas usam `js/auth-guard.js` e exigem login Firebase.
+- Funções administrativas manuais verificam o Firebase ID token e a permissão `admin: true`.
+- A chave privada VAPID fica no Google Cloud Secret Manager.
+- Tokens e subscriptions podem ser cadastrados pelo cliente, mas não podem ser lidos publicamente pelas regras do Firestore.
 
-### Notificação não chega no iPhone
-1. Verifique se o PWA está instalado (não funciona no Safari)
-2. Verifique permissões: Ajustes → Notificações → Sapos League
-3. Desative "Não Perturbe"
-4. Desinstale e reinstale o PWA
-5. Certifique-se que tem iOS 16.4 ou superior
+### Supabase
 
-### Notificação não chega no Android
-1. Verifique permissões de notificação
-2. Feche e reabra o app para atualizar Service Worker
-3. Limpe cache do navegador se necessário
-4. Use a página debug.html para diagnosticar
+- Leituras públicas usam apenas a chave `anon` e permanecem sujeitas ao RLS.
+- `INSERT`, `UPDATE` e `DELETE` nas tabelas protegidas passam pela Cloud Function `adminSupabaseWrite`.
+- A função valida o token Firebase, a permissão administrativa, a tabela, a operação e o payload.
+- A chave elevada do Supabase fica somente no Secret Manager como `SUPABASE_ADMIN_KEY`.
+- Nunca coloque uma chave `sb_secret_...` ou `service_role` em HTML, JavaScript do navegador ou arquivos versionados.
+- A migração de segurança está em `supabase/20260727_secure_admin_rls.sql`.
 
-### Ícone genérico aparece na notificação
-1. Feche completamente o app
-2. Reabra e aguarde 10-15 segundos
-3. Service Worker precisa atualizar para versão mais recente
-4. Se persistir, desinstale e reinstale o PWA
+## Estrutura do projeto
 
-### Notificação não é enviada automaticamente
-1. Verifique se há jogos cadastrados para o dia correto
-2. Verifique Cloud Scheduler (deve estar habilitado)
-3. Veja os logs das functions
-4. Use funções de teste para validar
+```text
+.
+├── css/                         estilos das páginas
+├── functions/                   Firebase Cloud Functions
+├── images/                      ícones, logos e imagens do PWA
+├── js/                          lógica do frontend
+├── pelada/                      páginas públicas e administrativas das peladas
+├── supabase/                    migrações e políticas SQL
+├── .github/workflows/           automação de deploy do Firebase
+├── index.html                   classificação e próximas partidas
+├── painel.html                  painel administrativo
+├── relatorio-presencas.html     relatório por jogador e por time
+├── firestore.rules              regras do Firestore
+├── site.webmanifest             configuração de instalação do PWA
+└── sw.js                        Service Worker e notificações push
+```
 
----
+## Desenvolvimento local
 
-## 📈 Métricas
+O frontend deve ser servido por HTTP; abrir os arquivos diretamente com `file://` pode impedir módulos, Service Worker e requisições externas.
 
-### Usuários Ativos
-- Verifique quantidade de subscriptions no Firestore
-- Coleção `webPushSubscriptions` - iOS e Android
+Exemplo com Python:
 
-### Taxa de Entrega
-- Veja logs das functions após envio
-- Formato: "✅ Total enviadas: X" e "❌ Total falhas: Y"
+```powershell
+cd "C:\Users\RBR\Pictures\2026"
+python -m http.server 8000
+```
 
-### Uso de Quota
-- Firebase Console → Usage
-- Cloud Functions → Invocations
+Depois, acesse:
 
----
+```text
+http://localhost:8000/
+```
 
-## 🔄 Histórico de Versões
+### Firebase Functions
 
-### v1.1.0 (24/02/2026)
-- ✅ Corrigido registro de notificações no Android PWA
-- ✅ Corrigido ícones das notificações (URLs absolutas)
-- ✅ Adicionada página de debug para testes
-- ✅ Melhorados logs de diagnóstico
-- ✅ Sistema Web Push funcionando em iOS e Android
+Requisitos:
 
-### v1.0.0 (23/02/2026)
-- ✅ Lançamento inicial
-- ✅ Notificações automáticas
-- ✅ Suporte iOS e Android
-- ✅ PWA instalável
+- Node.js 22;
+- Firebase CLI;
+- projeto Firebase `sapos-league` selecionado;
+- parâmetros e segredos configurados.
 
----
+Instalação e validação:
 
-## 🚀 Próximas Melhorias (Opcional)
+```powershell
+cd functions
+npm ci
+npm run check
+```
 
-### Funcionalidades
-- [ ] Notificações personalizadas por time
-- [ ] Histórico de notificações
-- [ ] Estatísticas de jogadores
-- [ ] Chat entre jogadores
+Execução com emuladores:
 
-### Técnicas
-- [ ] Atualizar Node.js para versão mais recente
-- [ ] Implementar testes automatizados
-- [ ] Adicionar analytics
-- [ ] Implementar backup automático
+```powershell
+npm run serve
+```
 
----
+Use `functions/.env.example` como referência para os parâmetros não secretos. Não versione `functions/.env`.
 
-## 📞 Suporte
+Segredos necessários:
 
-### Ferramentas de Debug
-- **Página Debug:** https://saposleague.github.io/2026/debug.html
-- **Firebase Console:** https://console.firebase.google.com/project/sapos-league
-- **Funções de teste manuais**
+```powershell
+firebase functions:secrets:set VAPID_PRIVATE_KEY
+firebase functions:secrets:set SUPABASE_ADMIN_KEY
+```
 
-### Logs e Diagnóstico
-1. Firebase Console → Functions → Logs
-2. Funções de teste manuais
-3. Firestore para verificar dados
-4. Página debug.html para testar dispositivo
+## Publicação
 
----
+### Frontend
 
-## ✅ Checklist de Produção
+O frontend é publicado pelo GitHub Pages a partir da branch `main`. Antes de publicar uma mudança visível no PWA:
 
-- [x] Functions deployadas e funcionando
-- [x] Notificações automáticas configuradas
-- [x] Suporte iOS e Android implementado
-- [x] PWA instalável
-- [x] Modo escuro funcionando
-- [x] Sistema offline funcionando
-- [x] Funções de teste disponíveis
-- [x] Documentação completa
-- [x] Monitoramento configurado
-- [x] Segurança implementada
-- [x] Ícones das notificações funcionando
-- [x] Web Push funcionando em Android e iOS
-- [x] Página de debug disponível
-- [x] Sistema testado e validado
+1. Atualize os parâmetros `?v=` dos arquivos alterados quando necessário.
+2. Incremente `CACHE_VERSION` em `sw.js`.
+3. Verifique sintaxe e comportamento em computador e celular.
+4. Envie a alteração para `main`.
 
----
+### Firebase
 
-## 🎉 Sistema Pronto para Produção!
+O workflow `.github/workflows/firebase-deploy.yml` é executado quando `main` recebe mudanças em:
 
-Seu sistema está 100% funcional e pronto para uso em produção.
+- `functions/**`;
+- `firestore.rules`;
+- no próprio workflow.
 
-**Última atualização:** 24/02/2026  
-**Versão:** 1.1.0  
-**Status:** ✅ Produção
+Ele instala Node.js 22, valida as Functions, autentica no Google Cloud e publica Functions e regras do Firestore.
 
-**Principais Conquistas:**
-- ✅ Notificações funcionando perfeitamente em iOS e Android
-- ✅ Ícones personalizados aparecendo corretamente
-- ✅ Sistema de debug completo para troubleshooting
-- ✅ Documentação atualizada e completa
+## Verificações antes de publicar
+
+```powershell
+node --check js/arquivo-alterado.js
+node --check sw.js
+git diff --check
+
+cd functions
+npm run check
+```
+
+Além das verificações de sintaxe, teste:
+
+- navegação entre fases e rodadas;
+- cadastro, edição e exclusão nas áreas administrativas;
+- relatório em tema claro e escuro;
+- relatório por jogador, por time e filtros;
+- atualização do PWA instalado;
+- registro e recebimento de notificações.
+
+## Monitoramento e diagnóstico
+
+- [Firebase Functions](https://console.firebase.google.com/project/sapos-league/functions)
+- [Firestore](https://console.firebase.google.com/project/sapos-league/firestore)
+- [Logs das Functions](https://console.firebase.google.com/project/sapos-league/functions/logs)
+- [Cloud Scheduler](https://console.cloud.google.com/cloudscheduler?project=sapos-league)
+- [Página de diagnóstico](https://saposleague.github.io/2026/debug.html)
+
+Para conferir dispositivos inscritos:
+
+- `fcmTokens`: tokens FCM compatíveis.
+- `webPushSubscriptions`: subscriptions Web Push de PWA.
+
+## Solução de problemas
+
+### O PWA continua usando uma versão antiga
+
+1. Confirme que a publicação do GitHub Pages terminou.
+2. Feche completamente o PWA e abra novamente com internet.
+3. Aguarde a verificação do Service Worker e aceite a atualização quando apresentada.
+4. Use limpeza manual/reinstalação apenas como último recurso.
+
+O botão de voltar das páginas de pelada não apaga caches nem desregistra o Service Worker.
+
+### A notificação não chegou no iPhone
+
+1. Confirme iOS 16.4 ou superior.
+2. Use o site instalado pela opção **Adicionar à Tela de Início**; Web Push não funciona como esperado apenas em uma aba comum do Safari.
+3. Verifique a permissão em **Ajustes → Notificações → Sapos League**.
+4. Confirme que não há modo Foco/Não Perturbe bloqueando o aviso.
+5. Verifique a subscription e os logs usando `debug.html`.
+
+### A notificação automática não foi enviada
+
+1. Confirme que os jogos possuem data no formato esperado e estão no Firestore.
+2. Verifique o Cloud Scheduler.
+3. Consulte os logs de `notifyWeekGames` ou `notifyTodayGames`.
+4. Execute uma função manual autenticada para isolar o problema.
+
+### O relatório por time parece diferente do histórico
+
+O relatório agrupa todas as presenças pelo **time atual** do jogador. Se um jogador mudou de time, as presenças anteriores passam a contar para o time atual. Jogadores sem time permanecem no relatório individual, mas ficam fora do comparativo entre times.
+
+## Histórico recente
+
+### 2.2.26 — 12/08/2026
+
+- Filtro de jogadores por time no relatório.
+- Indicadores, gráficos e exportações acompanham o filtro.
+
+### 2.2.25 — 12/08/2026
+
+- Melhorias de contraste e legibilidade no tema claro.
+
+### 2.2.24 — 12/08/2026
+
+- Tema claro/escuro no relatório com preferência compartilhada.
+- Meteoros ocultado dos comparativos por time.
+
+### 2.2.23 — 12/08/2026
+
+- Novo relatório por jogador e por time.
+- Médias, gráficos, ranking e exportações PDF/Excel.
+- Acesso ao relatório pelo painel administrativo.
+
+### 2.2.22 — 10/08/2026
+
+- Botão de voltar das peladas deixou de apagar o cache e desregistrar o PWA.
+
+### 2.2.21 — 10/08/2026
+
+- Atualização automática do código e dos estilos do PWA.
+- Estratégia network-first para HTML, JavaScript e CSS.
+
+### 2.2.20 — 10/08/2026
+
+- Rodada inicial escolhida pelo próximo jogo pendente, independentemente da numeração da rodada.
+
+## Estado conhecido
+
+- O arquivo `images/favicon().png` está fora do controle de versão e não é usado pelo site.
+- A versão do PWA deve ser incrementada sempre que houver mudança que possa ficar retida no cache.
+- O relatório esconde Meteoros no comparativo, mas mantém os registros individuais existentes.
