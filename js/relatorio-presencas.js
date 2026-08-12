@@ -1,118 +1,174 @@
 /**
- * relatorio-presencas.js
- * Lógica da página de relatório de presenças.
- * Depende de: config.js (SUPABASE_URL, SUPABASE_ANON_KEY)
+ * Relatório de presenças por jogador e por time.
+ * Depende de config.js e das bibliotecas Chart.js, jsPDF e SheetJS.
  */
 
-// Cores para os gráficos
 const CORES = [
-  '#0088FE', '#00C49F', '#FFBB28', '#FF8042',
-  '#8884d8', '#82ca9d', '#ffc658', '#ff7c7c'
+  '#22c55e', '#38bdf8', '#f59e0b', '#a78bfa',
+  '#fb7185', '#2dd4bf', '#60a5fa', '#f97316'
 ];
 
-let state = {
+const state = {
   conectado: false,
-  dados: [],
   loading: false,
-  erro: ''
+  erro: '',
+  visualizacao: 'jogadores',
+  jogadores: [],
+  times: [],
+  presencas: [],
+  dadosJogadores: [],
+  dadosTimes: [],
+  totalPeladas: 0,
+  totalPresencasSemTime: 0
 };
 
-// ----------------------------------------------------------------
-// Exportação PDF
-// ----------------------------------------------------------------
-function exportarPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+let chartBar = null;
+let chartPie = null;
 
-  doc.setFontSize(18);
-  doc.text('Relatório de Presenças', 14, 20);
+function chaveId(valor) {
+  return valor === null || valor === undefined ? '' : String(valor);
+}
 
-  doc.setFontSize(10);
-  doc.text(
-    `Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`,
-    14, 28
-  );
+function formatarDecimal(valor) {
+  return Number(valor || 0).toLocaleString('pt-BR', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  });
+}
 
-  const totalPresencas = state.dados.reduce((sum, d) => sum + d.total_presencas, 0);
-  const mediaPresencas = state.dados.length > 0
-    ? (totalPresencas / state.dados.length).toFixed(1)
-    : 0;
+function formatarData(dataISO) {
+  if (!dataISO || typeof dataISO !== 'string') return '-';
+  const partes = dataISO.slice(0, 10).split('-');
+  if (partes.length !== 3) return '-';
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
 
-  doc.setFontSize(12);
-  doc.text(`Total de Jogadores: ${state.dados.length}`, 14, 38);
-  doc.text(`Total de Presenças: ${totalPresencas}`, 14, 45);
-  doc.text(`Média por Jogador: ${mediaPresencas}`, 14, 52);
+function urlImagemSegura(url) {
+  if (!url) return './images/favicon.png';
 
-  const tableData = state.dados.map((jogador, idx) => [
-    idx + 1,
-    jogador.nome,
-    jogador.total_presencas,
-    jogador.primeira_presenca,
-    jogador.ultima_presenca
-  ]);
+  try {
+    const resolvida = new URL(url, window.location.href);
+    return ['http:', 'https:'].includes(resolvida.protocol)
+      ? resolvida.href
+      : './images/favicon.png';
+  } catch (_) {
+    return './images/favicon.png';
+  }
+}
 
-  doc.autoTable({
-    startY: 60,
-    head: [['#', 'Jogador', 'Presenças', 'Primeira', 'Última']],
-    body: tableData,
-    theme: 'grid',
-    headStyles: { fillColor: [59, 130, 246] },
-    styles: { fontSize: 9 }
+function prepararDados(jogadores, times, presencas) {
+  const presencasPorJogador = new Map();
+
+  presencas.forEach(presenca => {
+    const jogadorId = chaveId(presenca.jogador_id);
+    if (!jogadorId) return;
+
+    if (!presencasPorJogador.has(jogadorId)) {
+      presencasPorJogador.set(jogadorId, []);
+    }
+    presencasPorJogador.get(jogadorId).push(presenca);
   });
 
-  doc.save(`relatorio-presencas-${new Date().toISOString().split('T')[0]}.pdf`);
+  const timesPorId = new Map(times.map(time => [chaveId(time.id), time]));
+
+  state.dadosJogadores = jogadores.map(jogador => {
+    const registros = presencasPorJogador.get(chaveId(jogador.id)) || [];
+    const datas = registros
+      .map(registro => registro.data_pelada)
+      .filter(Boolean)
+      .sort();
+    const time = timesPorId.get(chaveId(jogador.time_id));
+
+    return {
+      id: jogador.id,
+      nome: jogador.nome || 'Sem nome',
+      time_nome: time?.nome || 'Sem time',
+      total_presencas: registros.length,
+      primeira_presenca: datas.length ? formatarData(datas[0]) : '-',
+      ultima_presenca: datas.length ? formatarData(datas[datas.length - 1]) : '-'
+    };
+  }).sort((a, b) =>
+    b.total_presencas - a.total_presencas || a.nome.localeCompare(b.nome, 'pt-BR')
+  );
+
+  const jogadoresPorTime = new Map();
+  jogadores.forEach(jogador => {
+    const timeId = chaveId(jogador.time_id) || 'sem-time';
+    if (!jogadoresPorTime.has(timeId)) jogadoresPorTime.set(timeId, []);
+    jogadoresPorTime.get(timeId).push(jogador);
+  });
+
+  const timesParaRelatorio = times.map(time => ({
+    ...time,
+    chave: chaveId(time.id)
+  }));
+
+  state.totalPresencasSemTime = (jogadoresPorTime.get('sem-time') || [])
+    .reduce((total, jogador) => {
+      return total + (presencasPorJogador.get(chaveId(jogador.id)) || []).length;
+    }, 0);
+
+  state.totalPeladas = new Set(
+    presencas.map(presenca => presenca.data_pelada).filter(Boolean)
+  ).size;
+
+  state.dadosTimes = timesParaRelatorio.map(time => {
+    const jogadoresDoTime = jogadoresPorTime.get(time.chave) || [];
+    const totalPresencas = jogadoresDoTime.reduce((total, jogador) => {
+      return total + (presencasPorJogador.get(chaveId(jogador.id)) || []).length;
+    }, 0);
+
+    return {
+      id: time.id,
+      nome: time.nome || 'Sem nome',
+      logo_url: time.logo_url,
+      total_jogadores: jogadoresDoTime.length,
+      total_presencas: totalPresencas,
+      media_por_jogador: jogadoresDoTime.length
+        ? totalPresencas / jogadoresDoTime.length
+        : 0,
+      media_por_pelada: state.totalPeladas
+        ? totalPresencas / state.totalPeladas
+        : 0
+    };
+  }).sort((a, b) =>
+    b.total_presencas - a.total_presencas || a.nome.localeCompare(b.nome, 'pt-BR')
+  );
 }
 
-// ----------------------------------------------------------------
-// Exportação Excel
-// ----------------------------------------------------------------
-function exportarExcel() {
-  const totalPresencas = state.dados.reduce((sum, d) => sum + d.total_presencas, 0);
-  const mediaPresencas = state.dados.length > 0
-    ? (totalPresencas / state.dados.length).toFixed(1)
-    : 0;
+async function buscarJson(url, headers, descricao) {
+  const todos = [];
+  const tamanhoPagina = 1000;
+  let inicio = 0;
+  let totalEsperado = null;
 
-  const resumo = [
-    ['RELATÓRIO DE PRESENÇAS'],
-    [],
-    ['Gerado em:', new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR')],
-    [],
-    ['ESTATÍSTICAS'],
-    ['Total de Jogadores:', state.dados.length],
-    ['Total de Presenças:', totalPresencas],
-    ['Média por Jogador:', mediaPresencas],
-    [],
-    ['RANKING DE JOGADORES'],
-    ['#', 'Jogador', 'Presenças', 'Primeira Presença', 'Última Presença']
-  ];
+  do {
+    const resposta = await fetch(url, {
+      method: 'GET',
+      headers: {
+        ...headers,
+        Prefer: 'count=exact',
+        Range: `${inicio}-${inicio + tamanhoPagina - 1}`
+      },
+      cache: 'no-store'
+    });
 
-  const jogadoresData = state.dados.map((jogador, idx) => [
-    idx + 1,
-    jogador.nome,
-    jogador.total_presencas,
-    jogador.primeira_presenca,
-    jogador.ultima_presenca
-  ]);
+    if (!resposta.ok) throw new Error(`Erro ao buscar ${descricao}: ${resposta.status}`);
 
-  const wsData = [...resumo, ...jogadoresData];
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const pagina = await resposta.json();
+    const contentRange = resposta.headers.get('content-range');
+    const totalInformado = contentRange?.split('/')[1];
+    if (totalInformado && totalInformado !== '*') totalEsperado = Number(totalInformado);
 
-  ws['!cols'] = [
-    { wch: 5 },
-    { wch: 25 },
-    { wch: 12 },
-    { wch: 18 },
-    { wch: 18 }
-  ];
+    todos.push(...pagina);
+    inicio += pagina.length;
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Presenças');
-  XLSX.writeFile(wb, `relatorio-presencas-${new Date().toISOString().split('T')[0]}.xlsx`);
+    if (pagina.length === 0) break;
+  } while (totalEsperado !== null ? todos.length < totalEsperado : inicio % tamanhoPagina === 0);
+
+  return todos;
 }
 
-// ----------------------------------------------------------------
-// Busca de dados no Supabase
-// ----------------------------------------------------------------
 async function buscarDados() {
   state.loading = true;
   state.erro = '';
@@ -120,297 +176,393 @@ async function buscarDados() {
 
   try {
     let urlNormalizada = SUPABASE_URL.trim();
-    if (!urlNormalizada.startsWith('http://') && !urlNormalizada.startsWith('https://')) {
-      urlNormalizada = 'https://' + urlNormalizada;
-    }
+    if (!/^https?:\/\//i.test(urlNormalizada)) urlNormalizada = `https://${urlNormalizada}`;
 
     const headers = {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       'Content-Type': 'application/json'
     };
 
-    const [jogadoresRes, presencasRes] = await Promise.all([
-      fetch(`${urlNormalizada}/rest/v1/jogadores?select=*`, { method: 'GET', headers }),
-      fetch(`${urlNormalizada}/rest/v1/presencas?select=*`, { method: 'GET', headers })
+    const base = `${urlNormalizada}/rest/v1`;
+    const [jogadores, times, presencas] = await Promise.all([
+      buscarJson(`${base}/jogadores?select=id,nome,time_id`, headers, 'jogadores'),
+      buscarJson(`${base}/times?select=id,nome,logo_url`, headers, 'times'),
+      buscarJson(`${base}/presencas?select=jogador_id,data_pelada`, headers, 'presenças')
     ]);
 
-    if (!jogadoresRes.ok) throw new Error(`Erro ao buscar jogadores: ${jogadoresRes.status}`);
-    if (!presencasRes.ok) throw new Error(`Erro ao buscar presenças: ${presencasRes.status}`);
+    state.jogadores = jogadores;
+    state.times = times;
+    state.presencas = presencas;
+    prepararDados(jogadores, times, presencas);
+    state.conectado = true;
+  } catch (erro) {
+    console.error('Erro ao carregar relatório:', erro);
+    state.erro = erro.message || 'Não foi possível carregar o relatório.';
+  } finally {
+    state.loading = false;
+    render();
+    if (state.conectado) criarGraficos();
+  }
+}
 
-    const jogadores = await jogadoresRes.json();
-    const presencas = await presencasRes.json();
+function alterarVisualizacao(tipo) {
+  if (!['jogadores', 'times'].includes(tipo) || state.visualizacao === tipo) return;
+  state.visualizacao = tipo;
+  render();
+  criarGraficos();
+}
 
-    const relatorio = jogadores.map(j => {
-      const presencasJogador = presencas.filter(p => p.jogador_id === j.id);
-      const datas = presencasJogador
-        .map(p => p.data_pelada ? new Date(p.data_pelada) : null)
-        .filter(d => d !== null);
+function destruirGraficos() {
+  if (chartBar) chartBar.destroy();
+  if (chartPie) chartPie.destroy();
+  chartBar = null;
+  chartPie = null;
+}
 
-      return {
-        id: j.id,
-        nome: j.nome || 'Sem nome',
-        total_presencas: presencasJogador.length,
-        primeira_presenca: datas.length > 0
-          ? new Date(Math.min(...datas)).toLocaleDateString('pt-BR')
-          : '-',
-        ultima_presenca: datas.length > 0
-          ? new Date(Math.max(...datas)).toLocaleDateString('pt-BR')
-          : '-'
-      };
+function criarGraficos() {
+  destruirGraficos();
+
+  const dados = state.visualizacao === 'times'
+    ? state.dadosTimes
+    : state.dadosJogadores.slice(0, 10);
+  if (!dados.length || typeof Chart === 'undefined') return;
+
+  requestAnimationFrame(() => {
+    const canvasBar = document.getElementById('chartBar');
+    const canvasPie = document.getElementById('chartPie');
+    if (!canvasBar || !canvasPie) return;
+
+    const rotulo = state.visualizacao === 'times' ? 'Time' : 'Jogador';
+    const labels = dados.map(item => item.nome);
+    const totais = dados.map(item => item.total_presencas);
+
+    chartBar = new Chart(canvasBar, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Idas à pelada',
+          data: totais,
+          backgroundColor: '#22c55e',
+          borderRadius: 7,
+          maxBarThickness: 44
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { title: itens => `${rotulo}: ${itens[0].label}` } }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, color: '#94a3b8' }, grid: { color: '#243449' } },
+          x: { ticks: { color: '#cbd5e1' }, grid: { display: false } }
+        }
+      }
     });
 
-    relatorio.sort((a, b) => b.total_presencas - a.total_presencas);
-    state.dados = relatorio;
-    state.conectado = true;
-    state.loading = false;
-
-    render();
-    criarGraficos();
-
-  } catch (err) {
-    console.error('Erro:', err);
-    state.erro = err.message;
-    state.loading = false;
-    render();
-  }
-}
-
-// ----------------------------------------------------------------
-// Gráficos
-// ----------------------------------------------------------------
-function criarGraficos() {
-  if (state.dados.length === 0) return;
-
-  setTimeout(() => {
-    const ctxBar = document.getElementById('chartBar');
-    if (ctxBar) {
-      const top10 = state.dados.slice(0, 10);
-      new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-          labels: top10.map(d => d.nome),
-          datasets: [{
-            label: 'Presenças',
-            data: top10.map(d => d.total_presencas),
-            backgroundColor: '#3b82f6',
-            borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#1e293b',
-              titleColor: '#e2e8f0',
-              bodyColor: '#e2e8f0'
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { color: '#9CA3AF' },
-              grid: { color: '#374151' }
-            },
-            x: {
-              ticks: { color: '#9CA3AF' },
-              grid: { display: false }
-            }
+    chartPie = new Chart(canvasPie, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data: totais, backgroundColor: CORES, borderWidth: 0 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '62%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#cbd5e1', padding: 14, usePointStyle: true }
           }
         }
-      });
-    }
-
-    const ctxPie = document.getElementById('chartPie');
-    if (ctxPie) {
-      const top8 = state.dados.slice(0, 8);
-      new Chart(ctxPie, {
-        type: 'doughnut',
-        data: {
-          labels: top8.map(d => d.nome),
-          datasets: [{
-            data: top8.map(d => d.total_presencas),
-            backgroundColor: CORES,
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: { color: '#e2e8f0', padding: 15 }
-            },
-            tooltip: {
-              backgroundColor: '#1e293b',
-              titleColor: '#e2e8f0',
-              bodyColor: '#e2e8f0'
-            }
-          }
-        }
-      });
-    }
-  }, 100);
+      }
+    });
+  });
 }
 
-// ----------------------------------------------------------------
-// Renderização
-// ----------------------------------------------------------------
-function render() {
-  const app = document.getElementById('app');
+function exportarPDF() {
+  if (!window.jspdf?.jsPDF) return;
 
-  if (!state.conectado) {
-    app.innerHTML = `
-      <div style="min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);padding:2rem;">
-        <div style="max-width:42rem;margin:0 auto;">
-          <div style="background:#1e293b;border-radius:1rem;box-shadow:0 25px 50px rgba(0,0,0,0.5);padding:2rem;border:1px solid #334155;">
-            <div style="text-align:center;margin-bottom:2rem;">
-              <h1 style="font-size:2.25rem;font-weight:bold;color:white;margin-bottom:0.5rem;">⚽ Relatório de Presenças</h1>
-              <p style="color:#94a3b8;">Sistema de controle de jogadores</p>
-            </div>
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const porTimes = state.visualizacao === 'times';
+  const totalPresencas = state.dadosJogadores.reduce((soma, item) => soma + item.total_presencas, 0);
+  const totalPresencasTimes = state.dadosTimes.reduce((soma, item) => soma + item.total_presencas, 0);
 
-            ${state.erro ? `
-              <div style="background:rgba(127,29,29,0.5);border:1px solid #b91c1c;border-radius:0.5rem;padding:1rem;margin-bottom:1.5rem;">
-                <p style="color:#fca5a5;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;">Erro na conexão:</p>
-                <p style="color:#fca5a5;font-size:0.75rem;">${escapeHtml(state.erro)}</p>
-              </div>
-            ` : ''}
+  doc.setFontSize(18);
+  doc.text(`Relatorio de Presencas por ${porTimes ? 'Time' : 'Jogador'}`, 14, 18);
+  doc.setFontSize(9);
+  doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')}`, 14, 25);
+  doc.text(
+    porTimes
+      ? `Peladas: ${state.totalPeladas} | Times: ${state.dadosTimes.length} | Idas com time: ${totalPresencasTimes}`
+      : `Peladas: ${state.totalPeladas} | Jogadores: ${state.dadosJogadores.length} | Presencas: ${totalPresencas}`,
+    14,
+    31
+  );
 
-            <button
-              onclick="buscarDados()"
-              ${state.loading ? 'disabled' : ''}
-              style="width:100%;background:linear-gradient(to right,#2563eb,#1d4ed8);color:white;font-weight:600;padding:1rem 1.5rem;border-radius:0.5rem;border:none;cursor:pointer;font-size:1.125rem;"
-            >
-              ${state.loading ? '🔄 Carregando...' : '🚀 Carregar Relatório'}
-            </button>
+  const cabecalho = porTimes
+    ? [['#', 'Time', 'Jogadores', 'Total de idas', 'Media/jogador', 'Media/pelada']]
+    : [['#', 'Jogador', 'Time', 'Presencas', 'Primeira', 'Ultima']];
+  const corpo = porTimes
+    ? state.dadosTimes.map((time, indice) => [
+        indice + 1, time.nome, time.total_jogadores, time.total_presencas,
+        formatarDecimal(time.media_por_jogador), formatarDecimal(time.media_por_pelada)
+      ])
+    : state.dadosJogadores.map((jogador, indice) => [
+        indice + 1, jogador.nome, jogador.time_nome, jogador.total_presencas,
+        jogador.primeira_presenca, jogador.ultima_presenca
+      ]);
 
-            <div style="margin-top:1.5rem;padding:1rem;background:rgba(51,65,85,0.5);border-radius:0.5rem;">
-              <p style="font-size:0.75rem;color:#94a3b8;text-align:center;">
-                Clique no botão acima para visualizar o relatório de presenças
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    return;
-  }
+  doc.autoTable({
+    startY: 38,
+    head: cabecalho,
+    body: corpo,
+    theme: 'grid',
+    headStyles: { fillColor: [22, 163, 74] },
+    styles: { fontSize: 8 }
+  });
 
-  const totalPresencas = state.dados.reduce((sum, d) => sum + d.total_presencas, 0);
-  const mediaPresencas = state.dados.length > 0
-    ? (totalPresencas / state.dados.length).toFixed(1)
-    : 0;
+  doc.save(`relatorio-${porTimes ? 'times' : 'jogadores'}-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
 
-  app.innerHTML = `
-    <div style="min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);padding:2rem;">
-      <div style="max-width:80rem;margin:0 auto;">
+function exportarExcel() {
+  if (typeof XLSX === 'undefined') return;
 
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
-          <div>
-            <h1 style="font-size:2.25rem;font-weight:bold;color:white;margin-bottom:0.5rem;">⚽ Relatório de Presenças</h1>
-            <p style="color:#94a3b8;">Acompanhe a participação de cada jogador</p>
-          </div>
-          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-            <button onclick="exportarPDF()"
-              style="padding:0.5rem 1rem;background:#dc2626;color:white;border-radius:0.5rem;border:none;cursor:pointer;font-weight:500;"
-              onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
-              📄 Exportar PDF
-            </button>
-            <button onclick="exportarExcel()"
-              style="padding:0.5rem 1rem;background:#16a34a;color:white;border-radius:0.5rem;border:none;cursor:pointer;font-weight:500;"
-              onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
-              📊 Exportar Excel
-            </button>
-            <button onclick="location.reload()"
-              style="padding:0.5rem 1rem;background:#334155;color:white;border-radius:0.5rem;border:none;cursor:pointer;"
-              onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">
-              🔄 Atualizar
-            </button>
-          </div>
-        </div>
+  const totalPresencas = state.dadosJogadores.reduce((soma, item) => soma + item.total_presencas, 0);
+  const workbook = XLSX.utils.book_new();
+  const resumo = XLSX.utils.aoa_to_sheet([
+    ['RELATÓRIO DE PRESENÇAS'],
+    ['Gerado em', new Date().toLocaleString('pt-BR')],
+    ['Peladas registradas', state.totalPeladas],
+    ['Jogadores', state.dadosJogadores.length],
+    ['Times', state.dadosTimes.filter(time => time.id !== null).length],
+    ['Total de presenças', totalPresencas],
+    ['Presenças de jogadores sem time', state.totalPresencasSemTime]
+  ]);
+  const jogadores = XLSX.utils.json_to_sheet(state.dadosJogadores.map((item, indice) => ({
+    '#': indice + 1,
+    Jogador: item.nome,
+    Time: item.time_nome,
+    Presenças: item.total_presencas,
+    'Primeira presença': item.primeira_presenca,
+    'Última presença': item.ultima_presenca
+  })));
+  const times = XLSX.utils.json_to_sheet(state.dadosTimes.map((item, indice) => ({
+    '#': indice + 1,
+    Time: item.nome,
+    Jogadores: item.total_jogadores,
+    'Total de idas': item.total_presencas,
+    'Média por jogador': Number(item.media_por_jogador.toFixed(1)),
+    'Média por pelada': Number(item.media_por_pelada.toFixed(1))
+  })));
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-bottom:2rem;">
-          <div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:0.75rem;padding:1.5rem;box-shadow:0 10px 15px rgba(0,0,0,0.3);">
-            <div style="color:#bfdbfe;font-size:0.875rem;font-weight:500;margin-bottom:0.25rem;">Total de Jogadores</div>
-            <div style="font-size:2.25rem;font-weight:bold;color:white;">${state.dados.length}</div>
-          </div>
-          <div style="background:linear-gradient(135deg,#16a34a,#15803d);border-radius:0.75rem;padding:1.5rem;box-shadow:0 10px 15px rgba(0,0,0,0.3);">
-            <div style="color:#bbf7d0;font-size:0.875rem;font-weight:500;margin-bottom:0.25rem;">Total de Presenças</div>
-            <div style="font-size:2.25rem;font-weight:bold;color:white;">${totalPresencas}</div>
-          </div>
-          <div style="background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:0.75rem;padding:1.5rem;box-shadow:0 10px 15px rgba(0,0,0,0.3);">
-            <div style="color:#ddd6fe;font-size:0.875rem;font-weight:500;margin-bottom:0.25rem;">Média por Jogador</div>
-            <div style="font-size:2.25rem;font-weight:bold;color:white;">${mediaPresencas}</div>
-          </div>
-        </div>
+  resumo['!cols'] = [{ wch: 24 }, { wch: 22 }];
+  jogadores['!cols'] = [{ wch: 5 }, { wch: 25 }, { wch: 22 }, { wch: 12 }, { wch: 18 }, { wch: 18 }];
+  times['!cols'] = [{ wch: 5 }, { wch: 24 }, { wch: 12 }, { wch: 15 }, { wch: 20 }, { wch: 18 }];
 
-        ${state.dados.length > 0 ? `
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin-bottom:2rem;">
-            <div style="background:#1e293b;border-radius:1rem;padding:1.5rem;border:1px solid #334155;box-shadow:0 20px 25px rgba(0,0,0,0.5);">
-              <h2 style="font-size:1.25rem;font-weight:bold;color:white;margin-bottom:1rem;">📊 Top 10 Jogadores</h2>
-              <div style="height:300px;"><canvas id="chartBar"></canvas></div>
-            </div>
-            <div style="background:#1e293b;border-radius:1rem;padding:1.5rem;border:1px solid #334155;box-shadow:0 20px 25px rgba(0,0,0,0.5);">
-              <h2 style="font-size:1.25rem;font-weight:bold;color:white;margin-bottom:1rem;">🥧 Distribuição Top 8</h2>
-              <div style="height:300px;"><canvas id="chartPie"></canvas></div>
-            </div>
-          </div>
-        ` : ''}
+  XLSX.utils.book_append_sheet(workbook, resumo, 'Resumo');
+  XLSX.utils.book_append_sheet(workbook, jogadores, 'Jogadores');
+  XLSX.utils.book_append_sheet(workbook, times, 'Times');
+  XLSX.writeFile(workbook, `relatorio-presencas-${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
 
-        <div style="background:#1e293b;border-radius:1rem;box-shadow:0 20px 25px rgba(0,0,0,0.5);border:1px solid #334155;overflow:hidden;">
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;">
-              <thead>
-                <tr style="background:#334155;">
-                  <th style="padding:1rem 1.5rem;text-align:left;font-size:0.875rem;font-weight:600;color:#e2e8f0;">#</th>
-                  <th style="padding:1rem 1.5rem;text-align:left;font-size:0.875rem;font-weight:600;color:#e2e8f0;">Jogador</th>
-                  <th style="padding:1rem 1.5rem;text-align:center;font-size:0.875rem;font-weight:600;color:#e2e8f0;">Presenças</th>
-                  <th style="padding:1rem 1.5rem;text-align:center;font-size:0.875rem;font-weight:600;color:#e2e8f0;">Primeira</th>
-                  <th style="padding:1rem 1.5rem;text-align:center;font-size:0.875rem;font-weight:600;color:#e2e8f0;">Última</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${state.dados.map((jogador, idx) => `
-                  <tr style="border-bottom:1px solid #334155;">
-                    <td style="padding:1rem 1.5rem;color:#94a3b8;font-weight:500;">${idx + 1}</td>
-                    <td style="padding:1rem 1.5rem;">
-                      <div style="display:flex;align-items:center;gap:0.75rem;">
-                        <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;flex-shrink:0;">
-                          ${escapeHtml(jogador.nome.charAt(0).toUpperCase())}
-                        </div>
-                        <span style="color:white;font-weight:500;">${escapeHtml(jogador.nome)}</span>
-                      </div>
-                    </td>
-                    <td style="padding:1rem 1.5rem;text-align:center;">
-                      <span style="display:inline-flex;align-items:center;justify-content:center;width:3rem;height:3rem;border-radius:50%;background:#2563eb;color:white;font-weight:bold;font-size:1.125rem;">
-                        ${jogador.total_presencas}
-                      </span>
-                    </td>
-                    <td style="padding:1rem 1.5rem;text-align:center;color:#cbd5e1;">${escapeHtml(jogador.primeira_presenca)}</td>
-                    <td style="padding:1rem 1.5rem;text-align:center;color:#cbd5e1;">${escapeHtml(jogador.ultima_presenca)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
+function avatarJogador(nome) {
+  return `<span class="avatar-jogador">${escapeHtml((nome || '?').charAt(0).toUpperCase())}</span>`;
+}
 
-        ${state.dados.length === 0 ? `
-          <div style="background:#1e293b;border-radius:1rem;padding:3rem;text-align:center;border:1px solid #334155;">
-            <p style="color:#94a3b8;font-size:1.125rem;">Conectado! Mas não há dados para exibir.</p>
-            <p style="color:#64748b;font-size:0.875rem;margin-top:0.5rem;">Adicione jogadores e presenças no banco de dados.</p>
-          </div>
-        ` : ''}
+function avatarTime(time) {
+  const nome = escapeHtml(time.nome);
+  const logo = escapeHtml(urlImagemSegura(time.logo_url));
+  return `
+    <span class="avatar-time">
+      <img src="${logo}" alt="Escudo do ${nome}" onerror="this.src='./images/favicon.png'">
+    </span>
+  `;
+}
 
-      </div>
+function renderTabelaJogadores() {
+  if (!state.dadosJogadores.length) return renderVazio('Nenhum jogador cadastrado.');
+
+  return `
+    <div class="tabela-scroll">
+      <table class="relatorio-tabela">
+        <thead><tr>
+          <th>#</th><th>Jogador</th><th>Time</th><th class="centro">Presenças</th>
+          <th class="centro coluna-data">Primeira</th><th class="centro coluna-data">Última</th>
+        </tr></thead>
+        <tbody>
+          ${state.dadosJogadores.map((jogador, indice) => `
+            <tr>
+              <td class="ranking">${indice + 1}</td>
+              <td><div class="identidade">${avatarJogador(jogador.nome)}<strong>${escapeHtml(jogador.nome)}</strong></div></td>
+              <td><span class="time-tag">${escapeHtml(jogador.time_nome)}</span></td>
+              <td class="centro"><span class="numero-destaque">${jogador.total_presencas}</span></td>
+              <td class="centro coluna-data">${escapeHtml(jogador.primeira_presenca)}</td>
+              <td class="centro coluna-data">${escapeHtml(jogador.ultima_presenca)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
     </div>
   `;
 }
 
-// ----------------------------------------------------------------
-// Init
-// ----------------------------------------------------------------
+function renderTabelaTimes() {
+  if (!state.dadosTimes.length) return renderVazio('Nenhum time cadastrado.');
+
+  const totalGeral = state.dadosTimes.reduce((soma, time) => soma + time.total_presencas, 0);
+
+  return `
+    <div class="tabela-scroll">
+      <table class="relatorio-tabela tabela-times">
+        <thead><tr>
+          <th>#</th><th>Time</th><th class="centro">Jogadores</th><th class="centro">Total de idas</th>
+          <th class="centro">Média/jogador</th><th class="centro">Média/pelada</th><th>Participação</th>
+        </tr></thead>
+        <tbody>
+          ${state.dadosTimes.map((time, indice) => {
+            const percentual = totalGeral ? (time.total_presencas / totalGeral) * 100 : 0;
+            return `
+              <tr>
+                <td class="ranking">${indice + 1}</td>
+                <td><div class="identidade">${avatarTime(time)}<strong>${escapeHtml(time.nome)}</strong></div></td>
+                <td class="centro">${time.total_jogadores}</td>
+                <td class="centro"><span class="numero-destaque verde">${time.total_presencas}</span></td>
+                <td class="centro"><strong>${formatarDecimal(time.media_por_jogador)}</strong></td>
+                <td class="centro"><strong>${formatarDecimal(time.media_por_pelada)}</strong></td>
+                <td>
+                  <div class="participacao"><span style="width:${percentual.toFixed(1)}%"></span></div>
+                  <small>${formatarDecimal(percentual)}%</small>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <p class="nota-relatorio">
+      As presenças são agrupadas de acordo com o time atual de cada jogador.
+      ${state.totalPresencasSemTime > 0
+        ? `${state.totalPresencasSemTime} presenças de jogadores sem time não entram neste comparativo.`
+        : ''}
+    </p>
+  `;
+}
+
+function renderVazio(mensagem) {
+  return `<div class="estado-vazio"><span>📋</span><p>${escapeHtml(mensagem)}</p></div>`;
+}
+
+function renderCarregamento() {
+  return `
+    <main class="pagina-relatorio estado-centralizado">
+      <div class="loading-card"><span class="spinner"></span><h1>Carregando relatório</h1><p>Buscando jogadores, times e presenças...</p></div>
+    </main>
+  `;
+}
+
+function renderErro() {
+  return `
+    <main class="pagina-relatorio estado-centralizado">
+      <div class="erro-card">
+        <span class="erro-icone">!</span>
+        <h1>Não foi possível carregar</h1>
+        <p>${escapeHtml(state.erro)}</p>
+        <button class="botao primario" onclick="buscarDados()">Tentar novamente</button>
+      </div>
+    </main>
+  `;
+}
+
+function render() {
+  const app = document.getElementById('app');
+  destruirGraficos();
+
+  if (state.loading && !state.conectado) {
+    app.innerHTML = renderCarregamento();
+    return;
+  }
+
+  if (state.erro && !state.conectado) {
+    app.innerHTML = renderErro();
+    return;
+  }
+
+  if (!state.conectado) {
+    app.innerHTML = renderCarregamento();
+    return;
+  }
+
+  const porTimes = state.visualizacao === 'times';
+  const totalPresencas = state.dadosJogadores.reduce((soma, item) => soma + item.total_presencas, 0);
+  const totalTimes = state.dadosTimes.length;
+  const totalPresencasTimes = state.dadosTimes.reduce((soma, time) => soma + time.total_presencas, 0);
+  const mediaPrincipal = porTimes
+    ? (totalTimes ? totalPresencasTimes / totalTimes : 0)
+    : (state.dadosJogadores.length ? totalPresencas / state.dadosJogadores.length : 0);
+
+  app.innerHTML = `
+    <div class="fundo-campo" aria-hidden="true"></div>
+    <main class="pagina-relatorio">
+      <header class="topo-relatorio">
+        <a class="voltar" href="painel.html" aria-label="Voltar ao painel">←</a>
+        <div class="marca"><img src="./images/favicon.png" alt=""><span>SAPOS <b>LEAGUE</b></span></div>
+        <div class="acoes-topo">
+          <button class="botao secundario" onclick="exportarPDF()">PDF</button>
+          <button class="botao secundario" onclick="exportarExcel()">Excel</button>
+          <button class="botao primario" onclick="buscarDados()" ${state.loading ? 'disabled' : ''}>${state.loading ? 'Atualizando...' : 'Atualizar'}</button>
+        </div>
+      </header>
+
+      <section class="cabecalho-relatorio">
+        <span class="temporada"><i></i> Temporada 2026</span>
+        <h1>Relatório de <em>Presenças</em></h1>
+        <p>Acompanhe a participação nas peladas por jogador ou por time.</p>
+      </section>
+
+      <nav class="abas" aria-label="Tipo de relatório">
+        <button class="aba ${!porTimes ? 'ativa' : ''}" onclick="alterarVisualizacao('jogadores')" aria-selected="${!porTimes}">Por jogador</button>
+        <button class="aba ${porTimes ? 'ativa' : ''}" onclick="alterarVisualizacao('times')" aria-selected="${porTimes}">Por time</button>
+      </nav>
+
+      <section class="cards-resumo">
+        <article class="card-resumo"><span>${porTimes ? 'Times' : 'Jogadores'}</span><strong>${porTimes ? totalTimes : state.dadosJogadores.length}</strong><small>cadastrados</small></article>
+        <article class="card-resumo destaque-verde"><span>Total de idas</span><strong>${porTimes ? totalPresencasTimes : totalPresencas}</strong><small>${porTimes ? 'de jogadores com time' : 'presenças registradas'}</small></article>
+        <article class="card-resumo"><span>${porTimes ? 'Média por time' : 'Média por jogador'}</span><strong>${formatarDecimal(mediaPrincipal)}</strong><small>idas à pelada</small></article>
+        <article class="card-resumo"><span>Peladas</span><strong>${state.totalPeladas}</strong><small>datas registradas</small></article>
+      </section>
+
+      <section class="graficos">
+        <article class="painel-card">
+          <div class="titulo-card"><div><span>DESEMPENHO</span><h2>${porTimes ? 'Idas por time' : 'Top 10 jogadores'}</h2></div><b>Total de presenças</b></div>
+          <div class="grafico-container"><canvas id="chartBar"></canvas></div>
+        </article>
+        <article class="painel-card">
+          <div class="titulo-card"><div><span>DISTRIBUIÇÃO</span><h2>Participação ${porTimes ? 'dos times' : 'dos líderes'}</h2></div></div>
+          <div class="grafico-container"><canvas id="chartPie"></canvas></div>
+        </article>
+      </section>
+
+      <section class="painel-card tabela-card">
+        <div class="titulo-card tabela-titulo">
+          <div><span>RANKING</span><h2>${porTimes ? 'Participação por time' : 'Participação por jogador'}</h2></div>
+          <span class="contador">${porTimes ? state.dadosTimes.length + ' times' : state.dadosJogadores.length + ' jogadores'}</span>
+        </div>
+        ${porTimes ? renderTabelaTimes() : renderTabelaJogadores()}
+      </section>
+    </main>
+  `;
+}
+
+window.buscarDados = buscarDados;
+window.alterarVisualizacao = alterarVisualizacao;
+window.exportarPDF = exportarPDF;
+window.exportarExcel = exportarExcel;
+
 render();
+buscarDados();
