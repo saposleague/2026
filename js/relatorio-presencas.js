@@ -8,6 +8,8 @@ const CORES = [
   '#fb7185', '#2dd4bf', '#60a5fa', '#f97316'
 ];
 
+const TIMES_OCULTOS_NO_RELATORIO = new Set(['METEOROS']);
+
 const state = {
   conectado: false,
   loading: false,
@@ -27,6 +29,14 @@ let chartPie = null;
 
 function chaveId(valor) {
   return valor === null || valor === undefined ? '' : String(valor);
+}
+
+function normalizarNome(valor) {
+  return String(valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toUpperCase();
 }
 
 function formatarDecimal(valor) {
@@ -69,7 +79,10 @@ function prepararDados(jogadores, times, presencas) {
     presencasPorJogador.get(jogadorId).push(presenca);
   });
 
-  const timesPorId = new Map(times.map(time => [chaveId(time.id), time]));
+  const timesVisiveis = times.filter(
+    time => !TIMES_OCULTOS_NO_RELATORIO.has(normalizarNome(time.nome))
+  );
+  const timesPorId = new Map(timesVisiveis.map(time => [chaveId(time.id), time]));
 
   state.dadosJogadores = jogadores.map(jogador => {
     const registros = presencasPorJogador.get(chaveId(jogador.id)) || [];
@@ -98,10 +111,11 @@ function prepararDados(jogadores, times, presencas) {
     jogadoresPorTime.get(timeId).push(jogador);
   });
 
-  const timesParaRelatorio = times.map(time => ({
-    ...time,
-    chave: chaveId(time.id)
-  }));
+  const timesParaRelatorio = timesVisiveis
+    .map(time => ({
+      ...time,
+      chave: chaveId(time.id)
+    }));
 
   state.totalPresencasSemTime = (jogadoresPorTime.get('sem-time') || [])
     .reduce((total, jogador) => {
@@ -236,6 +250,10 @@ function criarGraficos() {
     const rotulo = state.visualizacao === 'times' ? 'Time' : 'Jogador';
     const labels = dados.map(item => item.nome);
     const totais = dados.map(item => item.total_presencas);
+    const temaEscuro = document.body.classList.contains('dark-mode');
+    const corEixo = temaEscuro ? '#cbd5e1' : '#475569';
+    const corEixoSuave = temaEscuro ? '#94a3b8' : '#64748b';
+    const corGrade = temaEscuro ? '#243449' : '#e2e8f0';
 
     chartBar = new Chart(canvasBar, {
       type: 'bar',
@@ -257,8 +275,8 @@ function criarGraficos() {
           tooltip: { callbacks: { title: itens => `${rotulo}: ${itens[0].label}` } }
         },
         scales: {
-          y: { beginAtZero: true, ticks: { precision: 0, color: '#94a3b8' }, grid: { color: '#243449' } },
-          x: { ticks: { color: '#cbd5e1' }, grid: { display: false } }
+          y: { beginAtZero: true, ticks: { precision: 0, color: corEixoSuave }, grid: { color: corGrade } },
+          x: { ticks: { color: corEixo }, grid: { display: false } }
         }
       }
     });
@@ -276,7 +294,7 @@ function criarGraficos() {
         plugins: {
           legend: {
             position: 'bottom',
-            labels: { color: '#cbd5e1', padding: 14, usePointStyle: true }
+            labels: { color: corEixo, padding: 14, usePointStyle: true }
           }
         }
       }
@@ -563,6 +581,10 @@ window.buscarDados = buscarDados;
 window.alterarVisualizacao = alterarVisualizacao;
 window.exportarPDF = exportarPDF;
 window.exportarExcel = exportarExcel;
+
+new MutationObserver(() => {
+  if (state.conectado) criarGraficos();
+}).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
 render();
 buscarDados();

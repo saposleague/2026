@@ -27,6 +27,27 @@ button { color: inherit; }
 
 #app { min-height: 100vh; }
 
+.dark-toggle-button {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 20;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  padding: 9px;
+  place-items: center;
+  color: #0f172a;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, .13);
+  border-radius: 50%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.dark-toggle-button:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0, 0, 0, .24); }
+.dark-toggle-button svg { display: block; width: 23px; height: 23px; }
+
 .fundo-campo {
   position: fixed;
   inset: 0;
@@ -78,7 +99,7 @@ button { color: inherit; }
 }
 .marca b { color: var(--verde); font-weight: inherit; }
 
-.acoes-topo { display: flex; gap: 8px; }
+.acoes-topo { display: flex; gap: 8px; margin-right: 54px; }
 .botao {
   min-height: 38px;
   padding: 0 15px;
@@ -262,6 +283,55 @@ button { color: inherit; }
 .erro-icone { display: inline-grid; width: 42px; height: 42px; place-items: center; color: #fecaca; background: rgba(239,68,68,.17); border-radius: 50%; font-size: 22px; font-weight: 800; }
 @keyframes girar { to { transform: rotate(360deg); } }
 
+/* Tema claro — segue a mesma preferência `modo` usada na página principal. */
+body:not(.dark-mode) {
+  --fundo: #f1f5f9;
+  --painel: #ffffff;
+  --painel-claro: #f8fafc;
+  --borda: rgba(15, 23, 42, .12);
+  --texto: #172033;
+  --texto-suave: #64748b;
+  background: var(--fundo);
+}
+body:not(.dark-mode) .fundo-campo {
+  background:
+    radial-gradient(ellipse 65% 45% at 50% 110%, rgba(34, 197, 94, .13), transparent 70%),
+    radial-gradient(ellipse 55% 35% at 5% 0%, rgba(56, 189, 248, .10), transparent 70%),
+    #f1f5f9;
+}
+body:not(.dark-mode) .voltar,
+body:not(.dark-mode) .botao.secundario,
+body:not(.dark-mode) .abas {
+  color: #334155;
+  background: rgba(255, 255, 255, .82);
+}
+body:not(.dark-mode) .voltar:hover,
+body:not(.dark-mode) .botao.secundario:hover { background: #fff; }
+body:not(.dark-mode) .card-resumo,
+body:not(.dark-mode) .painel-card,
+body:not(.dark-mode) .loading-card,
+body:not(.dark-mode) .erro-card {
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 16px 38px rgba(15, 23, 42, .08);
+}
+body:not(.dark-mode) .card-resumo::after { background: rgba(56, 189, 248, .09); }
+body:not(.dark-mode) .card-resumo.destaque-verde::after { background: rgba(34, 197, 94, .11); }
+body:not(.dark-mode) .card-resumo strong,
+body:not(.dark-mode) .titulo-card h2,
+body:not(.dark-mode) .identidade { color: #172033; }
+body:not(.dark-mode) .card-resumo small,
+body:not(.dark-mode) .ranking,
+body:not(.dark-mode) .nota-relatorio { color: #64748b !important; }
+body:not(.dark-mode) .titulo-card > b,
+body:not(.dark-mode) .contador { color: #475569 !important; background: #eef2f7; }
+body:not(.dark-mode) .relatorio-tabela th { color: #64748b; background: #f8fafc; }
+body:not(.dark-mode) .relatorio-tabela td { color: #475569; }
+body:not(.dark-mode) .relatorio-tabela tbody tr:hover { background: #f8fafc; }
+body:not(.dark-mode) .avatar-time { background: #eef2f7; }
+body:not(.dark-mode) .time-tag { color: #0369a1; background: #e0f2fe; }
+body:not(.dark-mode) .participacao { background: #e2e8f0; }
+body:not(.dark-mode) .dark-toggle-button { background: #fff; }
+
 @media (max-width: 900px) {
   .cards-resumo { grid-template-columns: repeat(2, 1fr); }
   .graficos { grid-template-columns: 1fr; }
@@ -271,7 +341,8 @@ button { color: inherit; }
   .pagina-relatorio { width: min(100% - 24px, 1240px); padding-top: 14px; }
   .topo-relatorio { grid-template-columns: auto 1fr; }
   .marca { justify-self: start; }
-  .acoes-topo { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; }
+  .acoes-topo { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; margin-right: 0; padding-right: 50px; }
+  .dark-toggle-button { top: 14px; right: 12px; }
   .cabecalho-relatorio { padding: 38px 0 24px; }
   .cabecalho-relatorio p { max-width: 310px; margin: 10px auto 0; }
   .cards-resumo { gap: 10px; }
