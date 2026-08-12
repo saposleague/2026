@@ -15,6 +15,7 @@ const state = {
   loading: false,
   erro: '',
   visualizacao: 'jogadores',
+  filtroTime: 'todos',
   jogadores: [],
   times: [],
   presencas: [],
@@ -95,6 +96,7 @@ function prepararDados(jogadores, times, presencas) {
     return {
       id: jogador.id,
       nome: jogador.nome || 'Sem nome',
+      time_id: time ? chaveId(time.id) : 'sem-time',
       time_nome: time?.nome || 'Sem time',
       total_presencas: registros.length,
       primeira_presenca: datas.length ? formatarData(datas[0]) : '-',
@@ -227,6 +229,23 @@ function alterarVisualizacao(tipo) {
   criarGraficos();
 }
 
+function obterJogadoresFiltrados() {
+  if (state.filtroTime === 'todos') return state.dadosJogadores;
+  return state.dadosJogadores.filter(jogador => jogador.time_id === state.filtroTime);
+}
+
+function alterarFiltroTime(timeId) {
+  state.filtroTime = timeId || 'todos';
+  render();
+  criarGraficos();
+}
+
+function obterNomeFiltroTime() {
+  if (state.filtroTime === 'todos') return 'Todos os times';
+  if (state.filtroTime === 'sem-time') return 'Sem time';
+  return state.dadosTimes.find(time => chaveId(time.id) === state.filtroTime)?.nome || 'Todos os times';
+}
+
 function destruirGraficos() {
   if (chartBar) chartBar.destroy();
   if (chartPie) chartPie.destroy();
@@ -239,7 +258,7 @@ function criarGraficos() {
 
   const dados = state.visualizacao === 'times'
     ? state.dadosTimes
-    : state.dadosJogadores.slice(0, 10);
+    : obterJogadoresFiltrados().slice(0, 10);
   if (!dados.length || typeof Chart === 'undefined') return;
 
   requestAnimationFrame(() => {
@@ -308,7 +327,8 @@ function exportarPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const porTimes = state.visualizacao === 'times';
-  const totalPresencas = state.dadosJogadores.reduce((soma, item) => soma + item.total_presencas, 0);
+  const jogadoresExportados = porTimes ? state.dadosJogadores : obterJogadoresFiltrados();
+  const totalPresencas = jogadoresExportados.reduce((soma, item) => soma + item.total_presencas, 0);
   const totalPresencasTimes = state.dadosTimes.reduce((soma, item) => soma + item.total_presencas, 0);
 
   doc.setFontSize(18);
@@ -318,7 +338,7 @@ function exportarPDF() {
   doc.text(
     porTimes
       ? `Peladas: ${state.totalPeladas} | Times: ${state.dadosTimes.length} | Idas com time: ${totalPresencasTimes}`
-      : `Peladas: ${state.totalPeladas} | Jogadores: ${state.dadosJogadores.length} | Presencas: ${totalPresencas}`,
+      : `Filtro: ${obterNomeFiltroTime()} | Jogadores: ${jogadoresExportados.length} | Presencas: ${totalPresencas}`,
     14,
     31
   );
@@ -331,7 +351,7 @@ function exportarPDF() {
         indice + 1, time.nome, time.total_jogadores, time.total_presencas,
         formatarDecimal(time.media_por_jogador), formatarDecimal(time.media_por_pelada)
       ])
-    : state.dadosJogadores.map((jogador, indice) => [
+    : jogadoresExportados.map((jogador, indice) => [
         indice + 1, jogador.nome, jogador.time_nome, jogador.total_presencas,
         jogador.primeira_presenca, jogador.ultima_presenca
       ]);
@@ -351,18 +371,22 @@ function exportarPDF() {
 function exportarExcel() {
   if (typeof XLSX === 'undefined') return;
 
-  const totalPresencas = state.dadosJogadores.reduce((soma, item) => soma + item.total_presencas, 0);
+  const jogadoresExportados = state.visualizacao === 'jogadores'
+    ? obterJogadoresFiltrados()
+    : state.dadosJogadores;
+  const totalPresencas = jogadoresExportados.reduce((soma, item) => soma + item.total_presencas, 0);
   const workbook = XLSX.utils.book_new();
   const resumo = XLSX.utils.aoa_to_sheet([
     ['RELATÓRIO DE PRESENÇAS'],
     ['Gerado em', new Date().toLocaleString('pt-BR')],
     ['Peladas registradas', state.totalPeladas],
-    ['Jogadores', state.dadosJogadores.length],
+    ['Filtro de jogadores', state.visualizacao === 'jogadores' ? obterNomeFiltroTime() : 'Todos os times'],
+    ['Jogadores', jogadoresExportados.length],
     ['Times', state.dadosTimes.filter(time => time.id !== null).length],
     ['Total de presenças', totalPresencas],
     ['Presenças de jogadores sem time', state.totalPresencasSemTime]
   ]);
-  const jogadores = XLSX.utils.json_to_sheet(state.dadosJogadores.map((item, indice) => ({
+  const jogadores = XLSX.utils.json_to_sheet(jogadoresExportados.map((item, indice) => ({
     '#': indice + 1,
     Jogador: item.nome,
     Time: item.time_nome,
@@ -404,7 +428,8 @@ function avatarTime(time) {
 }
 
 function renderTabelaJogadores() {
-  if (!state.dadosJogadores.length) return renderVazio('Nenhum jogador cadastrado.');
+  const jogadores = obterJogadoresFiltrados();
+  if (!jogadores.length) return renderVazio('Nenhum jogador encontrado para este time.');
 
   return `
     <div class="tabela-scroll">
@@ -414,7 +439,7 @@ function renderTabelaJogadores() {
           <th class="centro coluna-data">Primeira</th><th class="centro coluna-data">Última</th>
         </tr></thead>
         <tbody>
-          ${state.dadosJogadores.map((jogador, indice) => `
+          ${jogadores.map((jogador, indice) => `
             <tr>
               <td class="ranking">${indice + 1}</td>
               <td><div class="identidade">${avatarJogador(jogador.nome)}<strong>${escapeHtml(jogador.nome)}</strong></div></td>
@@ -427,6 +452,25 @@ function renderTabelaJogadores() {
         </tbody>
       </table>
     </div>
+  `;
+}
+
+function renderFiltroTimes() {
+  const times = [...state.dadosTimes]
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  const temJogadoresSemTime = state.dadosJogadores.some(jogador => jogador.time_id === 'sem-time');
+
+  return `
+    <label class="filtro-time">
+      <span>Filtrar por time</span>
+      <select onchange="alterarFiltroTime(this.value)" aria-label="Filtrar jogadores por time">
+        <option value="todos" ${state.filtroTime === 'todos' ? 'selected' : ''}>Todos os times</option>
+        ${times.map(time => `
+          <option value="${escapeHtml(chaveId(time.id))}" ${state.filtroTime === chaveId(time.id) ? 'selected' : ''}>${escapeHtml(time.nome)}</option>
+        `).join('')}
+        ${temJogadoresSemTime ? `<option value="sem-time" ${state.filtroTime === 'sem-time' ? 'selected' : ''}>Sem time</option>` : ''}
+      </select>
+    </label>
   `;
 }
 
@@ -517,12 +561,13 @@ function render() {
   }
 
   const porTimes = state.visualizacao === 'times';
-  const totalPresencas = state.dadosJogadores.reduce((soma, item) => soma + item.total_presencas, 0);
+  const jogadoresVisiveis = obterJogadoresFiltrados();
+  const totalPresencas = jogadoresVisiveis.reduce((soma, item) => soma + item.total_presencas, 0);
   const totalTimes = state.dadosTimes.length;
   const totalPresencasTimes = state.dadosTimes.reduce((soma, time) => soma + time.total_presencas, 0);
   const mediaPrincipal = porTimes
     ? (totalTimes ? totalPresencasTimes / totalTimes : 0)
-    : (state.dadosJogadores.length ? totalPresencas / state.dadosJogadores.length : 0);
+    : (jogadoresVisiveis.length ? totalPresencas / jogadoresVisiveis.length : 0);
 
   app.innerHTML = `
     <div class="fundo-campo" aria-hidden="true"></div>
@@ -549,7 +594,7 @@ function render() {
       </nav>
 
       <section class="cards-resumo">
-        <article class="card-resumo"><span>${porTimes ? 'Times' : 'Jogadores'}</span><strong>${porTimes ? totalTimes : state.dadosJogadores.length}</strong><small>cadastrados</small></article>
+        <article class="card-resumo"><span>${porTimes ? 'Times' : 'Jogadores'}</span><strong>${porTimes ? totalTimes : jogadoresVisiveis.length}</strong><small>${porTimes || state.filtroTime === 'todos' ? 'cadastrados' : 'no filtro selecionado'}</small></article>
         <article class="card-resumo destaque-verde"><span>Total de idas</span><strong>${porTimes ? totalPresencasTimes : totalPresencas}</strong><small>${porTimes ? 'de jogadores com time' : 'presenças registradas'}</small></article>
         <article class="card-resumo"><span>${porTimes ? 'Média por time' : 'Média por jogador'}</span><strong>${formatarDecimal(mediaPrincipal)}</strong><small>idas à pelada</small></article>
         <article class="card-resumo"><span>Peladas</span><strong>${state.totalPeladas}</strong><small>datas registradas</small></article>
@@ -569,7 +614,10 @@ function render() {
       <section class="painel-card tabela-card">
         <div class="titulo-card tabela-titulo">
           <div><span>RANKING</span><h2>${porTimes ? 'Participação por time' : 'Participação por jogador'}</h2></div>
-          <span class="contador">${porTimes ? state.dadosTimes.length + ' times' : state.dadosJogadores.length + ' jogadores'}</span>
+          <div class="controles-tabela">
+            ${porTimes ? '' : renderFiltroTimes()}
+            <span class="contador">${porTimes ? state.dadosTimes.length + ' times' : jogadoresVisiveis.length + ' jogadores'}</span>
+          </div>
         </div>
         ${porTimes ? renderTabelaTimes() : renderTabelaJogadores()}
       </section>
@@ -579,6 +627,7 @@ function render() {
 
 window.buscarDados = buscarDados;
 window.alterarVisualizacao = alterarVisualizacao;
+window.alterarFiltroTime = alterarFiltroTime;
 window.exportarPDF = exportarPDF;
 window.exportarExcel = exportarExcel;
 
