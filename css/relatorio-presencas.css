@@ -329,6 +329,22 @@ body:not(.dark-mode) .relatorio-tabela td { color: #475569; }
 body:not(.dark-mode) .relatorio-tabela tbody tr:hover { background: #f8fafc; }
 body:not(.dark-mode) .avatar-time { background: #eef2f7; }
 body:not(.dark-mode) .time-tag { color: #0369a1; background: #e0f2fe; }
+body:not(.dark-mode) .temporada {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #86efac;
+}
+body:not(.dark-mode) .numero-destaque {
+  color: #1e40af;
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+body:not(.dark-mode) .numero-destaque.verde {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #86efac;
+}
+body:not(.dark-mode) .relatorio-tabela td small { color: #475569; }
 body:not(.dark-mode) .participacao { background: #e2e8f0; }
 body:not(.dark-mode) .dark-toggle-button { background: #fff; }
 
