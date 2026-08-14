@@ -61,9 +61,19 @@ body.modal-open { overflow: hidden; }
 #mensagem-texto { margin: 0 0 17px; color: rgba(255,255,255,.72); font-size: 13px; line-height: 1.55; white-space: pre-line; }
 
 /* Tema claro */
-body:not(.dark-mode) .fase-selector label, body:not(.dark-mode) .form-label, body:not(.dark-mode) .score-help, body:not(.dark-mode) .champions-intro p { color: #64748b; }
-body:not(.dark-mode) .form-label small { color: #94a3b8; }
-body:not(.dark-mode) .form-section-title { color: #334155; }
+body:not(.dark-mode) .sp-title span { color: #15803d; }
+body:not(.dark-mode) .sp-hero .sp-subtitle { color: #475569; font-weight: 500; }
+body:not(.dark-mode) .sp-page-badge { color: #1e40af; font-weight: 600; }
+body:not(.dark-mode) .fase-selector label,
+body:not(.dark-mode) .form-label { color: #475569; font-weight: 700; }
+body:not(.dark-mode) .form-label small { color: #64748b; font-size: 9px; font-weight: 600; }
+body:not(.dark-mode) .form-section-title { color: #1e293b; }
+body:not(.dark-mode) .form-section-title span,
+body:not(.dark-mode) .match-team-label { color: #15803d; }
+body:not(.dark-mode) .score-help,
+body:not(.dark-mode) .champions-intro p { color: #475569; }
+body:not(.dark-mode) .score-help { font-size: 11px; font-weight: 500; }
+body:not(.dark-mode) .main-card .form-input::placeholder { color: #64748b; opacity: 1; }
 body:not(.dark-mode) .form-section-title:not(:first-child), body:not(.dark-mode) .button-section, body:not(.dark-mode) .popup-header, body:not(.dark-mode) .rodada-header, body:not(.dark-mode) .paginacao { border-color: rgba(15,23,42,.09); }
 body:not(.dark-mode) .match-team, body:not(.dark-mode) .rodada { background: #f8fafc; border-color: rgba(15,23,42,.09); }
 body:not(.dark-mode) .champions-intro { background: #fffbeb; border-color: #fde68a; }
