@@ -293,6 +293,42 @@ function adicionarListaDetalhes(container, titulo, itens, formatarItem = item =>
   container.append(tituloEl, lista);
 }
 
+function criarListaNomesProcessados(reconhecidos) {
+  const bloco = document.createElement('div');
+  bloco.className = 'sp-importacao-processados';
+
+  const titulo = document.createElement('div');
+  titulo.className = 'sp-importacao-processados-titulo';
+  titulo.textContent = 'Nomes reconhecidos:';
+
+  const lista = document.createElement('ul');
+  lista.className = 'sp-importacao-processados-lista';
+
+  [...reconhecidos]
+    .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
+    .forEach(item => {
+      const li = document.createElement('li');
+
+      const correspondencia = document.createElement('span');
+      correspondencia.className = 'sp-importacao-correspondencia';
+      correspondencia.textContent = `${item.nomeInformado} → ${item.jogador.nome}`;
+
+      const tipo = document.createElement('span');
+      tipo.className = `sp-importacao-tipo sp-importacao-tipo-${item.estrategia}`;
+      tipo.textContent = item.estrategia === 'exato'
+        ? 'Exato'
+        : item.estrategia === 'confirmado'
+          ? 'Confirmado'
+          : 'Aproximação';
+
+      li.append(correspondencia, tipo);
+      lista.appendChild(li);
+    });
+
+  bloco.append(titulo, lista);
+  return bloco;
+}
+
 function criarEscolhaAmbigua(item) {
   const bloco = document.createElement('div');
   bloco.className = 'sp-importacao-ambiguo';
@@ -336,6 +372,7 @@ function resolverNomeAmbiguo(item, jogadorId) {
     jogador,
     nomeInformado: item.nomeInformado,
     estrategia: 'confirmado',
+    ordem: item.ordem,
   });
   resultado.ambiguos = resultado.ambiguos.filter(ambiguo => ambiguo !== item);
 
@@ -358,12 +395,7 @@ function mostrarResultadoImportacao(resultado = state.resultadoImportacao) {
   resumo.textContent = `✅ ${reconhecidos.length} jogador${reconhecidos.length !== 1 ? 'es' : ''} selecionado${reconhecidos.length !== 1 ? 's' : ''}. Revise a seleção antes de gerar.`;
   container.appendChild(resumo);
 
-  adicionarListaDetalhes(
-    container,
-    'ℹ️ Reconhecidos por aproximação:',
-    reconhecidos.filter(item => item.estrategia === 'parcial' || item.estrategia === 'similar'),
-    item => `${item.nomeInformado} → ${item.jogador.nome}`,
-  );
+  if (reconhecidos.length) container.appendChild(criarListaNomesProcessados(reconhecidos));
   adicionarListaDetalhes(container, '⚠️ Não encontrados — selecione manualmente:', naoEncontrados);
 
   if (ambiguos.length) {
@@ -402,7 +434,7 @@ function importarListaJogadores() {
   const idsReconhecidos = new Set();
   const nomesInformados = new Set();
 
-  linhas.forEach(nomeInformado => {
+  linhas.forEach((nomeInformado, ordem) => {
     const chaveNome = normalizarNomeImportacao(nomeInformado);
     if (nomesInformados.has(chaveNome)) {
       duplicados.push(nomeInformado);
@@ -421,8 +453,10 @@ function importarListaJogadores() {
         jogador: resultado.jogador,
         nomeInformado,
         estrategia: resultado.estrategia,
+        ordem,
       });
     } else if (resultado.status === 'ambiguo') {
+      resultado.ordem = ordem;
       ambiguos.push(resultado);
     } else {
       naoEncontrados.push(nomeInformado);
