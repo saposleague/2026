@@ -18,15 +18,18 @@ body {
 }
 
 .sp-header > .sp-back {
-  display: grid;
+  display: flex;
   width: 40px;
   height: 40px;
   padding: 0;
-  place-items: center;
+  align-items: center;
+  justify-content: center;
   justify-self: start;
   border-radius: 12px;
   font-size: 0;
+  line-height: 0;
 }
+.sp-header > .sp-back svg { display: block; flex: none; }
 .sp-header > .sp-logo { justify-self: start; }
 
 .sp-header-actions,

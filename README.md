@@ -5,7 +5,7 @@ Aplicação web para gestão do campeonato e das peladas da Sapos League. O proj
 ## Status
 
 - **Ambiente:** produção
-- **Versão do frontend/PWA:** 2.2.33
+- **Versão do frontend/PWA:** 2.2.34
 - **Última atualização:** 14/08/2026
 - **Site:** https://saposleague.github.io/2026/
 
@@ -302,6 +302,10 @@ O botão de voltar das páginas de pelada não apaga caches nem desregistra o Se
 O relatório agrupa todas as presenças pelo **time atual** do jogador. Se um jogador mudou de time, as presenças anteriores passam a contar para o time atual. Jogadores sem time permanecem no relatório individual, mas ficam fora do comparativo entre times.
 
 ## Histórico recente
+
+### 2.2.34 — 14/08/2026
+
+- Alinhamento vertical do ícone no botão de voltar corrigido nas páginas administrativas.
 
 ### 2.2.33 — 14/08/2026
 
