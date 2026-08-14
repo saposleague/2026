@@ -247,7 +247,7 @@ function mostrarGerenciadorPeladas() {
                                 </button>
                             </div>
                             <div class="filter-group">
-                                <button class="filter-btn" style="background: linear-gradient(45deg, #95a5a6, #7f8c8d);" onclick="limparFiltros()">
+                                <button class="filter-btn filter-btn-secondary" onclick="limparFiltros()">
                                     🗑️ Limpar
                                 </button>
                             </div>
@@ -352,11 +352,8 @@ function aplicarFiltros() {
     if (filterBtn) {
         const originalText = filterBtn.innerHTML;
         filterBtn.innerHTML = '🔄 Filtrando...';
-        filterBtn.style.background = 'linear-gradient(45deg, #ffc107, #ff9800)';
-        
         setTimeout(() => {
             filterBtn.innerHTML = originalText;
-            filterBtn.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
         }, 1000);
     }
     

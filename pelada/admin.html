@@ -5,57 +5,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Peladas - Sapos League</title>
     <meta name="description" content="Consulte e edite peladas registradas e gerencie jogadores aptos.">
+    <meta name="theme-color" content="#0a1628">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sapos League">
 
     <link rel="icon" href="../images/favicon-tab.png?v=7" type="image/png" sizes="256x256">
     <link rel="shortcut icon" href="../images/favicon-tab.png?v=7" type="image/png">
     <link rel="apple-touch-icon" href="../images/apple-touch-icon.png">
     <link rel="manifest" href="../site.webmanifest">
 
-    <link rel="stylesheet" href="../css/admin-peladas.css?v=2.2.30">
-    <link rel="stylesheet" href="../css/dark-mode-colors.css">
-    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/gerador-times.css?v=2.2.29">
+    <link rel="stylesheet" href="../css/admin-peladas.css?v=2.2.31">
 </head>
 <body>
-    <button id="toggle-dark-mode" class="dark-toggle-button" title="Alternar modo claro/escuro"></button>
+    <div class="sp-bg-field"></div>
+    <svg class="sp-lines" viewBox="0 0 420 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="10" y="10" width="400" height="200" rx="8" stroke="white" stroke-width="1.5"></rect>
+        <line x1="210" y1="10" x2="210" y2="210" stroke="white" stroke-width="1.5"></line>
+        <circle cx="210" cy="110" r="50" stroke="white" stroke-width="1.5"></circle>
+        <rect x="10" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"></rect>
+        <rect x="350" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"></rect>
+    </svg>
 
-    <button id="back-to-home" class="back-to-home-button" title="Voltar ao painel" data-home-url="../painel.html">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M19 12H5M12 19l-7-7 7-7"></path>
-        </svg>
-    </button>
+    <header class="sp-header">
+        <button id="back-to-home" class="sp-back" type="button" aria-label="Voltar ao Painel" data-home-url="../painel.html">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            Voltar ao Painel
+        </button>
+        <div class="sp-logo">
+            <div class="sp-logo-icon">⚽</div>
+            <div class="sp-logo-text">SAPOS <span>LEAGUE</span></div>
+        </div>
+        <div class="sp-user-actions">
+            <span id="user-email" class="sp-user-email"></span>
+            <button id="logout-btn" class="sp-logout-btn" type="button">Sair</button>
+        </div>
+    </header>
 
-    <main class="container">
-        <header class="header">
-            <h1>⚽ GESTÃO DE PELADAS</h1>
-            <p class="header-subtitle">Manutenção das presenças e dos jogadores aptos</p>
-            <div class="user-info">
-                <span id="user-email"></span>
-                <button id="logout-btn" class="btn-logout">🚪 Sair</button>
+    <section class="sp-hero">
+        <div class="sp-page-badge">📋 Gestão de Peladas</div>
+        <h1 class="sp-title">GERENCIE <span>AS PELADAS</span></h1>
+        <p class="sp-subtitle">Consulte o histórico e mantenha os jogadores aptos atualizados</p>
+    </section>
+
+    <main class="sp-content sp-admin-content">
+        <section class="sp-intro" aria-labelledby="management-intro-title">
+            <div class="sp-card-title-icon sp-intro-icon">ℹ️</div>
+            <div class="sp-intro-copy">
+                <h2 id="management-intro-title">O cadastro começa no Gerador de Times</h2>
+                <p>Importe a lista, gere os times e registre as presenças no Gerador. Aqui você consulta e corrige os registros existentes.</p>
             </div>
-        </header>
-
-        <section class="management-intro" aria-labelledby="management-intro-title">
-            <div class="management-intro-icon">ℹ️</div>
-            <div>
-                <h2 id="management-intro-title">O cadastro agora começa no Gerador de Times</h2>
-                <p>Importe a lista, gere os times e registre as presenças diretamente no Gerador. Use esta página para consultar ou corrigir o que já foi registrado.</p>
-                <a href="../gerador-times.html" class="management-generator-link">Ir para o Gerador de Times</a>
-            </div>
+            <a href="../gerador-times.html" class="sp-btn sp-btn-blue sp-intro-link">Abrir Gerador</a>
         </section>
 
-        <section class="main-content management-actions" aria-label="Opções de gestão">
-            <article class="management-section management-card">
-                <div class="management-icon">📋</div>
-                <h2 class="management-title">Peladas Registradas</h2>
-                <p class="management-desc">Consulte o histórico, filtre por data, altere jogadores e observações ou exclua uma pelada.</p>
-                <button class="btn btn-manage" type="button" onclick="abrirGerenciadorPeladas()">Ver e Editar Peladas</button>
+        <section class="sp-management-grid" aria-label="Opções de gestão">
+            <article class="sp-card sp-management-card">
+                <div class="sp-card-header">
+                    <div class="sp-card-title">
+                        <div class="sp-card-title-icon">📋</div>
+                        Peladas Registradas
+                    </div>
+                </div>
+                <div class="sp-management-body">
+                    <p>Consulte o histórico, filtre por data, altere jogadores e observações ou exclua uma pelada.</p>
+                    <button class="sp-btn-gerar" type="button" onclick="abrirGerenciadorPeladas()">Ver e Editar Peladas</button>
+                </div>
             </article>
 
-            <article class="management-section management-card management-card-aptos">
-                <div class="management-icon">✅</div>
-                <h2 class="management-title">Jogadores Aptos</h2>
-                <p class="management-desc">Defina manualmente quem está apto a jogar, independentemente da participação recente.</p>
-                <button class="btn btn-manage" type="button" onclick="abrirGerenciadorAptos()">Gerenciar Aptos</button>
+            <article class="sp-card sp-management-card">
+                <div class="sp-card-header">
+                    <div class="sp-card-title">
+                        <div class="sp-card-title-icon sp-icon-aptos">✅</div>
+                        Jogadores Aptos
+                    </div>
+                </div>
+                <div class="sp-management-body">
+                    <p>Defina manualmente quem está apto a jogar, independentemente da participação recente.</p>
+                    <button class="sp-btn-gerar" type="button" onclick="abrirGerenciadorAptos()">Gerenciar Aptos</button>
+                </div>
             </article>
         </section>
     </main>
@@ -107,9 +135,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
     <script src="../js/alert-manager.js"></script>
     <script src="../js/config.js?v=2.2.10"></script>
-    <script src="../js/admin-peladas.js?v=2.2.30"></script>
+    <script src="../js/admin-peladas.js?v=2.2.31"></script>
     <script type="module" src="../js/auth-manager.js"></script>
-    <script src="../js/dark-mode-logic.js"></script>
-    <script src="../js/back-to-home.js?v=2.2.30"></script>
+    <script src="../js/back-to-home.js?v=2.2.31"></script>
 </body>
 </html>
