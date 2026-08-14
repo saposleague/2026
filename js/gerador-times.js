@@ -189,6 +189,199 @@ function limparSelecao() {
   atualizarTotalNecessario();
 }
 
+function limparLinhaImportacao(linha) {
+  return linha
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/^\s*(?:(?:\d{1,3}(?:\s*[.\-):]\s*|\s+))|(?:[-–—•*✓✔☑✅]\s*))\s*/u, '')
+    .trim();
+}
+
+function normalizarNomeImportacao(nome) {
+  return normalizar(nome)
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function distanciaLevenshtein(a, b) {
+  const anterior = Array.from({ length: b.length + 1 }, (_, i) => i);
+
+  for (let i = 1; i <= a.length; i++) {
+    const atual = [i];
+    for (let j = 1; j <= b.length; j++) {
+      atual[j] = a[i - 1] === b[j - 1]
+        ? anterior[j - 1]
+        : Math.min(anterior[j - 1], anterior[j], atual[j - 1]) + 1;
+    }
+    anterior.splice(0, anterior.length, ...atual);
+  }
+
+  return anterior[b.length];
+}
+
+function calcularSimilaridadeNome(a, b) {
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  return 1 - (distanciaLevenshtein(a, b) / Math.max(a.length, b.length));
+}
+
+function reconhecerJogador(nomeInformado) {
+  const nomeNormalizado = normalizarNomeImportacao(nomeInformado);
+  if (!nomeNormalizado) return { status: 'nao_encontrado', nomeInformado };
+
+  const candidatos = state.jogadores.map(jogador => ({
+    jogador,
+    nomeNormalizado: normalizarNomeImportacao(jogador.nome),
+  }));
+
+  const exatos = candidatos.filter(c => c.nomeNormalizado === nomeNormalizado);
+  if (exatos.length === 1) return { status: 'reconhecido', jogador: exatos[0].jogador, estrategia: 'exato' };
+  if (exatos.length > 1) return { status: 'ambiguo', nomeInformado, candidatos: exatos.map(c => c.jogador.nome) };
+
+  if (nomeNormalizado.length >= 3) {
+    const parciais = candidatos.filter(c => {
+      const informadoComoPalavras = ` ${nomeNormalizado} `;
+      const cadastradoComoPalavras = ` ${c.nomeNormalizado} `;
+      return cadastradoComoPalavras.includes(informadoComoPalavras)
+        || informadoComoPalavras.includes(cadastradoComoPalavras);
+    });
+
+    if (parciais.length === 1) {
+      return { status: 'reconhecido', jogador: parciais[0].jogador, estrategia: 'parcial' };
+    }
+    if (parciais.length > 1) {
+      return { status: 'ambiguo', nomeInformado, candidatos: parciais.map(c => c.jogador.nome) };
+    }
+  }
+
+  const similares = candidatos
+    .map(c => ({ ...c, similaridade: calcularSimilaridadeNome(nomeNormalizado, c.nomeNormalizado) }))
+    .sort((a, b) => b.similaridade - a.similaridade);
+  const melhor = similares[0];
+  const segundo = similares[1];
+
+  if (melhor?.similaridade >= 0.88 && (!segundo || melhor.similaridade - segundo.similaridade >= 0.08)) {
+    return { status: 'reconhecido', jogador: melhor.jogador, estrategia: 'similar' };
+  }
+
+  const sugestoes = similares
+    .filter(c => c.similaridade >= 0.65)
+    .slice(0, 3)
+    .map(c => c.jogador.nome);
+
+  return sugestoes.length
+    ? { status: 'ambiguo', nomeInformado, candidatos: sugestoes }
+    : { status: 'nao_encontrado', nomeInformado };
+}
+
+function adicionarListaDetalhes(container, titulo, itens, formatarItem = item => item) {
+  if (!itens.length) return;
+
+  const tituloEl = document.createElement('div');
+  tituloEl.className = 'sp-importacao-aviso';
+  tituloEl.textContent = titulo;
+
+  const lista = document.createElement('ul');
+  lista.className = 'sp-importacao-detalhes';
+  itens.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = formatarItem(item);
+    lista.appendChild(li);
+  });
+
+  container.append(tituloEl, lista);
+}
+
+function mostrarResultadoImportacao({ reconhecidos, naoEncontrados, ambiguos, duplicados }) {
+  const container = document.getElementById('resultado-importacao');
+  container.replaceChildren();
+  container.hidden = false;
+
+  const resumo = document.createElement('div');
+  resumo.className = 'sp-importacao-resumo';
+  resumo.textContent = `✅ ${reconhecidos.length} jogador${reconhecidos.length !== 1 ? 'es' : ''} selecionado${reconhecidos.length !== 1 ? 's' : ''}. Revise a seleção antes de gerar.`;
+  container.appendChild(resumo);
+
+  adicionarListaDetalhes(
+    container,
+    'ℹ️ Reconhecidos por aproximação:',
+    reconhecidos.filter(item => item.estrategia !== 'exato'),
+    item => `${item.nomeInformado} → ${item.jogador.nome}`,
+  );
+  adicionarListaDetalhes(container, '⚠️ Não encontrados — selecione manualmente:', naoEncontrados);
+  adicionarListaDetalhes(
+    container,
+    '⚠️ Nomes que precisam de confirmação — selecione manualmente:',
+    ambiguos,
+    item => `${item.nomeInformado} (possíveis: ${item.candidatos.join(', ')})`,
+  );
+  adicionarListaDetalhes(container, 'ℹ️ Nomes repetidos na lista:', duplicados);
+}
+
+function importarListaJogadores() {
+  const textarea = document.getElementById('lista-importacao-input');
+  const linhas = textarea.value
+    .split(/\r?\n/)
+    .map(limparLinhaImportacao)
+    .filter(Boolean);
+
+  if (!linhas.length) {
+    mostrarMensagem('Cole ou digite pelo menos um jogador, com um nome por linha.');
+    textarea.focus();
+    return;
+  }
+
+  if (!state.jogadores.length) {
+    mostrarMensagem('Aguarde o carregamento dos jogadores antes de importar a lista.');
+    return;
+  }
+
+  const reconhecidos = [];
+  const naoEncontrados = [];
+  const ambiguos = [];
+  const duplicados = [];
+  const idsReconhecidos = new Set();
+  const nomesInformados = new Set();
+
+  linhas.forEach(nomeInformado => {
+    const chaveNome = normalizarNomeImportacao(nomeInformado);
+    if (nomesInformados.has(chaveNome)) {
+      duplicados.push(nomeInformado);
+      return;
+    }
+    nomesInformados.add(chaveNome);
+
+    const resultado = reconhecerJogador(nomeInformado);
+    if (resultado.status === 'reconhecido') {
+      if (idsReconhecidos.has(resultado.jogador.id)) {
+        duplicados.push(nomeInformado);
+        return;
+      }
+      idsReconhecidos.add(resultado.jogador.id);
+      reconhecidos.push({
+        jogador: resultado.jogador,
+        nomeInformado,
+        estrategia: resultado.estrategia,
+      });
+    } else if (resultado.status === 'ambiguo') {
+      ambiguos.push(resultado);
+    } else {
+      naoEncontrados.push(nomeInformado);
+    }
+  });
+
+  state.jogadores.forEach(jogador => {
+    jogador.selecionado = idsReconhecidos.has(jogador.id);
+    if (!jogador.selecionado) jogador.goleiro = false;
+  });
+
+  document.getElementById('busca-jogador-input').value = '';
+  renderizarLista(state.jogadores);
+  atualizarContador();
+  atualizarTotalNecessario();
+  mostrarResultadoImportacao({ reconhecidos, naoEncontrados, ambiguos, duplicados });
+}
+
 function aplicarFiltroAtual() {
   const input = document.getElementById('busca-jogador-input');
   if (!input) return;
@@ -387,6 +580,10 @@ function renderizarSeletorGoleiros() {
 
 document.getElementById('selecionar-todos-button').addEventListener('click', selecionarTodos);
 document.getElementById('limpar-selecao-button').addEventListener('click', limparSelecao);
+document.getElementById('importar-lista-button').addEventListener('click', importarListaJogadores);
+document.getElementById('lista-importacao-input').addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') importarListaJogadores();
+});
 
 function normalizar(str) {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();

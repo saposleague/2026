@@ -24,7 +24,7 @@
   <link rel="apple-touch-icon" sizes="152x152" href="./images/web-app-manifest-192x192.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="css/gerador-times.css">
+  <link rel="stylesheet" href="css/gerador-times.css?v=2.2.27">
 </head>
 <body>
 
@@ -72,6 +72,25 @@
           <button id="selecionar-todos-button" class="sp-btn sp-btn-ghost">Selecionar Todos</button>
           <button id="limpar-selecao-button" class="sp-btn sp-btn-danger">Limpar</button>
         </div>
+      </div>
+
+      <div class="sp-importacao">
+        <label class="sp-importacao-label" for="lista-importacao-input">
+          <span>📋 Importar lista da pelada</span>
+          <span class="sp-importacao-hint">um jogador por linha</span>
+        </label>
+        <textarea
+          id="lista-importacao-input"
+          class="sp-importacao-textarea"
+          rows="5"
+          placeholder="Exemplo:&#10;1. João&#10;2. Carlos Silva&#10;3. Pedro"
+          spellcheck="false"
+        ></textarea>
+        <div class="sp-importacao-actions">
+          <span class="sp-importacao-help">A seleção atual será substituída pelos nomes reconhecidos.</span>
+          <button id="importar-lista-button" class="sp-btn sp-btn-primary" type="button">Selecionar da Lista</button>
+        </div>
+        <div id="resultado-importacao" class="sp-importacao-resultado" aria-live="polite" hidden></div>
       </div>
 
       <div class="sp-search">
@@ -271,6 +290,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
   <script src="js/config.js?v=2.2.10"></script>
-  <script type="module" src="js/gerador-times.js?v=2.2.10"></script>
+  <script type="module" src="js/gerador-times.js?v=2.2.27"></script>
 </body>
 </html>

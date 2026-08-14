@@ -5,8 +5,8 @@ Aplicação web para gestão do campeonato e das peladas da Sapos League. O proj
 ## Status
 
 - **Ambiente:** produção
-- **Versão do frontend/PWA:** 2.2.26
-- **Última atualização:** 12/08/2026
+- **Versão do frontend/PWA:** 2.2.27
+- **Última atualização:** 14/08/2026
 - **Site:** https://saposleague.github.io/2026/
 
 ## Acessos
@@ -16,6 +16,7 @@ Aplicação web para gestão do campeonato e das peladas da Sapos League. O proj
 | Site público | https://saposleague.github.io/2026/ |
 | Login administrativo | https://saposleague.github.io/2026/admin.html |
 | Painel administrativo | https://saposleague.github.io/2026/painel.html |
+| Gerador de times | https://saposleague.github.io/2026/gerador-times.html |
 | Gestão de rodadas | https://saposleague.github.io/2026/rodadas.html |
 | Gestão de peladas | https://saposleague.github.io/2026/pelada/admin.html |
 | Relatório de presenças | https://saposleague.github.io/2026/relatorio-presencas.html |
@@ -43,6 +44,8 @@ Aplicação web para gestão do campeonato e das peladas da Sapos League. O proj
 
 - Cadastro e edição de jogadores.
 - Organização dos jogadores por time.
+- Importação de uma lista, com um nome por linha, no Gerador de Times.
+- Reconhecimento automático dos jogadores cadastrados, aviso de nomes incertos e revisão manual antes de gerar.
 - Registro e consulta de presenças nas peladas.
 - Indicação de jogadores aptos com base nas participações recentes.
 - Histórico das peladas anteriores.
@@ -157,6 +160,7 @@ Navegador / PWA
 ├── .github/workflows/           automação de deploy do Firebase
 ├── index.html                   classificação e próximas partidas
 ├── painel.html                  painel administrativo
+├── gerador-times.html           seleção e geração balanceada dos times
 ├── relatorio-presencas.html     relatório por jogador e por time
 ├── firestore.rules              regras do Firestore
 ├── site.webmanifest             configuração de instalação do PWA
@@ -297,6 +301,11 @@ O botão de voltar das páginas de pelada não apaga caches nem desregistra o Se
 O relatório agrupa todas as presenças pelo **time atual** do jogador. Se um jogador mudou de time, as presenças anteriores passam a contar para o time atual. Jogadores sem time permanecem no relatório individual, mas ficam fora do comparativo entre times.
 
 ## Histórico recente
+
+### 2.2.27 — 14/08/2026
+
+- Importação e reconhecimento automático da lista de jogadores no Gerador de Times.
+- Nomes não encontrados, ambíguos ou repetidos ficam destacados para revisão manual.
 
 ### 2.2.26 — 12/08/2026
 
