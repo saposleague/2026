@@ -19,7 +19,8 @@
   <link rel="apple-touch-icon" sizes="152x152" href="./images/web-app-manifest-192x192.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="css/painel.css">
+  <link rel="stylesheet" href="css/painel.css?v=2.2.37">
+  <link rel="stylesheet" href="css/admin-theme.css?v=2.2.37">
 </head>
 <body>
 
@@ -33,12 +34,17 @@
     <rect x="350" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"/>
   </svg>
 
-  <div class="sp-header">
+  <header class="sp-header">
+    <a href="index.html" class="sp-back" aria-label="Voltar ao site principal">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar ao site principal
+    </a>
     <div class="sp-logo">
-      <div class="sp-logo-icon">⚽</div>
+      <img class="sp-logo-image" src="./images/favicon.png" alt="Escudo Sapos League">
       <div class="sp-logo-text">SAPOS <span>LEAGUE</span></div>
     </div>
-    <div class="sp-header-right">
+    <div class="sp-header-actions sp-header-right">
+      <button id="toggle-dark-mode" class="dark-toggle-button" type="button" aria-label="Alternar entre tema claro e escuro"></button>
       <div class="sp-user-badge">
         <div class="sp-avatar" id="user-avatar">--</div>
         <div class="sp-user-info">
@@ -46,9 +52,9 @@
           <div class="sp-user-role">Administrador</div>
         </div>
       </div>
-      <button id="logout-button" class="sp-logout-btn">Sair</button>
+      <button id="logout-button" class="sp-logout-btn" type="button">Sair</button>
     </div>
-  </div>
+  </header>
 
   <div class="sp-hero">
     <div class="sp-season-badge">
@@ -111,7 +117,7 @@
       <p class="sp-card-name">Gestão de Peladas</p>
       <p class="sp-card-desc">Edite peladas e jogadores aptos</p>
     </a>
-    <a href="jogadores.html" class="sp-card" style="border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.07);">
+    <a href="jogadores.html" class="sp-card purple">
       <span class="sp-card-arrow" aria-hidden="true">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
       </span>
@@ -131,6 +137,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
   <script src="js/config.js?v=2.2.10"></script>
-  <script type="module" src="js/painel.js"></script>
+  <script src="js/dark-mode-logic.js?v=2.2.37"></script>
+  <script type="module" src="js/painel.js?v=2.2.37"></script>
 </body>
 </html>
