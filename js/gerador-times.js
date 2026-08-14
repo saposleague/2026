@@ -15,6 +15,7 @@ const state = {
   },
   times: [],              // [{ id, nome, jogadores[], forca }]
   historicoDeTrocas: [],  // snapshots para desfazer
+  resultadoImportacao: null,
 };
 
 // ─── AUTENTICAÇÃO ─────────────────────────────────────────────────────────────
@@ -236,7 +237,7 @@ function reconhecerJogador(nomeInformado) {
 
   const exatos = candidatos.filter(c => c.nomeNormalizado === nomeNormalizado);
   if (exatos.length === 1) return { status: 'reconhecido', jogador: exatos[0].jogador, estrategia: 'exato' };
-  if (exatos.length > 1) return { status: 'ambiguo', nomeInformado, candidatos: exatos.map(c => c.jogador.nome) };
+  if (exatos.length > 1) return { status: 'ambiguo', nomeInformado, candidatos: exatos.map(c => c.jogador) };
 
   if (nomeNormalizado.length >= 3) {
     const parciais = candidatos.filter(c => {
@@ -250,7 +251,7 @@ function reconhecerJogador(nomeInformado) {
       return { status: 'reconhecido', jogador: parciais[0].jogador, estrategia: 'parcial' };
     }
     if (parciais.length > 1) {
-      return { status: 'ambiguo', nomeInformado, candidatos: parciais.map(c => c.jogador.nome) };
+      return { status: 'ambiguo', nomeInformado, candidatos: parciais.map(c => c.jogador) };
     }
   }
 
@@ -267,7 +268,7 @@ function reconhecerJogador(nomeInformado) {
   const sugestoes = similares
     .filter(c => c.similaridade >= 0.65)
     .slice(0, 3)
-    .map(c => c.jogador.nome);
+    .map(c => c.jogador);
 
   return sugestoes.length
     ? { status: 'ambiguo', nomeInformado, candidatos: sugestoes }
@@ -292,7 +293,62 @@ function adicionarListaDetalhes(container, titulo, itens, formatarItem = item =>
   container.append(tituloEl, lista);
 }
 
-function mostrarResultadoImportacao({ reconhecidos, naoEncontrados, ambiguos, duplicados }) {
+function criarEscolhaAmbigua(item) {
+  const bloco = document.createElement('div');
+  bloco.className = 'sp-importacao-ambiguo';
+
+  const nome = document.createElement('div');
+  nome.className = 'sp-importacao-ambiguo-nome';
+  nome.textContent = `“${item.nomeInformado}” pode ser:`;
+
+  const opcoes = document.createElement('div');
+  opcoes.className = 'sp-importacao-opcoes';
+
+  item.candidatos.forEach(candidato => {
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'sp-importacao-opcao';
+    botao.textContent = candidato.nome;
+    botao.disabled = candidato.selecionado;
+    botao.title = candidato.selecionado
+      ? `${candidato.nome} já está selecionado`
+      : `Confirmar ${candidato.nome}`;
+    botao.addEventListener('click', () => resolverNomeAmbiguo(item, candidato.id));
+    opcoes.appendChild(botao);
+  });
+
+  bloco.append(nome, opcoes);
+  return bloco;
+}
+
+function resolverNomeAmbiguo(item, jogadorId) {
+  const resultado = state.resultadoImportacao;
+  const jogador = state.jogadores.find(j => j.id === jogadorId);
+  if (!resultado || !jogador) return;
+
+  if (jogador.selecionado) {
+    mostrarMensagem(`${jogador.nome} já está selecionado para outro nome da lista.`);
+    return;
+  }
+
+  jogador.selecionado = true;
+  resultado.reconhecidos.push({
+    jogador,
+    nomeInformado: item.nomeInformado,
+    estrategia: 'confirmado',
+  });
+  resultado.ambiguos = resultado.ambiguos.filter(ambiguo => ambiguo !== item);
+
+  renderizarLista(state.jogadores);
+  atualizarContador();
+  atualizarTotalNecessario();
+  mostrarResultadoImportacao(resultado);
+}
+
+function mostrarResultadoImportacao(resultado = state.resultadoImportacao) {
+  if (!resultado) return;
+
+  const { reconhecidos, naoEncontrados, ambiguos, duplicados } = resultado;
   const container = document.getElementById('resultado-importacao');
   container.replaceChildren();
   container.hidden = false;
@@ -305,16 +361,19 @@ function mostrarResultadoImportacao({ reconhecidos, naoEncontrados, ambiguos, du
   adicionarListaDetalhes(
     container,
     'ℹ️ Reconhecidos por aproximação:',
-    reconhecidos.filter(item => item.estrategia !== 'exato'),
+    reconhecidos.filter(item => item.estrategia === 'parcial' || item.estrategia === 'similar'),
     item => `${item.nomeInformado} → ${item.jogador.nome}`,
   );
   adicionarListaDetalhes(container, '⚠️ Não encontrados — selecione manualmente:', naoEncontrados);
-  adicionarListaDetalhes(
-    container,
-    '⚠️ Nomes que precisam de confirmação — selecione manualmente:',
-    ambiguos,
-    item => `${item.nomeInformado} (possíveis: ${item.candidatos.join(', ')})`,
-  );
+
+  if (ambiguos.length) {
+    const tituloAmbiguos = document.createElement('div');
+    tituloAmbiguos.className = 'sp-importacao-aviso';
+    tituloAmbiguos.textContent = '⚠️ Confirme os nomes abaixo:';
+    container.appendChild(tituloAmbiguos);
+    ambiguos.forEach(item => container.appendChild(criarEscolhaAmbigua(item)));
+  }
+
   adicionarListaDetalhes(container, 'ℹ️ Nomes repetidos na lista:', duplicados);
 }
 
@@ -379,7 +438,8 @@ function importarListaJogadores() {
   renderizarLista(state.jogadores);
   atualizarContador();
   atualizarTotalNecessario();
-  mostrarResultadoImportacao({ reconhecidos, naoEncontrados, ambiguos, duplicados });
+  state.resultadoImportacao = { reconhecidos, naoEncontrados, ambiguos, duplicados };
+  mostrarResultadoImportacao();
 }
 
 function aplicarFiltroAtual() {
