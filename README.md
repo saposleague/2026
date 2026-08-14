@@ -5,7 +5,7 @@ Aplicação web para gestão do campeonato e das peladas da Sapos League. O proj
 ## Status
 
 - **Ambiente:** produção
-- **Versão do frontend/PWA:** 2.2.29
+- **Versão do frontend/PWA:** 2.2.30
 - **Última atualização:** 14/08/2026
 - **Site:** https://saposleague.github.io/2026/
 
@@ -47,6 +47,7 @@ Aplicação web para gestão do campeonato e das peladas da Sapos League. O proj
 - Importação de uma lista, com um nome por linha, no Gerador de Times.
 - Reconhecimento automático dos jogadores cadastrados, aviso de nomes incertos e revisão manual antes de gerar.
 - Registro e consulta de presenças nas peladas.
+- A Gestão de Peladas fica dedicada à consulta, edição e exclusão do histórico e ao controle manual de jogadores aptos.
 - Indicação de jogadores aptos com base nas participações recentes.
 - Histórico das peladas anteriores.
 - Gestão administrativa protegida por login Firebase.
@@ -301,6 +302,12 @@ O botão de voltar das páginas de pelada não apaga caches nem desregistra o Se
 O relatório agrupa todas as presenças pelo **time atual** do jogador. Se um jogador mudou de time, as presenças anteriores passam a contar para o time atual. Jogadores sem time permanecem no relatório individual, mas ficam fora do comparativo entre times.
 
 ## Histórico recente
+
+### 2.2.30 — 14/08/2026
+
+- Cadastro por lista removido da Gestão de Peladas e centralizado no Gerador de Times.
+- Gestão de Peladas reformulada para manutenção do histórico e dos jogadores aptos.
+- Código de interface do formulário antigo removido.
 
 ### 2.2.29 — 14/08/2026
 

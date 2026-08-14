@@ -38,6 +38,73 @@ body {
     background-clip: text;
 }
 
+.header-subtitle {
+    margin-top: 10px;
+    color: var(--text-medium);
+    text-align: center;
+    line-height: 1.5;
+}
+
+.management-intro {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 24px;
+    padding: 20px 24px;
+    background: var(--container-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: 18px;
+    box-shadow: 0 10px 28px var(--shadow-subtle);
+}
+
+.management-intro-icon {
+    display: flex;
+    flex: 0 0 46px;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: rgba(52, 152, 219, 0.14);
+    font-size: 1.25rem;
+}
+
+.management-intro h2 {
+    margin-bottom: 5px;
+    color: var(--text-dark);
+    font-size: 1.1rem;
+}
+
+.management-intro p {
+    color: var(--text-medium);
+    line-height: 1.5;
+}
+
+.management-generator-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: #2980b9;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.management-generator-link:hover { text-decoration: underline; }
+
+.management-actions { align-items: stretch; }
+
+.management-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 310px;
+    margin: 0;
+}
+
+.management-card .btn-manage { align-self: center; margin-top: auto; }
+.management-card-aptos .management-icon { background: linear-gradient(45deg, #2fb835, #27ae60); }
+.management-card-aptos .btn-manage { background: linear-gradient(45deg, #2fb835, #27ae60); }
+.management-card-aptos .btn-manage:hover { background: linear-gradient(45deg, #27ae60, #1e8449); }
+
 /* Estilos para informações do usuário no header */
 .user-info {
     display: flex;
@@ -1882,6 +1949,15 @@ body.modal-open .editor-pelada * {
 .edicao-info small {
     color: var(--text-medium);
     opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .management-intro { align-items: flex-start; padding: 18px; }
+    .management-card { min-height: 260px; }
+}
+
+@media (max-width: 480px) {
+    .management-intro { flex-direction: column; }
 }
 
 /* ===== CORREÇÕES PARA MODO NOTURNO ===== */

@@ -6,9 +6,9 @@
 (function() {
     'use strict';
 
-    function goHome() {
+    function goHome(destination) {
         // Navegação normal: o cache e o Service Worker devem permanecer ativos.
-        window.location.href = '../index.html';
+        window.location.href = destination;
     }
 
     /**
@@ -20,7 +20,7 @@
         if (backButton) {
             backButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                goHome();
+                goHome(backButton.dataset.homeUrl || '../index.html');
             });
             
             console.log('🔙 Botão de voltar inicializado');
