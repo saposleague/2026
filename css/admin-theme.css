@@ -1,0 +1,365 @@
+/* Tema compartilhado das páginas administrativas */
+
+body {
+  transition: color .2s ease, background-color .2s ease;
+}
+
+.sp-header {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  align-items: center;
+}
+
+.sp-header > .sp-back { justify-self: start; }
+.sp-header > .sp-logo { justify-self: center; }
+
+.sp-header-actions,
+.sp-user-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 8px;
+}
+
+.sp-logo-image {
+  display: block;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.dark-toggle-button {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  place-items: center;
+  color: #0f172a;
+  background: #fff;
+  border: 1px solid rgba(15,23,42,.13);
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+  cursor: pointer;
+  transition: transform .2s ease,box-shadow .2s ease;
+}
+
+.dark-toggle-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(0,0,0,.24);
+}
+
+.dark-toggle-button svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+/* Tema claro. A preferência usa a mesma chave `modo` do relatório. */
+body:not(.dark-mode) {
+  color: #172033;
+  background: #f1f5f9;
+}
+
+body:not(.dark-mode) .sp-bg-field {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 110%, rgba(34,197,94,.15) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 20% -10%, rgba(56,189,248,.11) 0%, transparent 60%),
+    #f1f5f9;
+}
+
+body:not(.dark-mode) .sp-lines {
+  opacity: .055;
+  filter: invert(1);
+}
+
+body:not(.dark-mode) .sp-header {
+  background: rgba(241,245,249,.86);
+  border-bottom-color: rgba(15,23,42,.08);
+}
+
+body:not(.dark-mode) .sp-back {
+  color: #475569;
+  background: rgba(255,255,255,.8);
+  border-color: rgba(15,23,42,.12);
+}
+
+body:not(.dark-mode) .sp-back:hover { background: #fff; }
+body:not(.dark-mode) .sp-logo-text,
+body:not(.dark-mode) .sp-title { color: #172033; }
+body:not(.dark-mode) .sp-subtitle { color: #64748b; }
+
+body:not(.dark-mode) .sp-page-badge {
+  color: #1d4ed8;
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+body:not(.dark-mode) .sp-logout-btn {
+  color: #b91c1c;
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+body:not(.dark-mode) .sp-logout-btn:hover { background: #fecaca; }
+
+body:not(.dark-mode) .sp-card {
+  background: rgba(255,255,255,.94);
+  border-color: rgba(15,23,42,.11);
+  box-shadow: 0 16px 38px rgba(15,23,42,.07);
+}
+
+body:not(.dark-mode) .sp-card-header {
+  border-bottom-color: rgba(15,23,42,.08);
+}
+
+body:not(.dark-mode) .sp-card-title,
+body:not(.dark-mode) .sp-toggle-title,
+body:not(.dark-mode) .jogador-nome,
+body:not(.dark-mode) .jogador-nome-time,
+body:not(.dark-mode) .nome-time,
+body:not(.dark-mode) .jog-nome { color: #263449; }
+
+body:not(.dark-mode) .sp-card-title-icon {
+  background: #dcfce7;
+}
+
+body:not(.dark-mode) .sp-selected-count { color: #15803d; }
+
+body:not(.dark-mode) .sp-importacao {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+body:not(.dark-mode) .sp-importacao-label,
+body:not(.dark-mode) .sp-importacao-processados-titulo { color: #166534; }
+
+body:not(.dark-mode) .sp-importacao-hint,
+body:not(.dark-mode) .sp-importacao-help,
+body:not(.dark-mode) .sp-importacao-detalhes,
+body:not(.dark-mode) .sp-loading-text,
+body:not(.dark-mode) .sp-config-label,
+body:not(.dark-mode) .sp-total-label,
+body:not(.dark-mode) .sp-total-unit,
+body:not(.dark-mode) .sp-toggle-desc,
+body:not(.dark-mode) .resumo-label,
+body:not(.dark-mode) .sp-troca-info,
+body:not(.dark-mode) .time-forca,
+body:not(.dark-mode) .jogo-hora,
+body:not(.dark-mode) .vs-separator,
+body:not(.dark-mode) .sp-form-label,
+body:not(.dark-mode) .sp-empty,
+body:not(.dark-mode) .sp-count { color: #64748b; }
+
+body:not(.dark-mode) .sp-importacao-textarea,
+body:not(.dark-mode) .sp-search input,
+body:not(.dark-mode) .sp-select,
+body:not(.dark-mode) .sp-input,
+body:not(.dark-mode) .sp-textarea,
+body:not(.dark-mode) .nivel-select-inline {
+  color: #334155;
+  background-color: #fff;
+  border-color: rgba(15,23,42,.14);
+}
+
+body:not(.dark-mode) .sp-importacao-textarea::placeholder,
+body:not(.dark-mode) .sp-search input::placeholder,
+body:not(.dark-mode) .sp-input::placeholder,
+body:not(.dark-mode) .sp-textarea::placeholder { color: #94a3b8; }
+
+body:not(.dark-mode) .sp-importacao-resultado {
+  color: #475569;
+  background: #fff;
+  border-color: rgba(15,23,42,.1);
+}
+
+body:not(.dark-mode) .sp-importacao-processados-lista li,
+body:not(.dark-mode) .sp-importacao-ambiguo { background: rgba(34,197,94,.06); }
+body:not(.dark-mode) .sp-importacao-correspondencia,
+body:not(.dark-mode) .sp-importacao-ambiguo-nome { color: #334155; }
+
+body:not(.dark-mode) .sp-select option,
+body:not(.dark-mode) .nivel-select-inline option { color: #334155; background: #fff; }
+
+body:not(.dark-mode) .jogador-item,
+body:not(.dark-mode) .jog-item { border-bottom-color: rgba(15,23,42,.07); }
+body:not(.dark-mode) .jogador-item:hover,
+body:not(.dark-mode) .jog-item:hover { background: #f8fafc; }
+body:not(.dark-mode) .jogador-item.selecionado { background: #f0fdf4; }
+body:not(.dark-mode) .jogador-item.selecionado .jogador-nome { color: #166534; }
+
+body:not(.dark-mode) .btn-goleiro {
+  color: #64748b;
+  border-color: rgba(15,23,42,.15);
+}
+
+body:not(.dark-mode) .sp-total-box,
+body:not(.dark-mode) .sp-resumo,
+body:not(.dark-mode) .sp-troca-painel,
+body:not(.dark-mode) .sp-info-item {
+  background: #f8fafc;
+  border-color: rgba(15,23,42,.09);
+}
+
+body:not(.dark-mode) .sp-info-label { color: #64748b; }
+body:not(.dark-mode) .sp-toggle { background: #cbd5e1; }
+
+body:not(.dark-mode) .sp-btn-ghost {
+  color: #475569;
+  background: #f8fafc;
+  border-color: rgba(15,23,42,.16);
+}
+
+body:not(.dark-mode) .sp-btn-ghost:hover { color: #172033; background: #eef2f7; }
+body:not(.dark-mode) .sp-btn-primary { color: #166534; background: #dcfce7; border-color: #86efac; }
+body:not(.dark-mode) .sp-btn-danger { color: #b91c1c; background: #fee2e2; border-color: #fecaca; }
+body:not(.dark-mode) .sp-btn-amber { color: #92400e; background: #fef3c7; border-color: #fcd34d; }
+body:not(.dark-mode) .sp-btn-blue { color: #1d4ed8; background: #dbeafe; border-color: #93c5fd; }
+
+body:not(.dark-mode) .time-card,
+body:not(.dark-mode) .rodada-preview,
+body:not(.dark-mode) .jogo-preview {
+  background: #f8fafc;
+  border-color: rgba(15,23,42,.1);
+}
+
+body:not(.dark-mode) .time-card-header,
+body:not(.dark-mode) .rodada-header { border-bottom-color: rgba(15,23,42,.08); }
+body:not(.dark-mode) .time-forca { background: #e2e8f0; }
+body:not(.dark-mode) .time-jogador-item { background: #fff; }
+body:not(.dark-mode) .time-jogador-item:hover { background: #eef2f7; }
+body:not(.dark-mode) .time-jogador-item.selecionado-troca {
+  color: #92400e; background: #fffbeb;
+}
+body:not(.dark-mode) .time-jogador-item.selecionado-troca .jogador-nome-time { color: #92400e; }
+
+body:not(.dark-mode) .sp-modal-overlay { background: rgba(15,23,42,.55); }
+body:not(.dark-mode) .sp-modal {
+  background: #fff;
+  border-color: rgba(15,23,42,.12);
+  box-shadow: 0 24px 60px rgba(15,23,42,.18);
+}
+body:not(.dark-mode) .sp-modal-header {
+  color: #172033;
+  border-bottom-color: rgba(15,23,42,.09);
+}
+body:not(.dark-mode) .sp-modal-body { color: #475569; }
+
+body:not(.dark-mode) .sp-star { color: #cbd5e1; }
+body:not(.dark-mode) .sp-star.on { color: #f59e0b; }
+body:not(.dark-mode) .jog-list::-webkit-scrollbar-thumb,
+body:not(.dark-mode) .sp-player-list::-webkit-scrollbar-thumb { background: rgba(15,23,42,.15); }
+
+/* Gestão de Peladas no tema claro */
+body:not(.dark-mode) .sp-intro {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+body:not(.dark-mode) .sp-intro-copy h2 { color: #1e3a8a; }
+body:not(.dark-mode) .sp-intro-copy p { color: #64748b; }
+body:not(.dark-mode) .sp-management-body p { color: #64748b; }
+
+body:not(.dark-mode) .gerenciador-modal-overlay,
+body:not(.dark-mode) #modal-gerenciador-overlay,
+body:not(.dark-mode) .editor-pelada { background: rgba(15,23,42,.55); }
+
+body:not(.dark-mode) .modal-gerenciador,
+body:not(.dark-mode) #modal-gerenciador-content,
+body:not(.dark-mode) .editor-content {
+  background: #fff;
+  border-color: rgba(15,23,42,.12);
+  box-shadow: 0 24px 60px rgba(15,23,42,.18);
+}
+
+body:not(.dark-mode) .modal-header-gerenciador,
+body:not(.dark-mode) .editor-header {
+  background: #f8fafc;
+  border-bottom-color: rgba(15,23,42,.08);
+}
+
+body:not(.dark-mode) .modal-title,
+body:not(.dark-mode) .editor-header h2,
+body:not(.dark-mode) .empty-title { color: #172033; }
+
+body:not(.dark-mode) .filters-section,
+body:not(.dark-mode) .pelada-card,
+body:not(.dark-mode) .pelada-players,
+body:not(.dark-mode) .info-pelada,
+body:not(.dark-mode) .jogadores-editaveis,
+body:not(.dark-mode) .jogador-editavel,
+body:not(.dark-mode) .jogador-apto-item {
+  background: #f8fafc;
+  border-color: rgba(15,23,42,.09);
+}
+
+body:not(.dark-mode) .filters-title,
+body:not(.dark-mode) .info-pelada h4,
+body:not(.dark-mode) .jogadores-editaveis h4 { color: #166534; }
+
+body:not(.dark-mode) .filter-label,
+body:not(.dark-mode) .info-campo label,
+body:not(.dark-mode) .players-label,
+body:not(.dark-mode) .paginacao-info,
+body:not(.dark-mode) .empty-text,
+body:not(.dark-mode) .estado-carregando { color: #64748b; }
+
+body:not(.dark-mode) .filter-input,
+body:not(.dark-mode) .filter-select,
+body:not(.dark-mode) .info-campo input,
+body:not(.dark-mode) .info-campo textarea,
+body:not(.dark-mode) .nome-jogador-input {
+  color: #334155;
+  background: #fff;
+  border-color: rgba(15,23,42,.14);
+}
+
+body:not(.dark-mode) input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: .65;
+}
+
+body:not(.dark-mode) .filter-select option { color: #334155; background: #fff; }
+body:not(.dark-mode) .pelada-count,
+body:not(.dark-mode) .btn-pagina { color: #475569; background: #eef2f7; }
+body:not(.dark-mode) .players-list { color: #475569; }
+body:not(.dark-mode) .pagina-atual { color: #64748b !important; }
+body:not(.dark-mode) .jogador-campo > div[style] { color: #64748b !important; }
+
+body:not(.dark-mode) .sugestoes-container {
+  background: #fff !important;
+  border-color: rgba(15,23,42,.14) !important;
+  box-shadow: 0 14px 32px rgba(15,23,42,.16) !important;
+}
+body:not(.dark-mode) .sugestao-item { border-bottom-color: rgba(15,23,42,.08); }
+body:not(.dark-mode) .sugestao-item .jogador-nome,
+body:not(.dark-mode) .jogador-nome-apto { color: #334155; }
+body:not(.dark-mode) .jogador-time { color: #64748b; }
+body:not(.dark-mode) .checkmark {
+  background: #fff;
+  border-color: rgba(15,23,42,.22);
+}
+
+body:not(.dark-mode) .alert {
+  color: #475569;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(15,23,42,.14);
+}
+body:not(.dark-mode) .alert-title { color: #172033; }
+
+@media (max-width: 600px) {
+  .sp-header { grid-template-columns: 38px minmax(0,1fr) auto; }
+  .sp-header > .sp-logo { justify-self: start; margin-left: 7px; }
+  .sp-logo-image { width: 30px; height: 30px; }
+  .sp-logo-text { font-size: 16px; letter-spacing: 1.4px; }
+  .sp-header-actions,
+  .sp-user-actions { gap: 5px; }
+  .dark-toggle-button { flex-basis: 32px; width: 32px; height: 32px; padding: 6px; }
+  .sp-logout-btn { padding: 6px 10px; }
+}
+
+@media (max-width: 390px) {
+  .sp-logo-text { font-size: 14px; letter-spacing: 1px; }
+  .sp-logo-image { width: 27px; height: 27px; }
+  .sp-logo { gap: 5px; }
+  .sp-logout-btn { padding-inline: 8px; font-size: 11px; }
+}

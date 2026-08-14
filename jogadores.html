@@ -10,8 +10,9 @@
   <link rel="shortcut icon" href="./images/favicon-tab.png?v=7" type="image/png" />
   <link rel="apple-touch-icon" href="./images/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="css/gerador-times.css">
-  <link rel="stylesheet" href="css/jogadores.css">
+  <link rel="stylesheet" href="css/gerador-times.css?v=2.2.29">
+  <link rel="stylesheet" href="css/jogadores.css?v=2.2.32">
+  <link rel="stylesheet" href="css/admin-theme.css?v=2.2.32">
 </head>
 <body>
 
@@ -31,10 +32,13 @@
       Voltar ao Painel
     </button>
     <div class="sp-logo">
-      <div class="sp-logo-icon">⚽</div>
+      <img class="sp-logo-image" src="./images/favicon.png" alt="Escudo Sapos League">
       <div class="sp-logo-text">SAPOS <span>LEAGUE</span></div>
     </div>
-    <button id="logout-button" class="sp-logout-btn">Sair</button>
+    <div class="sp-header-actions">
+      <button id="toggle-dark-mode" class="dark-toggle-button" aria-label="Alternar entre tema claro e escuro"></button>
+      <button id="logout-button" class="sp-logout-btn">Sair</button>
+    </div>
   </div>
 
   <!-- Hero -->
@@ -141,6 +145,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
   <script src="js/config.js?v=2.2.10"></script>
-  <script type="module" src="js/jogadores.js?v=2.2.10"></script>
+  <script src="js/dark-mode-logic.js?v=2.2.32"></script>
+  <script type="module" src="js/jogadores.js?v=2.2.32"></script>
 </body>
 </html>

@@ -21,15 +21,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const moonPath = "M240,96a8,8,0,0,1-8,8H216v16a8,8,0,0,1-16,0V104H184a8,8,0,0,1,0-16h16V72a8,8,0,0,1,16,0V88h16A8,8,0,0,1,240,96ZM144,56h8v8a8,8,0,0,0,16,0V56h8a8,8,0,0,0,0-16h-8V32a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16Zm72.77,97a8,8,0,0,1,1.43,8A96,96,0,1,1,95.07,37.8a8,8,0,0,1,10.6,9.06A88.07,88.07,0,0,0,209.14,150.33A8,8,0,0,1,216.77,153Zm-19.39,14.88c-1.79.09-3.59.14-5.38.14A104.11,104.11,0,0,1,88,64c0-1.79,0-3.59.14-5.38A80,80,0,1,0,197.38,167.86Z";
 
   const atualizarIcone = () => {
+    if (!toggleBtn) return;
+
     // Limpar conteúdo
     toggleBtn.innerHTML = '';
     
     if (body.classList.contains("dark-mode")) {
       const sunSVG = criarSVG(sunPath, "#fbff0a");
       toggleBtn.appendChild(sunSVG);
+      toggleBtn.setAttribute('aria-label', 'Ativar tema claro');
+      toggleBtn.title = 'Ativar tema claro';
     } else {
       const moonSVG = criarSVG(moonPath, "#000000");
       toggleBtn.appendChild(moonSVG);
+      toggleBtn.setAttribute('aria-label', 'Ativar tema escuro');
+      toggleBtn.title = 'Ativar tema escuro';
+    }
+
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) {
+      themeMeta.setAttribute('content', body.classList.contains('dark-mode') ? '#0a1628' : '#f1f5f9');
     }
   };
 
