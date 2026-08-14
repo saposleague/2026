@@ -24,6 +24,10 @@ const salvarJogoBtn = document.getElementById("salvar-jogo-button");
 // Logout centralizado via auth-guard
 setupLogout('logout-button');
 
+document.getElementById('voltar-button')?.addEventListener('click', () => {
+  window.location.href = 'painel.html';
+});
+
 // ----------------------------------------------------
 async function carregarTimes() {
   const snap = await getDocs(collection(db, "times"));

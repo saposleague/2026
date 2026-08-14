@@ -3,202 +3,184 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SAPOS LEAGUE - Painel Admin</title>
-  
-  <!-- PWA Meta Tags -->
-  <meta name="description" content="Painel administrativo do Sapos League 2026">
-  <meta name="theme-color" content="#2e7d32">
+  <title>SAPOS LEAGUE - Gestão de Rodadas</title>
+  <meta name="description" content="Gestão de partidas e rodadas do Sapos League 2026">
+  <meta name="theme-color" content="#0a1628">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Sapos League">
-  
-  <!-- Favicons -->
-  <link rel="icon" href="./images/favicon-tab.png?v=7" type="image/png" sizes="256x256" />
-  <link rel="shortcut icon" href="./images/favicon-tab.png?v=7" type="image/png" />
-  <link rel="apple-touch-icon" href="./images/apple-touch-icon.png" />
-  <link rel="apple-touch-icon" sizes="57x57" href="./images/favicon-48x48.png" />
-  <link rel="apple-touch-icon" sizes="60x60" href="./images/favicon-48x48.png" />
-  <link rel="apple-touch-icon" sizes="72x72" href="./images/favicon-96x96.png" />
-  <link rel="apple-touch-icon" sizes="76x76" href="./images/favicon-96x96.png" />
-  <link rel="apple-touch-icon" sizes="114x114" href="./images/favicon-96x96.png" />
-  <link rel="apple-touch-icon" sizes="120x120" href="./images/favicon-96x96.png" />
-  <link rel="apple-touch-icon" sizes="144x144" href="./images/web-app-manifest-192x192.png" />
-  <link rel="apple-touch-icon" sizes="152x152" href="./images/web-app-manifest-192x192.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png" />
-  
-  <!-- Manifest -->
+
+  <link rel="icon" href="./images/favicon-tab.png?v=7" type="image/png" sizes="256x256">
+  <link rel="shortcut icon" href="./images/favicon-tab.png?v=7" type="image/png">
+  <link rel="apple-touch-icon" href="./images/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="57x57" href="./images/favicon-48x48.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="./images/favicon-48x48.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="./images/favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="./images/favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="./images/favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="./images/favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="./images/web-app-manifest-192x192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="./images/web-app-manifest-192x192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png">
+
   <link rel="manifest" href="/site.webmanifest">
-  
-  <!-- CSS -->
-  <link rel="stylesheet" href="css/rodadas.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
+  <link rel="stylesheet" href="css/gerador-times.css?v=2.2.35">
+  <link rel="stylesheet" href="css/rodadas.css?v=2.2.35">
+  <link rel="stylesheet" href="css/admin-theme.css?v=2.2.35">
 </head>
 <body>
-  <!-- Header Integrado com Botão de Sair -->
-  <div class="page-header">
-    <div class="header-left">
-      <div class="page-subtitle">👤 Administrador</div>
-    </div>
-    <div class="header-right">
-      <button id="logout-button" class="btn-logout-header">
-        Sair
-      </button>
-    </div>
-  </div>
+  <div class="sp-bg-field"></div>
+  <svg class="sp-lines" viewBox="0 0 420 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect x="10" y="10" width="400" height="200" rx="8" stroke="white" stroke-width="1.5"/>
+    <line x1="210" y1="10" x2="210" y2="210" stroke="white" stroke-width="1.5"/>
+    <circle cx="210" cy="110" r="50" stroke="white" stroke-width="1.5"/>
+    <rect x="10" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"/>
+    <rect x="350" y="60" width="60" height="100" rx="4" stroke="white" stroke-width="1.5"/>
+  </svg>
 
-  <!-- Container Principal -->
-  <div class="container">
-    <!-- Card Principal -->
-    <div class="main-card">
-      <div class="card-header">
-        <h2>📝 Cadastrar Nova Partida</h2>
+  <header class="sp-header">
+    <button id="voltar-button" class="sp-back" type="button" aria-label="Voltar ao Painel">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar ao Painel
+    </button>
+    <div class="sp-logo">
+      <img class="sp-logo-image" src="./images/favicon.png" alt="Escudo Sapos League">
+      <div class="sp-logo-text">SAPOS <span>LEAGUE</span></div>
+    </div>
+    <div class="sp-header-actions">
+      <button id="toggle-dark-mode" class="dark-toggle-button" type="button" aria-label="Alternar entre tema claro e escuro"></button>
+      <button id="logout-button" class="sp-logout-btn" type="button">Sair</button>
+    </div>
+  </header>
+
+  <section class="sp-hero">
+    <div class="sp-page-badge">⚽ Gestão de Rodadas</div>
+    <h1 class="sp-title">CADASTRE <span>AS PARTIDAS</span></h1>
+    <p class="sp-subtitle">Organize jogos, resultados e campeões de cada fase</p>
+  </section>
+
+  <main class="sp-content sp-rodadas-content">
+    <section class="sp-card main-card">
+      <div class="sp-card-header card-header">
+        <div class="sp-card-title">
+          <div class="sp-card-title-icon">📝</div>
+          <h2>Cadastrar Nova Partida</h2>
+        </div>
         <div class="fase-selector">
-          <label for="fase-select">Fase:</label>
-          <select id="fase-select" class="form-select-fase">
+          <label for="fase-select">Fase</label>
+          <select id="fase-select" class="sp-select form-select-fase">
             <option value="fase1">Primeira Fase</option>
             <option value="fase2">Segunda Fase</option>
             <option value="final">Final</option>
-            <option value="campeoes">🏆 Definir Campeões</option>
+            <option value="campeoes">Definir Campeões</option>
           </select>
         </div>
       </div>
+
       <div class="card-body">
-        <!-- Formulário de Cadastro de Partida -->
         <div id="form-partida">
-        <!-- Primeira linha: Rodada e Data -->
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="rodada">Número da Rodada</label>
-            <input type="number" id="rodada" class="form-input" min="1" placeholder="Ex: 22">
+          <div class="form-section-title"><span>01</span>Data e rodada</div>
+          <div class="form-row form-row-three">
+            <div class="form-group">
+              <label class="form-label" for="rodada">Número da rodada</label>
+              <input type="number" id="rodada" class="sp-input form-input" min="1" placeholder="Ex: 3">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="data">Data da partida <small>opcional</small></label>
+              <input type="date" id="data" class="sp-input form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="hora">Horário</label>
+              <input type="time" id="hora" class="sp-input form-input">
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="data">Data da Partida (opcional)</label>
-            <input type="date" id="data" class="form-input">
+
+          <div class="form-section-title"><span>02</span>Confronto e placar</div>
+          <div class="match-grid">
+            <div class="match-team">
+              <div class="match-team-label">Time A</div>
+              <div class="form-group">
+                <label class="form-label" for="timeA">Equipe</label>
+                <select id="timeA" class="sp-select form-select"><option value="">Selecione um time</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="golsA">Gols</label>
+                <input type="number" id="golsA" class="sp-input form-input score-input" min="0" placeholder="—">
+              </div>
+            </div>
+
+            <div class="match-versus" aria-hidden="true">×</div>
+
+            <div class="match-team">
+              <div class="match-team-label">Time B</div>
+              <div class="form-group">
+                <label class="form-label" for="timeB">Equipe</label>
+                <select id="timeB" class="sp-select form-select"><option value="">Selecione um time</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="golsB">Gols</label>
+                <input type="number" id="golsB" class="sp-input form-input score-input" min="0" placeholder="—">
+              </div>
+            </div>
+          </div>
+          <p class="score-help">Deixe os gols em branco enquanto a partida ainda não tiver sido disputada.</p>
+
+          <div class="button-section">
+            <button id="salvar-jogo-button" class="sp-btn sp-btn-gerar action-primary" type="button">💾 Salvar Partida</button>
+            <button id="botaoRodadas" class="sp-btn sp-btn-blue" type="button">📋 Ver Histórico</button>
+            <button id="gerador-rodadas-button" class="sp-btn sp-btn-ghost" type="button">🎲 Gerador de Rodadas</button>
           </div>
         </div>
 
-        <!-- Segunda linha: Horário (campo único) -->
-        <div class="form-row-single">
-          <div class="form-group">
-            <label class="form-label" for="hora">Horário</label>
-            <input type="time" id="hora" class="form-input">
-          </div>
-        </div>
-
-        <!-- Terceira linha: Times -->
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="timeA">Time A</label>
-            <select id="timeA" class="form-select">
-              <option value="">Selecione um time</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="timeB">Time B</label>
-            <select id="timeB" class="form-select">
-              <option value="">Selecione um time</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Quarta linha: Gols -->
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="golsA">Gols Time A</label>
-            <input type="number" id="golsA" class="form-input" placeholder="Deixe vazio se não jogou">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="golsB">Gols Time B</label>
-            <input type="number" id="golsB" class="form-input" placeholder="Deixe vazio se não jogou">
-          </div>
-        </div>
-
-        <!-- Seção de Botões -->
-        <div class="button-section">
-          <button id="salvar-jogo-button" class="btn btn-primary">
-            💾 Salvar Partida
-          </button>
-          <button id="botaoRodadas" class="btn btn-secondary">
-            📋 Ver Histórico
-          </button>
-          <button id="gerador-rodadas-button" class="btn btn-success">
-            🎲 Gerador de Rodadas
-          </button>
-        </div>
-        </div>
-        
-        <!-- Formulário de Definir Campeões -->
         <div id="form-campeoes" style="display: none;">
+          <div class="champions-intro">
+            <div class="champions-icon">🏆</div>
+            <div><strong>Defina os vencedores</strong><p>Selecione o campeão de cada fase para exibição no campeonato.</p></div>
+          </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="campeao-fase1">🏆 Campeão da Primeira Fase</label>
-              <select id="campeao-fase1" class="form-select">
-                <option value="">Selecione o campeão</option>
-              </select>
+              <label class="form-label" for="campeao-fase1">Campeão da Primeira Fase</label>
+              <select id="campeao-fase1" class="sp-select form-select"><option value="">Selecione o campeão</option></select>
             </div>
             <div class="form-group">
-              <label class="form-label" for="campeao-fase2">🏆 Campeão da Segunda Fase</label>
-              <select id="campeao-fase2" class="form-select">
-                <option value="">Selecione o campeão</option>
-              </select>
+              <label class="form-label" for="campeao-fase2">Campeão da Segunda Fase</label>
+              <select id="campeao-fase2" class="sp-select form-select"><option value="">Selecione o campeão</option></select>
             </div>
           </div>
-          
-          <div class="button-section">
-            <button id="salvar-campeoes-button" class="btn btn-success">
-              💾 Salvar Campeões
-            </button>
+          <div class="button-section champions-actions">
+            <button id="salvar-campeoes-button" class="sp-btn sp-btn-gerar action-primary" type="button">💾 Salvar Campeões</button>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <!-- Modal de Histórico de Rodadas -->
-  <div id="rodadas-popup" class="popup-overlay">
-    <div class="popup-content">
+  <div id="rodadas-popup" class="popup-overlay" role="dialog" aria-modal="true" aria-labelledby="historico-titulo">
+    <div class="popup-content history-popup">
       <div class="popup-header">
-        <h2>📋 Histórico de Rodadas</h2>
-        <span class="close-button">&times;</span>
+        <div><span class="popup-eyebrow">Partidas cadastradas</span><h2 id="historico-titulo">📋 Histórico de Rodadas</h2></div>
+        <button class="close-button" type="button" aria-label="Fechar histórico">&times;</button>
       </div>
       <div class="popup-body">
         <div id="lista-rodadas"></div>
         <div class="paginacao">
-          <button type="button" id="btn-anterior">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-            Anterior
-          </button>
-          <div class="paginacao-info">
-            <span>Página</span>
-            <input type="number" id="numero-pagina" min="1">
-            <span>de <span id="total-paginas"></span></span>
-          </div>
-          <button type="button" id="btn-proximo">
-            Próxima
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
+          <button type="button" id="btn-anterior"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>Anterior</button>
+          <div class="paginacao-info"><span>Página</span><input type="number" id="numero-pagina" min="1" aria-label="Número da página"><span>de <span id="total-paginas"></span></span></div>
+          <button type="button" id="btn-proximo">Próxima<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal de Mensagem -->
-  <div id="mensagem-popup" class="popup-overlay">
-    <div class="popup-content">
-      <div class="popup-header">
-        <h2>💬 Mensagem</h2>
-      </div>
-      <div class="popup-body">
-        <p id="mensagem-texto"></p>
-        <button id="mensagem-ok-button">✅ OK</button>
-      </div>
+  <div id="mensagem-popup" class="popup-overlay" role="dialog" aria-modal="true" aria-labelledby="mensagem-titulo">
+    <div class="popup-content message-popup">
+      <div class="popup-header"><h2 id="mensagem-titulo">💬 Mensagem</h2></div>
+      <div class="popup-body"><p id="mensagem-texto"></p><button id="mensagem-ok-button" class="sp-btn sp-btn-primary" type="button">OK</button></div>
     </div>
   </div>
 
-  <script type="module" src="js/rodadas.js?v=2.2.13"></script>
+  <script src="js/dark-mode-logic.js?v=2.2.35"></script>
+  <script type="module" src="js/rodadas.js?v=2.2.35"></script>
   <script src="js/pwa-install.js"></script>
 </body>
 </html>
