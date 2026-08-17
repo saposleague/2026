@@ -511,6 +511,20 @@ body.jogadores-page:not(.dark-mode) .sp-btn-gerar:disabled {
   opacity: 1;
 }
 
+body.gerador-times-page:not(.dark-mode) .sp-alert-warn {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #f59e0b;
+  font-weight: 600;
+}
+
+body.gerador-times-page:not(.dark-mode) .sp-alert-ok {
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #4ade80;
+  font-weight: 600;
+}
+
 @media (max-width: 600px) {
   .sp-header {
     grid-template-columns: 40px minmax(0,1fr) auto;
