@@ -17,6 +17,20 @@
 .form-label small { color: rgba(255,255,255,.25); font-size: 8px; font-weight: 400; }
 .form-input, .form-select { min-height: 42px; }
 .form-input::placeholder { color: rgba(255,255,255,.22); }
+input[type="date"].form-input,
+input[type="time"].form-input {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type="date"].form-input::-webkit-date-and-time-value,
+input[type="time"].form-input::-webkit-date-and-time-value {
+  min-inline-size: 0;
+  text-align: left;
+}
 input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator { opacity: .65; filter: invert(1); }
 .match-grid { display: grid; grid-template-columns: minmax(0,1fr) 34px minmax(0,1fr); align-items: center; gap: 12px; }
 .match-team { display: grid; grid-template-columns: minmax(0,1fr) 82px; gap: 10px; padding: 13px; background: rgba(255,255,255,.035); border: .5px solid rgba(255,255,255,.08); border-radius: 12px; }
