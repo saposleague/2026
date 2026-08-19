@@ -838,6 +838,7 @@ function fecharEditorPelada() {
 
 let inputSugestaoAtivo = null;
 let buscaSugestaoAtual = 0;
+let frameReposicionamentoSugestoes = null;
 
 function obterSugestoesFlutuantes() {
     let container = document.getElementById('sugestoes-jogadores-flutuante');
@@ -914,6 +915,13 @@ function mostrarSugestoes(input, jogadores) {
     container.innerHTML = html;
     container.style.display = 'block';
 
+    posicionarSugestoes(input, container);
+    agendarReposicionamentoSugestoes();
+}
+
+function posicionarSugestoes(input, container) {
+    if (!input?.isConnected || !container || container.style.display === 'none') return;
+
     // O menu fica ligado ao viewport para não ser cortado pelo modal rolável.
     const inputRect = input.getBoundingClientRect();
     const viewport = window.visualViewport;
@@ -949,6 +957,20 @@ function mostrarSugestoes(input, jogadores) {
     container.style.maxHeight = `${alturaMaxima}px`;
     container.style.top = `${topo}px`;
     container.style.bottom = 'auto';
+}
+
+function agendarReposicionamentoSugestoes() {
+    if (frameReposicionamentoSugestoes !== null) {
+        cancelAnimationFrame(frameReposicionamentoSugestoes);
+    }
+
+    frameReposicionamentoSugestoes = requestAnimationFrame(() => {
+        frameReposicionamentoSugestoes = null;
+        const container = document.getElementById('sugestoes-jogadores-flutuante');
+        if (inputSugestaoAtivo && container) {
+            posicionarSugestoes(inputSugestaoAtivo, container);
+        }
+    });
 }
 
 // Selecionar jogador da sugestão
@@ -1038,6 +1060,10 @@ document.head.appendChild(style);
 
 // Fechar sugestões
 function fecharSugestoes() {
+    if (frameReposicionamentoSugestoes !== null) {
+        cancelAnimationFrame(frameReposicionamentoSugestoes);
+        frameReposicionamentoSugestoes = null;
+    }
     const sugestoes = document.querySelectorAll('.sugestoes-container');
     sugestoes.forEach(s => s.style.display = 'none');
     inputSugestaoAtivo = null;
@@ -1084,7 +1110,11 @@ function adicionarJogadorPelada() {
 
     const botaoAdicionar = container.querySelector('.btn-adicionar-jogador');
     container.insertBefore(novoJogador, botaoAdicionar);
-    novoJogador.querySelector('.nome-jogador-input').focus();
+    const novoInput = novoJogador.querySelector('.nome-jogador-input');
+    novoInput.focus();
+    requestAnimationFrame(() => {
+        novoJogador.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
     
     console.log('➕ Novo jogador adicionado à interface');
 }
@@ -1096,8 +1126,14 @@ document.addEventListener('pointerdown', (event) => {
     }
 });
 
-window.addEventListener('resize', fecharSugestoes);
-window.visualViewport?.addEventListener('resize', fecharSugestoes);
+document.addEventListener('scroll', (event) => {
+    if (event.target?.closest?.('.sugestoes-flutuantes')) return;
+    agendarReposicionamentoSugestoes();
+}, true);
+
+window.addEventListener('resize', agendarReposicionamentoSugestoes);
+window.visualViewport?.addEventListener('resize', agendarReposicionamentoSugestoes);
+window.visualViewport?.addEventListener('scroll', agendarReposicionamentoSugestoes);
 
 // Remover jogador da pelada
 async function removerJogadorPelada(presencaId) {
