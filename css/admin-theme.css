@@ -368,8 +368,16 @@ body:not(.dark-mode) .jogadores-editaveis,
 body:not(.dark-mode) .jogador-editavel,
 body:not(.dark-mode) .jogador-apto-item {
   background: #f8fafc;
-  border-color: rgba(15,23,42,.09);
+  border-color: #cbd5e1;
 }
+
+body:not(.dark-mode) .pelada-card,
+body:not(.dark-mode) .jogador-editavel {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15,23,42,.05);
+}
+
+body:not(.dark-mode) .pelada-players { background: #f1f5f9; }
 
 body:not(.dark-mode) .filters-title,
 body:not(.dark-mode) .info-pelada h4,
@@ -380,7 +388,7 @@ body:not(.dark-mode) .info-campo label,
 body:not(.dark-mode) .players-label,
 body:not(.dark-mode) .paginacao-info,
 body:not(.dark-mode) .empty-text,
-body:not(.dark-mode) .estado-carregando { color: #64748b; }
+body:not(.dark-mode) .estado-carregando { color: #475569; }
 
 body:not(.dark-mode) .filter-input,
 body:not(.dark-mode) .filter-select,
@@ -389,7 +397,16 @@ body:not(.dark-mode) .info-campo textarea,
 body:not(.dark-mode) .nome-jogador-input {
   color: #334155;
   background: #fff;
-  border-color: rgba(15,23,42,.14);
+  border-color: #b8c4d3;
+}
+
+body:not(.dark-mode) .filter-input:focus,
+body:not(.dark-mode) .filter-select:focus,
+body:not(.dark-mode) .info-campo input:focus,
+body:not(.dark-mode) .info-campo textarea:focus,
+body:not(.dark-mode) .nome-jogador-input:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22,163,74,.12);
 }
 
 body:not(.dark-mode) input[type="date"]::-webkit-calendar-picker-indicator {
@@ -399,10 +416,71 @@ body:not(.dark-mode) input[type="date"]::-webkit-calendar-picker-indicator {
 
 body:not(.dark-mode) .filter-select option { color: #334155; background: #fff; }
 body:not(.dark-mode) .pelada-count,
-body:not(.dark-mode) .btn-pagina { color: #475569; background: #eef2f7; }
+body:not(.dark-mode) .btn-pagina {
+  color: #334155;
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
 body:not(.dark-mode) .players-list { color: #475569; }
 body:not(.dark-mode) .pagina-atual { color: #64748b !important; }
 body:not(.dark-mode) .jogador-campo > div[style] { color: #64748b !important; }
+
+body:not(.dark-mode) .close-btn,
+body:not(.dark-mode) .btn-fechar,
+body:not(.dark-mode) .btn-delete,
+body:not(.dark-mode) .btn-remover,
+body:not(.dark-mode) .btn-cancelar {
+  color: #b91c1c;
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+body:not(.dark-mode) .filter-btn,
+body:not(.dark-mode) .btn-adicionar-jogador,
+body:not(.dark-mode) .btn-salvar,
+body:not(.dark-mode) .btn-confirmar {
+  color: #166534;
+  background: #dcfce7 !important;
+  border-color: #86efac;
+  font-weight: 600;
+}
+
+body:not(.dark-mode) .filter-btn-secondary {
+  color: #334155;
+  background: #e2e8f0 !important;
+  border-color: #cbd5e1;
+}
+
+body:not(.dark-mode) .pelada-date,
+body:not(.dark-mode) .status-cadastrado {
+  color: #166534;
+  background: #dcfce7;
+  border: .5px solid #86efac;
+  font-weight: 600;
+}
+
+body:not(.dark-mode) .status-nao-cadastrado {
+  color: #92400e;
+  background: #fef3c7;
+  border: .5px solid #fcd34d;
+  font-weight: 600;
+}
+
+body:not(.dark-mode) .btn-edit {
+  color: #1d4ed8;
+  background: #dbeafe;
+  border-color: #93c5fd;
+  font-weight: 600;
+}
+
+body:not(.dark-mode) .pelada-observations {
+  color: #78350f;
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+body:not(.dark-mode) .obs-label,
+body:not(.dark-mode) .obs-text { color: #92400e; }
 
 body:not(.dark-mode) .sugestoes-container {
   background: #fff !important;
