@@ -195,6 +195,79 @@ function normalizeOptionalText(value, field, maxLength) {
   return normalized || null;
 }
 
+function normalizePlayerNameKey(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR');
+}
+
+function duplicatePlayerNameError(existingName) {
+  const error = new Error(`Já existe um jogador cadastrado com o nome "${existingName}".`);
+  error.code = 'duplicate_player_name';
+  return error;
+}
+
+function createSupabaseAdminHeaders(adminKey, prefer = null) {
+  const headers = {
+    apikey: adminKey,
+    'Content-Type': 'application/json'
+  };
+
+  if (prefer) headers.Prefer = prefer;
+  if (!adminKey.startsWith('sb_secret_')) {
+    headers.Authorization = `Bearer ${adminKey}`;
+  }
+  return headers;
+}
+
+async function assertUniquePlayerNames({ operation, values, filters, baseUrl, adminKey }) {
+  if (!['insert', 'update'].includes(operation)) return;
+
+  const rows = (Array.isArray(values) ? values : [values])
+    .filter(row => row && row.nome !== undefined);
+  if (rows.length === 0) return;
+
+  const namesInRequest = new Map();
+  for (const row of rows) {
+    const key = normalizePlayerNameKey(row.nome);
+    if (namesInRequest.has(key)) {
+      throw duplicatePlayerNameError(namesInRequest.get(key));
+    }
+    namesInRequest.set(key, row.nome);
+  }
+
+  const existingUrl = new URL(`${baseUrl}/rest/v1/jogadores`);
+  existingUrl.searchParams.set('select', 'id,nome');
+
+  const response = await fetch(existingUrl, {
+    method: 'GET',
+    headers: createSupabaseAdminHeaders(adminKey)
+  });
+
+  if (!response.ok) {
+    const error = new Error('Não foi possível verificar jogadores já cadastrados.');
+    error.code = `supabase_${response.status}`;
+    throw error;
+  }
+
+  const existingPlayers = await response.json();
+  const ignoredId = operation === 'update'
+    ? filters.find(filter => filter.operator === 'eq' && filter.column === 'id')?.value
+    : null;
+
+  for (const row of rows) {
+    const key = normalizePlayerNameKey(row.nome);
+    const duplicate = existingPlayers.find(player => (
+      String(player.id) !== String(ignoredId ?? '') &&
+      normalizePlayerNameKey(player.nome) === key
+    ));
+    if (duplicate) throw duplicatePlayerNameError(duplicate.nome);
+  }
+}
+
 function normalizeIsoDate(value, field) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     throw new Error(`${field} deve estar no formato AAAA-MM-DD.`);
@@ -227,10 +300,14 @@ function normalizeMutationRow(table, row, operation) {
     const normalized = {};
 
     if (row.nome !== undefined) {
-      if (typeof row.nome !== 'string' || row.nome.trim().length < 2 || row.nome.trim().length > 60) {
+      if (typeof row.nome !== 'string') {
         throw new Error('nome deve ter entre 2 e 60 caracteres.');
       }
-      normalized.nome = row.nome.trim();
+      const nome = row.nome.trim().replace(/\s+/g, ' ');
+      if (nome.length < 2 || nome.length > 60) {
+        throw new Error('nome deve ter entre 2 e 60 caracteres.');
+      }
+      normalized.nome = nome;
     }
     if (row.time_id !== undefined) {
       normalized.time_id = normalizePositiveInteger(row.time_id, 'time_id', true);
@@ -434,17 +511,16 @@ async function executeSupabaseMutation(request) {
     throw new Error('SUPABASE_ADMIN_KEY não está configurada.');
   }
 
-  const headers = {
-    apikey: adminKey,
-    'Content-Type': 'application/json',
-    Prefer: select ? 'return=representation' : 'return=minimal'
-  };
-
-  // Chaves novas sb_secret_ não são JWTs e usam somente apikey. A chave
-  // service_role legada continua exigindo o Bearer JWT.
-  if (!adminKey.startsWith('sb_secret_')) {
-    headers.Authorization = `Bearer ${adminKey}`;
+  if (table === 'jogadores') {
+    await assertUniquePlayerNames({ operation, values, filters, baseUrl, adminKey });
   }
+
+  // Chaves novas sb_secret_ usam somente apikey. A service_role legada
+  // continua exigindo também o Bearer JWT.
+  const headers = createSupabaseAdminHeaders(
+    adminKey,
+    select ? 'return=representation' : 'return=minimal'
+  );
 
   const response = await fetch(url, {
     method,

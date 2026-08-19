@@ -20,9 +20,6 @@ setupLogout('logout-button');
 document.getElementById('voltar-button').addEventListener('click', () => {
   window.location.href = 'painel.html';
 });
-document.getElementById('voltar-button').addEventListener('click', () => {
-  window.location.href = 'painel.html';
-});
 
 // ─── ESTRELAS ──────────────────────────────────────────────────────────────
 
@@ -54,7 +51,7 @@ const inputNome = document.getElementById('input-nome');
 const btnAdicionar = document.getElementById('btn-adicionar');
 
 inputNome.addEventListener('input', () => {
-  btnAdicionar.disabled = inputNome.value.trim().length < 2;
+  atualizarEstadoAdicionar();
 });
 
 inputNome.addEventListener('keydown', (e) => {
@@ -62,8 +59,15 @@ inputNome.addEventListener('keydown', (e) => {
 });
 
 btnAdicionar.addEventListener('click', async () => {
-  const nome = inputNome.value.trim();
+  const nome = formatarNome(inputNome.value);
   if (nome.length < 2) return;
+
+  const duplicado = encontrarJogadorDuplicado(nome);
+  if (duplicado) {
+    mostrarMsg('msg-add', mensagemJogadorDuplicado(duplicado), 'warn', 'duplicate');
+    atualizarEstadoAdicionar();
+    return;
+  }
 
   btnAdicionar.disabled = true;
   btnAdicionar.textContent = 'Salvando...';
@@ -72,7 +76,8 @@ btnAdicionar.addEventListener('click', async () => {
   const { error } = await db.from('jogadores').insert({ nome, nivel: nivelAdd });
 
   if (error) {
-    mostrarMsg('msg-add', 'Erro ao adicionar jogador. Tente novamente.', 'warn');
+    mostrarMsg('msg-add', mensagemErroGravacao(error, 'Erro ao adicionar jogador. Tente novamente.'), 'warn', error.code);
+    if (error.code === 'duplicate_player_name') await carregarJogadores();
   } else {
     mostrarMsg('msg-add', `✅ ${nome} adicionado com sucesso!`, 'ok');
     inputNome.value = '';
@@ -81,8 +86,8 @@ btnAdicionar.addEventListener('click', async () => {
     await carregarJogadores();
   }
 
-  btnAdicionar.disabled = false;
   btnAdicionar.textContent = '➕ Adicionar Jogador';
+  atualizarEstadoAdicionar();
 });
 
 // ─── CARREGAR ──────────────────────────────────────────────────────────────
@@ -104,6 +109,7 @@ async function carregarJogadores() {
   jogadores = data || [];
   document.getElementById('total-count').textContent = `${jogadores.length} jogador${jogadores.length !== 1 ? 'es' : ''}`;
   renderizarLista(jogadores);
+  atualizarEstadoAdicionar();
 }
 
 function renderizarLista(lista) {
@@ -147,8 +153,49 @@ document.getElementById('busca-input').addEventListener('input', (e) => {
   renderizarLista(filtrados);
 });
 
+function formatarNome(str) {
+  return String(str || '').trim().replace(/\s+/g, ' ');
+}
+
 function normalizar(str) {
-  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return formatarNome(str)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR');
+}
+
+function encontrarJogadorDuplicado(nome, idIgnorado = null) {
+  const chave = normalizar(nome);
+  if (!chave) return null;
+
+  return jogadores.find(jogador => (
+    String(jogador.id) !== String(idIgnorado ?? '') &&
+    normalizar(jogador.nome) === chave
+  )) || null;
+}
+
+function mensagemJogadorDuplicado(jogador) {
+  return `⚠️ O jogador "${jogador.nome}" já está cadastrado.`;
+}
+
+function atualizarEstadoAdicionar() {
+  const nome = formatarNome(inputNome.value);
+  const duplicado = nome.length >= 2 ? encontrarJogadorDuplicado(nome) : null;
+  btnAdicionar.disabled = nome.length < 2 || Boolean(duplicado);
+
+  const mensagem = document.getElementById('msg-add');
+  if (duplicado) {
+    mostrarMsg('msg-add', mensagemJogadorDuplicado(duplicado), 'warn', 'duplicate');
+  } else if (mensagem.dataset.code === 'duplicate') {
+    ocultarMsg('msg-add');
+  }
+}
+
+function mensagemErroGravacao(error, fallback) {
+  if (error?.code === 'duplicate_player_name') {
+    return `⚠️ ${error.message || 'Já existe um jogador cadastrado com esse nome.'}`;
+  }
+  return fallback;
 }
 
 // ─── EDITAR ────────────────────────────────────────────────────────────────
@@ -169,8 +216,14 @@ document.getElementById('btn-cancelar-edit').addEventListener('click', () => {
 
 document.getElementById('btn-salvar').addEventListener('click', async () => {
   const id = document.getElementById('edit-id').value;
-  const nome = document.getElementById('edit-nome').value.trim();
+  const nome = formatarNome(document.getElementById('edit-nome').value);
   if (nome.length < 2) return;
+
+  const duplicado = encontrarJogadorDuplicado(nome, id);
+  if (duplicado) {
+    mostrarMsg('msg-edit', mensagemJogadorDuplicado(duplicado), 'warn', 'duplicate');
+    return;
+  }
 
   const btn = document.getElementById('btn-salvar');
   btn.disabled = true;
@@ -180,7 +233,7 @@ document.getElementById('btn-salvar').addEventListener('click', async () => {
   const { error } = await db.from('jogadores').update({ nome, nivel: nivelEdit }).eq('id', id);
 
   if (error) {
-    mostrarMsg('msg-edit', 'Erro ao salvar. Tente novamente.', 'warn');
+    mostrarMsg('msg-edit', mensagemErroGravacao(error, 'Erro ao salvar. Tente novamente.'), 'warn', error.code);
   } else {
     document.getElementById('modal-editar').style.display = 'none';
     await carregarJogadores();
@@ -229,15 +282,18 @@ document.getElementById('modal-excluir').addEventListener('click', (e) => {
 
 // ─── UTILS ─────────────────────────────────────────────────────────────────
 
-function mostrarMsg(id, texto, tipo) {
+function mostrarMsg(id, texto, tipo, code = '') {
   const el = document.getElementById(id);
   el.textContent = texto;
   el.className = `sp-alert sp-alert-${tipo === 'ok' ? 'ok' : 'warn'}`;
+  el.dataset.code = code;
   el.style.display = 'block';
 }
 
 function ocultarMsg(id) {
-  document.getElementById(id).style.display = 'none';
+  const el = document.getElementById(id);
+  el.style.display = 'none';
+  delete el.dataset.code;
 }
 
 function escapeHtml(str) {
