@@ -919,26 +919,36 @@ function mostrarSugestoes(input, jogadores) {
     const viewport = window.visualViewport;
     const viewportWidth = viewport ? viewport.width : window.innerWidth;
     const viewportHeight = viewport ? viewport.height : window.innerHeight;
-    const viewportLeft = viewport ? viewport.offsetLeft : 0;
-    const viewportTop = viewport ? viewport.offsetTop : 0;
     const margem = 8;
     const largura = Math.min(inputRect.width, viewportWidth - (margem * 2));
     const esquerda = Math.max(
-        viewportLeft + margem,
-        Math.min(inputRect.left, viewportLeft + viewportWidth - largura - margem)
+        margem,
+        Math.min(inputRect.left, viewportWidth - largura - margem)
     );
-    const espacoAbaixo = viewportTop + viewportHeight - inputRect.bottom - margem;
-    const espacoAcima = inputRect.top - viewportTop - margem;
-    const abrirAcima = espacoAbaixo < 150 && espacoAcima > espacoAbaixo;
-    const alturaMaxima = Math.max(100, Math.min(220, abrirAcima ? espacoAcima - 6 : espacoAbaixo - 6));
 
+    // Mede o conteúdo real. Uma única sugestão deve permanecer junto ao campo,
+    // mesmo quando o teclado reduz bastante a área visível do navegador.
     container.style.width = `${largura}px`;
     container.style.left = `${esquerda}px`;
+    container.style.maxHeight = '220px';
+    const alturaDesejada = Math.min(220, Math.max(42, container.scrollHeight));
+    const espacoAbaixo = viewportHeight - inputRect.bottom - margem;
+    const espacoAcima = inputRect.top - margem;
+    const abrirAcima = espacoAbaixo < alturaDesejada && espacoAcima > espacoAbaixo;
+    const espacoEscolhido = abrirAcima ? espacoAcima : espacoAbaixo;
+    const alturaMaxima = Math.max(42, Math.min(220, espacoEscolhido - 6));
+    const alturaRenderizada = Math.min(alturaDesejada, alturaMaxima);
+    const topoCalculado = abrirAcima
+        ? inputRect.top - alturaRenderizada - 5
+        : inputRect.bottom + 5;
+    const topo = Math.max(
+        margem,
+        Math.min(topoCalculado, viewportHeight - alturaRenderizada - margem)
+    );
+
     container.style.maxHeight = `${alturaMaxima}px`;
-    container.style.top = abrirAcima ? 'auto' : `${inputRect.bottom + 5}px`;
-    container.style.bottom = abrirAcima
-        ? `${Math.max(margem, viewportTop + viewportHeight - inputRect.top + 5)}px`
-        : 'auto';
+    container.style.top = `${topo}px`;
+    container.style.bottom = 'auto';
 }
 
 // Selecionar jogador da sugestão
