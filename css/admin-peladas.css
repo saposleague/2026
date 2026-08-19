@@ -326,9 +326,13 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opaci
   border-radius: 9px !important; background: #17283d !important;
   box-shadow: 0 14px 32px rgba(0,0,0,.4) !important;
 }
+.sugestoes-flutuantes {
+  position: fixed !important; z-index: 22000 !important;
+  right: auto !important; overflow-y: auto;
+}
 .sugestao-item {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; padding: 8px 10px;
+  gap: 8px; min-height: 42px; padding: 8px 10px;
   border-bottom: .5px solid rgba(255,255,255,.07); cursor: pointer;
 }
 .sugestao-item:hover { background: rgba(34,197,94,.1); }
@@ -338,6 +342,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 .feedback-mensagem.status-success { background: rgba(34,197,94,.1); color: #86efac; }
 .feedback-mensagem.status-error { background: rgba(248,113,113,.1); color: #fca5a5; }
 .feedback-mensagem.status-warning { background: rgba(251,191,36,.1); color: #fcd34d; }
+.jogador-nao-cadastrado { border-left: 3px solid #f59e0b; }
 
 /* Jogadores aptos */
 .jogadores-aptos-lista {

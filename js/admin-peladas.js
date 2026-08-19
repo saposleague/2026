@@ -772,6 +772,9 @@ function mostrarEditorPelada(dataPelada, jogadores) {
                                                data-observacoes="${escapeHtml(jogador.observacoes || '')}"
                                                class="nome-jogador-input"
                                                placeholder="Nome do jogador"
+                                               autocomplete="off"
+                                               autocapitalize="words"
+                                               spellcheck="false"
                                                oninput="buscarJogadoresSugestao(this)"
                                                onclick="mostrarInfoJogador(this)">
                                         ${infoAdicional}
@@ -833,10 +836,26 @@ function fecharEditorPelada() {
     }
 }
 
+let inputSugestaoAtivo = null;
+let buscaSugestaoAtual = 0;
+
+function obterSugestoesFlutuantes() {
+    let container = document.getElementById('sugestoes-jogadores-flutuante');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'sugestoes-jogadores-flutuante';
+        container.className = 'sugestoes-container sugestoes-flutuantes';
+        container.setAttribute('role', 'listbox');
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
 // Buscar sugestões de jogadores
 async function buscarJogadoresSugestao(input) {
     const nome = input.value.trim();
-    const sugestoesContainer = input.parentElement.querySelector('.sugestoes-container');
+    const numeroBusca = ++buscaSugestaoAtual;
+    inputSugestaoAtivo = input;
     
     if (nome.length < 2) {
         fecharSugestoes();
@@ -858,8 +877,11 @@ async function buscarJogadoresSugestao(input) {
         
         if (error) throw error;
         
+        // Impede uma resposta antiga de substituir os resultados da digitação atual.
+        if (numeroBusca !== buscaSugestaoAtual || input !== inputSugestaoAtivo) return;
+
         if (jogadores && jogadores.length > 0) {
-            mostrarSugestoes(input, jogadores, sugestoesContainer);
+            mostrarSugestoes(input, jogadores);
         } else {
             fecharSugestoes();
         }
@@ -871,13 +893,16 @@ async function buscarJogadoresSugestao(input) {
 }
 
 // Mostrar sugestões de jogadores
-function mostrarSugestoes(input, jogadores, container) {
+function mostrarSugestoes(input, jogadores) {
+    const container = obterSugestoesFlutuantes();
     let html = '';
     
     jogadores.forEach(jogador => {
         const timeNome = jogador.times ? jogador.times.nome : 'Sem time';
         html += `
             <div class="sugestao-item" 
+                 role="option"
+                 data-jogador-id="${escapeHtml(jogador.id)}"
                  data-jogador-nome="${escapeHtml(jogador.nome)}"
                  onclick="selecionarJogadorSugestao(this, this.dataset.jogadorNome)">
                 <div class="jogador-nome">${escapeHtml(jogador.nome)}</div>
@@ -888,19 +913,49 @@ function mostrarSugestoes(input, jogadores, container) {
     
     container.innerHTML = html;
     container.style.display = 'block';
-    
-    // Posiciona o container de sugestões
+
+    // O menu fica ligado ao viewport para não ser cortado pelo modal rolável.
     const inputRect = input.getBoundingClientRect();
-    container.style.position = 'fixed';
-    container.style.top = (inputRect.bottom + 5) + 'px';
-    container.style.left = inputRect.left + 'px';
-    container.style.width = (inputRect.width + 50) + 'px';
+    const viewport = window.visualViewport;
+    const viewportWidth = viewport ? viewport.width : window.innerWidth;
+    const viewportHeight = viewport ? viewport.height : window.innerHeight;
+    const viewportLeft = viewport ? viewport.offsetLeft : 0;
+    const viewportTop = viewport ? viewport.offsetTop : 0;
+    const margem = 8;
+    const largura = Math.min(inputRect.width, viewportWidth - (margem * 2));
+    const esquerda = Math.max(
+        viewportLeft + margem,
+        Math.min(inputRect.left, viewportLeft + viewportWidth - largura - margem)
+    );
+    const espacoAbaixo = viewportTop + viewportHeight - inputRect.bottom - margem;
+    const espacoAcima = inputRect.top - viewportTop - margem;
+    const abrirAcima = espacoAbaixo < 150 && espacoAcima > espacoAbaixo;
+    const alturaMaxima = Math.max(100, Math.min(220, abrirAcima ? espacoAcima - 6 : espacoAbaixo - 6));
+
+    container.style.width = `${largura}px`;
+    container.style.left = `${esquerda}px`;
+    container.style.maxHeight = `${alturaMaxima}px`;
+    container.style.top = abrirAcima ? 'auto' : `${inputRect.bottom + 5}px`;
+    container.style.bottom = abrirAcima
+        ? `${Math.max(margem, viewportTop + viewportHeight - inputRect.top + 5)}px`
+        : 'auto';
 }
 
 // Selecionar jogador da sugestão
 function selecionarJogadorSugestao(elemento, nome) {
-    const input = elemento.closest('.jogador-editavel').querySelector('.nome-jogador-input');
+    const input = inputSugestaoAtivo;
+    if (!input || !input.isConnected) {
+        fecharSugestoes();
+        return;
+    }
+
     input.value = nome;
+    input.dataset.jogadorId = elemento.dataset.jogadorId || '';
+    const status = input.closest('.jogador-nao-cadastrado')?.querySelector('.status-indicador');
+    if (status) {
+        status.className = 'status-indicador status-cadastrado';
+        status.textContent = '✅ Jogador selecionado';
+    }
     fecharSugestoes();
     
     // Feedback visual
@@ -975,6 +1030,7 @@ document.head.appendChild(style);
 function fecharSugestoes() {
     const sugestoes = document.querySelectorAll('.sugestoes-container');
     sugestoes.forEach(s => s.style.display = 'none');
+    inputSugestaoAtivo = null;
 }
 
 // Adicionar jogador à pelada
@@ -982,48 +1038,56 @@ function adicionarJogadorPelada() {
     const container = document.querySelector('.jogadores-editaveis');
     const novoJogador = document.createElement('div');
     novoJogador.className = 'jogador-editavel jogador-nao-cadastrado';
-    novoJogador.style.cssText = 'display: flex; align-items: center; margin: 10px 0; padding: 15px; border: 1px solid #dee2e6; border-radius: 8px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #ffc107;';
     
     const index = document.querySelectorAll('.jogador-editavel').length + 1;
     
     novoJogador.innerHTML = `
-        <div style="display: flex; align-items: center; margin-right: 15px; min-width: 60px;">
-            <span style="background: #007bff; color: white; padding: 4px 8px; border-radius: 50%; font-size: 12px; font-weight: bold;">${index}</span>
-        </div>
-        <div style="flex: 1; margin-right: 15px;">
-            <input type="text" 
-                   value="" 
-                   data-id="novo"
-                   class="nome-jogador-input"
-                   style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px;"
-                   placeholder="Nome do jogador"
-                   oninput="buscarJogadoresSugestao(this)">
-            <div class="sugestoes-container" style="position: absolute; background: white; border: 1px solid #ccc; border-radius: 4px; max-height: 150px; overflow-y: auto; display: none; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 12px; color: #6c757d; display: flex; align-items: center; gap: 5px;">
-                ⚠️ Jogador não cadastrado
-            </span>
-            <button onclick="this.closest('.jogador-editavel').remove()" 
-                    style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background-color 0.2s;"
-                    onmouseover="this.style.backgroundColor='#c82333'"
-                    onmouseout="this.style.backgroundColor='#dc3545'">
-                🗑️ Remover
-            </button>
+        <div class="jogador-linha">
+            <div class="jogador-numero">${index}</div>
+
+            <div class="jogador-campo">
+                <input type="text"
+                       value=""
+                       data-id="novo"
+                       data-jogador-id=""
+                       data-original-nome=""
+                       class="nome-jogador-input"
+                       placeholder="Digite para buscar um jogador"
+                       autocomplete="off"
+                       autocapitalize="words"
+                       spellcheck="false"
+                       oninput="buscarJogadoresSugestao(this)">
+                <div class="sugestoes-container"></div>
+            </div>
+
+            <div class="jogador-status">
+                <div class="status-indicador status-nao-cadastrado">
+                    ⚠️ Selecione um jogador
+                </div>
+                <button class="btn-remover" type="button"
+                        onclick="this.closest('.jogador-editavel').remove()">
+                    🗑️ Remover
+                </button>
+            </div>
         </div>
     `;
-    
-    container.appendChild(novoJogador);
-    
-    // Adiciona evento para fechar sugestões ao clicar fora
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.jogador-editavel')) {
-            fecharSugestoes();
-        }
-    });
+
+    const botaoAdicionar = container.querySelector('.btn-adicionar-jogador');
+    container.insertBefore(novoJogador, botaoAdicionar);
+    novoJogador.querySelector('.nome-jogador-input').focus();
     
     console.log('➕ Novo jogador adicionado à interface');
 }
+
+document.addEventListener('pointerdown', (event) => {
+    if (!event.target.closest('.sugestoes-container') &&
+        !event.target.closest('.nome-jogador-input')) {
+        fecharSugestoes();
+    }
+});
+
+window.addEventListener('resize', fecharSugestoes);
+window.visualViewport?.addEventListener('resize', fecharSugestoes);
 
 // Remover jogador da pelada
 async function removerJogadorPelada(presencaId) {
