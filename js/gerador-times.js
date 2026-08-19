@@ -576,6 +576,7 @@ async function salvarEdicaoNivel(id, novoNivel) {
 function atualizarTotalNecessario() {
   const { numTimes, jogadoresPorTime } = state.config;
   const total = numTimes * jogadoresPorTime;
+  const minimo = numTimes * Math.max(1, jogadoresPorTime - 1);
   document.getElementById('total-necessario').textContent = `${total} jogadores`;
 
   const selecionados = state.jogadores.filter(j => j.selecionado).length;
@@ -584,7 +585,9 @@ function atualizarTotalNecessario() {
   if (selecionados !== total) {
     const diff = total - selecionados;
     if (diff > 0) {
-      alertaEl.textContent = `Você selecionou ${selecionados} jogadores. Faltam ${diff} vaga(s) — serão preenchidas automaticamente com jogadores genéricos para equilibrar os times.`;
+      alertaEl.textContent = selecionados >= minimo
+        ? `Você selecionou ${selecionados} jogadores. Faltam ${diff} vaga(s) — serão preenchidas como empréstimos, usando níveis que existem entre os jogadores desta pelada.`
+        : `Selecione ao menos ${minimo} jogadores. É permitido no máximo um empréstimo por time (${total - minimo} no total).`;
       alertaEl.style.color = '';
     } else {
       alertaEl.textContent = `Você selecionou ${selecionados} jogadores, mas a configuração exige ${total}. Há ${Math.abs(diff)} jogadores a mais.`;
@@ -601,10 +604,10 @@ function atualizarTotalNecessario() {
 function validarConfiguracao() {
   const { numTimes, jogadoresPorTime } = state.config;
   const total = numTimes * jogadoresPorTime;
+  const minimo = numTimes * Math.max(1, jogadoresPorTime - 1);
   const selecionados = state.jogadores.filter(j => j.selecionado).length;
-  // Permite gerar com menos jogadores (serão completados com genéricos)
-  // Só bloqueia se houver jogadores a mais do que o total
-  return selecionados <= total;
+  // Permite no máximo um empréstimo por time.
+  return selecionados >= minimo && selecionados <= total;
 }
 
 function validarBotaoGerar() {
@@ -616,7 +619,6 @@ function validarBotaoGerar() {
     return;
   }
 
-  // Bloqueia apenas se houver jogadores a mais do que o configurado
   btn.disabled = !validarConfiguracao();
   atualizarAvisoGoleiros();
 }
@@ -752,12 +754,53 @@ function criarJogadorGenerico(nivel, index) {
     selecionado: true,
     goleiro: false,
     generico: true,
+    emprestimo: true,
   };
+}
+
+function escolherNivelEmprestimoDisponivel(nivelIdeal, times, alvoIdx) {
+  const niveisDisponiveis = [...new Set(
+    times.flatMap((time, idx) => (
+      idx === alvoIdx
+        ? []
+        : time.jogadores
+          .filter(jogador => !jogador.generico)
+          .map(jogador => Math.max(1, Math.min(5, Number(jogador.nivel) || 1)))
+    ))
+  )];
+
+  if (!niveisDisponiveis.length) {
+    return Math.max(1, Math.min(5, Math.round(nivelIdeal) || 1));
+  }
+
+  const forcas = times.map(time => calcularForca(time));
+  const diferencaComNivel = nivel => {
+    const simuladas = forcas.map((forca, idx) => idx === alvoIdx ? forca + nivel : forca);
+    return Math.max(...simuladas) - Math.min(...simuladas);
+  };
+
+  return niveisDisponiveis.sort((nivelA, nivelB) => {
+    const distanciaA = Math.abs(nivelA - nivelIdeal);
+    const distanciaB = Math.abs(nivelB - nivelIdeal);
+    if (distanciaA !== distanciaB) return distanciaA - distanciaB;
+
+    const equilibrioA = diferencaComNivel(nivelA);
+    const equilibrioB = diferencaComNivel(nivelB);
+    if (equilibrioA !== equilibrioB) return equilibrioA - equilibrioB;
+    return nivelA - nivelB;
+  })[0];
 }
 
 function gerarTimes() {
   const { numTimes, jogadoresPorTime, separarGoleiros } = state.config;
   const jogadoresSelecionados = state.jogadores.filter(j => j.selecionado);
+
+  if (!validarConfiguracao()) {
+    const minimo = numTimes * Math.max(1, jogadoresPorTime - 1);
+    const total = numTimes * jogadoresPorTime;
+    mostrarMensagem(`Selecione entre ${minimo} e ${total} jogadores. É permitido no máximo um empréstimo por time.`);
+    return;
+  }
 
   // Inicializar times
   const times = Array.from({ length: numTimes }, (_, i) => ({
@@ -798,36 +841,31 @@ function gerarTimes() {
   // Usa greedy puro: cada jogador vai para o time com menor força que ainda tem vaga.
   // Após a distribuição greedy, aplica uma fase de melhoria por trocas para minimizar
   // a diferença máxima entre times.
-  const vagas = Array(numTimes).fill(jogadoresPorTime);
-  // Desconta vagas já usadas pelos goleiros
-  times.forEach((t, i) => { vagas[i] -= t.jogadores.length; });
-
   ordenados.forEach(jogador => {
-    // Encontra o time com menor força que ainda tem vaga
-    let melhorTime = null;
-    let melhorForca = Infinity;
-    times.forEach((t, i) => {
-      if (vagas[i] <= 0) return;
-      const f = calcularForca(t);
-      if (f < melhorForca) { melhorForca = f; melhorTime = i; }
-    });
-    if (melhorTime !== null) {
-      times[melhorTime].jogadores.push({ ...jogador });
-      vagas[melhorTime]--;
-    }
+    // Prioriza os times com menos jogadores reais e, entre eles, o de menor
+    // força. Assim cada time precisará de no máximo um empréstimo.
+    const comVaga = times.filter(time => time.jogadores.length < jogadoresPorTime);
+    if (!comVaga.length) return;
+
+    const menorQuantidade = Math.min(...comVaga.map(time => time.jogadores.length));
+    const menores = comVaga.filter(time => time.jogadores.length === menorQuantidade);
+    const menorForca = Math.min(...menores.map(time => calcularForca(time)));
+    const alvo = menores.find(time => calcularForca(time) === menorForca);
+    alvo.jogadores.push({ ...jogador });
   });
 
   // Fase de melhoria: tenta trocas entre times para reduzir diferença de força
   melhorarBalanceamento(times);
 
-  // Passo 4: Preencher vagas restantes com genéricos equilibrados
+  // Passo 4: Preencher vagas restantes com empréstimos equilibrados.
+  // O nível escolhido sempre existe entre os jogadores reais de outro time.
   const totalNecessario = numTimes * jogadoresPorTime;
   const totalReal = jogadoresSelecionados.length;
   const vagasRestantes = totalNecessario - totalReal;
 
   if (vagasRestantes > 0) {
     let genericoIndex = 0;
-    // Preenche vaga a vaga, sempre no time com menor força, com nível que equilibra
+    // Preenche vaga a vaga, sempre no time com menor força, com nível que equilibra.
     for (let i = 0; i < vagasRestantes; i++) {
       const forcas = times.map(t => calcularForca(t));
       const vagasTime = times.map(t => jogadoresPorTime - t.jogadores.length);
@@ -848,15 +886,15 @@ function gerarTimes() {
         ? forcasOutros.reduce((s, f) => s + f, 0) / forcasOutros.length
         : forcas[alvoIdx];
       const vagasNoAlvo = vagasTime[alvoIdx];
-      const nivelIdeal = Math.round(
-        Math.max(1, Math.min(5, (mediaOutros - forcas[alvoIdx]) / vagasNoAlvo))
-      ) || Math.round(
-        Math.max(1, Math.min(5,
-          jogadoresSelecionados.reduce((s, j) => s + j.nivel, 0) / (jogadoresSelecionados.length || 1)
-        ))
-      );
+      const mediaJogadores = jogadoresSelecionados.reduce((s, j) => s + j.nivel, 0) /
+        (jogadoresSelecionados.length || 1);
+      const calculado = (mediaOutros - forcas[alvoIdx]) / vagasNoAlvo;
+      const nivelIdeal = Number.isFinite(calculado) && calculado > 0
+        ? Math.max(1, Math.min(5, calculado))
+        : Math.max(1, Math.min(5, mediaJogadores));
+      const nivelDisponivel = escolherNivelEmprestimoDisponivel(nivelIdeal, times, alvoIdx);
 
-      times[alvoIdx].jogadores.push(criarJogadorGenerico(nivelIdeal, genericoIndex++));
+      times[alvoIdx].jogadores.push(criarJogadorGenerico(nivelDisponivel, genericoIndex++));
     }
   }
 
@@ -931,10 +969,10 @@ function renderizarTimes(times) {
   selecaoTroca.length = 0;
   atualizarBotaoTroca();
 
-  // Nota de genéricos
+  // Nota de empréstimos
   const totalGenericos = times.flatMap(t => t.jogadores).filter(j => j.generico).length;
   if (totalGenericos > 0) {
-    notaGenericos.textContent = `ℹ️ ${totalGenericos} jogador(es) genérico(s) foram adicionados para completar os times. Eles representam jogadores a serem "pegos emprestados" de outro time na hora do jogo.`;
+    notaGenericos.textContent = `🔄 ${totalGenericos} empréstimo(s) foram adicionados. O nível de cada "Jogador X estrelas" existe entre os jogadores reais de outro time da pelada.`;
     notaGenericos.style.display = 'block';
   } else {
     notaGenericos.style.display = 'none';
@@ -1009,8 +1047,14 @@ function atualizarResumo(times) {
     : 0;
 
   const avisoDesequilibrio = diferenca > media;
+  const jogadoresReais = times.flatMap(t => t.jogadores).filter(j => !j.generico).length;
+  const emprestimos = times.flatMap(t => t.jogadores).filter(j => j.generico).length;
 
   resumo.innerHTML = `
+    <div class="resumo-item">
+      <span class="resumo-label">Composição</span>
+      <span class="resumo-valor">${jogadoresReais} reais${emprestimos ? ` + ${emprestimos} empréstimo${emprestimos !== 1 ? 's' : ''}` : ''}</span>
+    </div>
     <div class="resumo-item">
       <span class="resumo-label">Diferença de Força</span>
       <span class="resumo-valor ${avisoDesequilibrio ? 'aviso' : ''}">${diferenca}</span>
@@ -1119,7 +1163,9 @@ function desfazerTroca() {
 function formatarTextoTimes(times) {
   let texto = '⚽ Times da Pelada\n\n';
   times.forEach(t => {
-    const nomes = t.jogadores.map(j => j.nome).join(', ');
+    const nomes = t.jogadores.map(j => (
+      j.generico ? `${'⭐'.repeat(j.nivel)} ${j.nome}` : j.nome
+    )).join(', ');
     texto += `${t.nome}: ${nomes}\n`;
   });
   return texto.trim();
