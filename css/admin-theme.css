@@ -487,6 +487,13 @@ body:not(.dark-mode) .sugestoes-container {
   border-color: rgba(15,23,42,.14) !important;
   box-shadow: 0 14px 32px rgba(15,23,42,.16) !important;
 }
+@media (max-width: 700px) {
+  body:not(.dark-mode) .jogador-campo > .sugestoes-container.sugestoes-inline {
+    background: #fff !important;
+    border-color: #86efac !important;
+    box-shadow: 0 8px 18px rgba(15,23,42,.14) !important;
+  }
+}
 body:not(.dark-mode) .sugestao-item { border-bottom-color: rgba(15,23,42,.08); }
 body:not(.dark-mode) .sugestao-item .jogador-nome,
 body:not(.dark-mode) .jogador-nome-apto { color: #334155; }

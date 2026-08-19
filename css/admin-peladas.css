@@ -412,6 +412,14 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opaci
   .info-grid { grid-template-columns: 1fr; }
   .jogador-linha { grid-template-columns: 24px minmax(0,1fr); }
   .jogador-status { grid-column: 2; justify-content: space-between; }
+  .jogador-campo > .sugestoes-container.sugestoes-inline {
+    position: static !important; z-index: auto !important;
+    top: auto !important; right: auto !important; bottom: auto !important; left: auto !important;
+    width: 100% !important; max-height: 190px !important;
+    margin-top: 6px; overflow-y: auto;
+    border: .5px solid rgba(74,222,128,.45) !important;
+    box-shadow: 0 8px 18px rgba(0,0,0,.24) !important;
+  }
 }
 
 @media (max-width: 480px) {

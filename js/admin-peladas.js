@@ -852,6 +852,19 @@ function obterSugestoesFlutuantes() {
     return container;
 }
 
+function obterContainerSugestoes(input) {
+    // No celular, especialmente no Safari iOS, elementos fixed ficam instáveis
+    // quando o teclado abre. A lista local participa do fluxo do modal e não
+    // depende de coordenadas do viewport.
+    if (window.matchMedia('(max-width: 700px)').matches) {
+        const containerLocal = input.parentElement.querySelector('.sugestoes-container');
+        containerLocal.classList.add('sugestoes-inline');
+        return containerLocal;
+    }
+
+    return obterSugestoesFlutuantes();
+}
+
 // Buscar sugestões de jogadores
 async function buscarJogadoresSugestao(input) {
     const nome = input.value.trim();
@@ -895,7 +908,11 @@ async function buscarJogadoresSugestao(input) {
 
 // Mostrar sugestões de jogadores
 function mostrarSugestoes(input, jogadores) {
-    const container = obterSugestoesFlutuantes();
+    document.querySelectorAll('.sugestoes-container').forEach(sugestao => {
+        sugestao.style.display = 'none';
+    });
+
+    const container = obterContainerSugestoes(input);
     let html = '';
     
     jogadores.forEach(jogador => {
@@ -915,12 +932,18 @@ function mostrarSugestoes(input, jogadores) {
     container.innerHTML = html;
     container.style.display = 'block';
 
+    if (container.classList.contains('sugestoes-inline')) {
+        container.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        return;
+    }
+
     posicionarSugestoes(input, container);
     agendarReposicionamentoSugestoes();
 }
 
 function posicionarSugestoes(input, container) {
-    if (!input?.isConnected || !container || container.style.display === 'none') return;
+    if (!input?.isConnected || !container || container.style.display === 'none' ||
+        container.classList.contains('sugestoes-inline')) return;
 
     // O menu fica ligado ao viewport para não ser cortado pelo modal rolável.
     const inputRect = input.getBoundingClientRect();
